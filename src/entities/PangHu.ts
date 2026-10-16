@@ -7,7 +7,7 @@ import type { Fighter } from './Fighter';
 export type PangHuStage = 'intro' | 'fight' | 'transform' | 'tiger' | 'defeated';
 
 /**
- * 第一关 Boss 胖虎。人形用大刀（冲锋劈砍、震地），半血变身猛虎。
+ * 第一关 Boss 胖虎。人形用大刀（冲锋劈砍、震地），半血变身猛虎（扑击、虎爪连挥、虎啸）。
  * 霸体：挨打只闪白、顿帧，不会被打断。
  * 事件：'move' 招式事件、'transform' 开始变身、'roar' 仰天长啸、'burst' 水墨炸开化虎、'defeated' 被打败。
  */
@@ -16,6 +16,8 @@ export class PangHu extends Actor {
   /** 当前阶段已经过了多少帧，变身演出按它排时间 */
   stageFrame = 0;
   form: 'human' | 'tiger' = 'human';
+  /** 扑击锁定的落点，地上的红圈画在这里 */
+  aimX = 0;
   private cooldown = 30;
   private pendingTransform = false;
   private readonly rng = new Phaser.Math.RandomDataGenerator(['panghu']);
@@ -62,9 +64,8 @@ export class PangHu extends Actor {
   tick() {
     if (!this.beginTick()) return;
     this.stageFrame++;
-    if (this.stage === 'fight') this.fight();
+    if (this.stage === 'fight' || this.stage === 'tiger') this.fight();
     else if (this.stage === 'transform') this.transform();
-    else if (this.stage === 'tiger') this.prowl();
     else this.stand();
   }
 
@@ -78,22 +79,67 @@ export class PangHu extends Actor {
       return this.stand();
     }
 
-    if (this.runner.move) {
-      this.advanceMove();
-      if (this.runner.move) return this.applyMoveMotion();
-      this.cooldown = this.rng.between(PANGHU.cooldown.min, PANGHU.cooldown.max);
+    const current = this.runner.move;
+    if (current) {
+      this.stepMove();
+      if (this.runner.move) return;
+      if (current.followUp) return this.begin(current.followUp);
+      const cd = this.form === 'human' ? PANGHU.cooldown : PANGHU.tiger.cooldown;
+      this.cooldown = this.rng.between(cd.min, cd.max);
     }
 
     this.faceTarget();
     const dist = Math.abs(this.target.x - this.x);
-    if (--this.cooldown <= 0 && dist <= PANGHU.attackRange && !this.target.dead) {
-      const id = dist > PANGHU.chargeRange || this.rng.frac() < 0.3 ? 'chargeChop' : 'slam';
-      this.startMove(PANGHU.moves[id]);
-      return this.applyMoveMotion();
-    }
-    // 够不着就往前走，走到冲锋能砍到的距离
+    const next = --this.cooldown <= 0 && !this.target.dead ? this.choose(dist) : undefined;
+    if (next) return this.begin(next);
+
+    // 够不着就往前走
+    const [speed, keep] =
+      this.form === 'human'
+        ? [PANGHU.walkSpeed, PANGHU.attackRange - 40]
+        : [PANGHU.tiger.walkSpeed, PANGHU.tiger.clawRange + 40];
     this.body.setAllowGravity(true);
-    this.body.setVelocityX(dist > PANGHU.attackRange - 40 ? PANGHU.walkSpeed * this.facing : 0);
+    this.body.setVelocityX(dist > keep ? speed * this.facing : 0);
+  }
+
+  /** 这一刻出哪一招；返回 undefined 表示先走近 */
+  private choose(dist: number) {
+    if (this.form === 'human') {
+      if (dist > PANGHU.attackRange) return undefined;
+      return dist > PANGHU.chargeRange || this.rng.frac() < 0.3 ? 'chargeChop' : 'slam';
+    }
+    const t = PANGHU.tiger;
+    if (dist > t.pounceRange) return 'pounce';
+    if (dist < t.clawRange) return this.rng.frac() < 0.6 ? 'claw1' : 'roar';
+    return this.rng.frac() < 0.5 ? 'pounce' : 'roar';
+  }
+
+  private begin(id: string) {
+    this.faceTarget();
+    // 扑击在起手这一刻锁定落点，红圈画在这里
+    if (id === 'pounce') this.aimX = this.target.x;
+    this.startMove(PANGHU.moves[id]);
+    this.applyMoveMotion();
+  }
+
+  private stepMove() {
+    this.advanceMove();
+    const { move, frame } = this.runner;
+    if (!move) return;
+    if (move.id !== 'pounce' || frame < move.startup) return this.applyMoveMotion();
+    // 扑击：判定开始那一帧起跳，之后交给重力，落地后滑一小段
+    if (frame === move.startup) return this.leap();
+    this.body.setAllowGravity(true);
+    if (this.grounded) this.body.setVelocityX(this.body.velocity.x * 0.75);
+  }
+
+  /** 按红圈位置算起跳速度，正好落在红圈上 */
+  private leap() {
+    const t = PANGHU.tiger;
+    const airtime = (2 * t.leapSpeed) / this.body.world.gravity.y;
+    const vx = Phaser.Math.Clamp((this.aimX - this.x) / airtime, -t.maxLeapSpeedX, t.maxLeapSpeedX);
+    this.body.setAllowGravity(true);
+    this.body.setVelocity(vx, -t.leapSpeed);
   }
 
   private transform() {
@@ -105,15 +151,6 @@ export class PangHu extends Actor {
       this.events.emit('burst');
     }
     if (this.stageFrame >= t.end) this.setStage('tiger');
-  }
-
-  /** 猛虎形态占位：盯着玩家来回踱步，招式明天接上 */
-  private prowl() {
-    this.faceTarget();
-    const dist = Math.abs(this.target.x - this.x);
-    const speed = PANGHU.tiger.walkSpeed;
-    this.body.setAllowGravity(true);
-    this.body.setVelocityX(dist > 300 ? speed * this.facing : dist < 160 ? -speed * 0.6 * this.facing : 0);
   }
 
   private stand() {

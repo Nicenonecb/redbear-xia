@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { MoveRunner } from '../combat/MoveRunner';
 import { inRange, type HitSpec, type MoveDef, type MoveEvent } from '../combat/moveTable';
-import { boxToRect, overlaps, type Hurtable } from '../combat/hitbox';
+import { boxToRect, overlaps, type HitResult, type Hurtable } from '../combat/hitbox';
 
 /**
  * 主角和敌人共用的部分：物理身体、按招式表播放招式、判定、顿帧、气血。
@@ -17,6 +17,8 @@ export abstract class Actor implements Hurtable {
   hp: number;
   /** 受击闪白剩余帧数，给画面用 */
   flash = 0;
+  /** 伤害倍率：武器、升级都乘在这里 */
+  damageScale = 1;
 
   private hitstop = 0;
   private frozenVelocity = { x: 0, y: 0 };
@@ -71,10 +73,12 @@ export abstract class Actor implements Hurtable {
   }
 
   /** 用当前招式的判定打 targets，命中就结算并顿帧。击退方向朝着远离自己的一侧 */
-  resolveHits(targets: Hurtable[]) {
+  resolveHits(targets: Hurtable[]): HitResult[] {
     const box = this.activeHitbox();
-    const hit = this.runner.move?.hit;
-    if (!box || !hit) return;
+    const spec = this.runner.move?.hit;
+    if (!box || !spec) return [];
+    const hit = { ...spec, damage: Math.round(spec.damage * this.damageScale) };
+    const results: HitResult[] = [];
     for (const t of targets) {
       if (t.invulnerable || this.runner.hitTargets.has(t)) continue;
       const hurt = t.hurtbox();
@@ -82,7 +86,9 @@ export abstract class Actor implements Hurtable {
       this.runner.hitTargets.add(t);
       t.takeHit(hit, hurt.centerX >= this.x ? 1 : -1);
       this.freeze(hit.hitstop);
+      results.push({ target: t, hit });
     }
+    return results;
   }
 
   abstract takeHit(hit: HitSpec, dir: 1 | -1): void;

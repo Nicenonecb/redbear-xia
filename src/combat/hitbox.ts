@@ -10,6 +10,12 @@ export interface Hurtable {
   takeHit(hit: HitSpec, dir: 1 | -1): void;
 }
 
+/** 一次实际打中：damage 已经乘过攻击方的伤害倍率 */
+export interface HitResult {
+  target: Hurtable;
+  hit: HitSpec;
+}
+
 /** 把招式表里的相对判定框换算成世界坐标 */
 export function boxToRect(box: Box, x: number, y: number, facing: 1 | -1) {
   const cx = x + box.x * facing;

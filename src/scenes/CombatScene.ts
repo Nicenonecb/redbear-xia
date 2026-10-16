@@ -4,12 +4,13 @@ import { drawInkMountains } from '../art/inkMountains';
 import { drawSwordQi } from '../art/projectiles';
 import { WenShaohuaView } from '../art/wenShaohuaView';
 import { SWORD_QI_LEVELS, WEN_SHAOHUA, swordQiLevel } from '../characters/wenShaohua';
-import type { Hurtable } from '../combat/hitbox';
+import type { HitResult, Hurtable } from '../combat/hitbox';
 import type { MoveEvent } from '../combat/moveTable';
 import { CombatDebug } from '../debug/CombatDebug';
 import { Fighter } from '../entities/Fighter';
 import { Projectile } from '../entities/Projectile';
 import { Controls } from '../input/Controls';
+import { DamageNumbers } from '../ui/DamageNumbers';
 import { HealthBar } from '../ui/HealthBar';
 
 export const GROUND_Y = 620;
@@ -17,6 +18,8 @@ export const GROUND_Y = 620;
 const FRAME_MS = 1000 / 60;
 /** 卡顿时最多补几帧，避免一次跳太远 */
 const MAX_CATCHUP_FRAMES = 6;
+/** 顿帧达到这么多帧算重击：字更大，还会震屏 */
+const HEAVY_HITSTOP = 8;
 
 const HINT = 'A/D 移动 · W/空格 跳跃 · J 流云三式 · K 按住蓄力 少华一剑 · L/Shift 闪避 · ` 判定框 · Esc 返回';
 
@@ -31,6 +34,7 @@ export abstract class CombatScene extends Phaser.Scene {
   protected projectiles: Projectile[] = [];
   private view!: WenShaohuaView;
   private playerBar!: HealthBar;
+  private numbers!: DamageNumbers;
   private debug!: CombatDebug;
   private accumulator = 0;
   private ended = false;
@@ -76,6 +80,7 @@ export abstract class CombatScene extends Phaser.Scene {
 
     this.add.text(24, 20, this.stageName, { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink });
     this.playerBar = new HealthBar(this, 24, 84, 240, WEN_SHAOHUA.name);
+    this.numbers = new DamageNumbers(this);
     this.add
       .text(24, GAME_HEIGHT - 40, HINT, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
       .setAlpha(0.8);
@@ -113,6 +118,16 @@ export abstract class CombatScene extends Phaser.Scene {
     this.cameras.main.shake(duration, strength);
   }
 
+  /** 每一次实际打中都报到这里：跳伤害数字，重击震屏 */
+  protected reportHits(results: HitResult[]) {
+    for (const { target, hit } of results) {
+      const box = target.hurtbox();
+      const heavy = hit.hitstop >= HEAVY_HITSTOP;
+      this.numbers.show(box.centerX, box.top - 10, hit.damage, target === this.player, heavy);
+      if (heavy) this.shake(0.006, 120);
+    }
+  }
+
   /** 战斗结束：大字提示，过一会儿切到下一个场景 */
   protected finish(title: string, next: string, delayMs = 2600) {
     if (this.ended) return;
@@ -131,8 +146,8 @@ export abstract class CombatScene extends Phaser.Scene {
   private tick() {
     this.player.tick();
     const foes = this.foes();
-    this.player.resolveHits(foes);
-    for (const p of this.projectiles) p.tick(p.team === 'player' ? foes : [this.player]);
+    this.reportHits(this.player.resolveHits(foes));
+    for (const p of this.projectiles) this.reportHits(p.tick(p.team === 'player' ? foes : [this.player]));
     this.projectiles = this.projectiles.filter((p) => p.alive);
     this.tickWorld();
   }
@@ -142,7 +157,9 @@ export abstract class CombatScene extends Phaser.Scene {
       const p = this.player;
       const level = swordQiLevel(p.runner.charge);
       const draw = drawSwordQi(SWORD_QI_LEVELS.indexOf(level), level.hit.box.h);
-      this.projectiles.push(new Projectile(this, p.x + 36 * p.facing, p.feetY - 46, p.facing, level, 'player', draw));
+      this.projectiles.push(
+        new Projectile(this, p.x + 36 * p.facing, p.feetY - 46, p.facing, level, 'player', draw, p.damageScale),
+      );
     }
     // 音效、特效事件先留着，接入音频后在这里分发
   }

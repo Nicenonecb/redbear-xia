@@ -48,3 +48,20 @@ export function drawShockwave(w: number, h: number) {
     g.fillCircle(-w * 1.4, h * 0.38, h * 0.12);
   };
 }
+
+/** 虎啸的环形音波：几道竖着的弧，浓墨里夹一道朱红，顶天立地 */
+export function drawRoarRing(h: number) {
+  return (g: Phaser.GameObjects.Graphics) => {
+    const span = Phaser.Math.DegToRad(60);
+    const r = h / 2 / Math.sin(span);
+    for (let k = 0; k < 3; k++) {
+      const pts: Phaser.Math.Vector2[] = [];
+      for (let i = 0; i <= 14; i++) {
+        const a = Phaser.Math.Linear(-span, span, i / 14);
+        pts.push(new Phaser.Math.Vector2(-r * Math.cos(span) + Math.cos(a) * r - k * 10, Math.sin(a) * r));
+      }
+      g.lineStyle(k === 0 ? 6 : 3, k === 0 ? COLORS.red : COLORS.ink, k === 0 ? 1 : 0.55 - k * 0.15);
+      g.strokePoints(pts);
+    }
+  };
+}

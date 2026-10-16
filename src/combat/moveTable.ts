@@ -76,6 +76,8 @@ export interface MoveDef {
   hold?: HoldSpec;
   /** 一次滞空只能用一次（例如空中闪避） */
   oncePerAir?: boolean;
+  /** 敌人用：收招结束后自动接这一招（连招） */
+  followUp?: MoveId;
   events?: MoveEvent[];
 }
 
@@ -125,6 +127,7 @@ export function validateMoves(owner: string, moves: Record<MoveId, MoveDef>) {
     if (m.id !== key) fail(`招式 ${key} 的 id 写成了 ${m.id}`);
     if (m.startup < 1) fail(`${m.id} 至少要有 1 帧前摇`);
     m.cancels?.forEach((c) => exists(c.into, `${m.id} 的取消窗口`));
+    exists(m.followUp, `${m.id} 的连招`);
     if (m.hold) {
       exists(m.hold.release, `${m.id} 的松手招`);
       if (m.active || m.recovery) fail(`蓄力招 ${m.id} 只能有前摇帧，判定交给松手招`);

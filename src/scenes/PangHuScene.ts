@@ -1,6 +1,6 @@
 import { GAME_WIDTH } from '../config';
 import { PangHuView } from '../art/pangHuView';
-import { drawShockwave } from '../art/projectiles';
+import { drawRoarRing, drawShockwave } from '../art/projectiles';
 import { PANGHU } from '../characters/pangHu';
 import type { Hurtable } from '../combat/hitbox';
 import { totalFrames, type MoveEvent } from '../combat/moveTable';
@@ -15,6 +15,7 @@ const BOSS_BAR_WIDTH = 520;
 /**
  * 第一关关底：竹林，山大王胖虎。
  * 开场白念完才开打（念的时候打不动他），半血变身猛虎，打败后过关。
+ * 冲击波、虎啸音波都是两边各放一道。
  * 【拔剑 / 给钱】的选项等铜钱和商店做好后接在开场白后面。
  */
 export class PangHuScene extends CombatScene {
@@ -62,7 +63,7 @@ export class PangHuScene extends CombatScene {
 
   protected tickWorld() {
     this.boss.tick();
-    this.boss.resolveHits([this.player]);
+    this.reportHits(this.boss.resolveHits([this.player]));
   }
 
   protected renderWorld(delta: number) {
@@ -90,6 +91,15 @@ export class PangHuScene extends CombatScene {
 
   private onBossMove(e: MoveEvent) {
     if (e.type === 'vfx' && e.name === 'shake') this.shake();
+    if (e.type === 'spawn' && e.name === 'roarRing') {
+      const spec = PANGHU.roarRing;
+      const draw = drawRoarRing(spec.hit.box.h);
+      const y = this.boss.feetY - spec.hit.box.h / 2 + 20;
+      for (const dir of [1, -1] as const) {
+        // 从胖虎正中间往外扩，贴身站着也躲不掉
+        this.projectiles.push(new Projectile(this, this.boss.x, y, dir, spec, 'enemy', draw));
+      }
+    }
     if (e.type === 'spawn' && e.name === 'shockwave') {
       const { hit } = PANGHU.shockwave;
       const draw = drawShockwave(hit.box.w, hit.box.h);

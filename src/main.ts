@@ -22,5 +22,8 @@ const game = new Phaser.Game({
   scene: [BootScene, TitleScene, GameScene, PangHuScene],
 });
 
-// 开发时把 game 挂到 window 上，方便在控制台里查看状态
-if (import.meta.env.DEV) Object.assign(window, { game });
+// 开发时把 game 和逐帧测试工具挂到 window 上，打包后没有这段
+if (import.meta.env.DEV) {
+  Object.assign(window, { game });
+  import('./debug/devHarness').then((m) => m.installDevHarness(game));
+}

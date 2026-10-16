@@ -11,6 +11,26 @@ import type { PangHu } from '../entities/PangHu';
 
 type Pt = { x: number; y: number };
 
+interface TigerPose {
+  /** 身子高度比例，压低时变小 */
+  crouch: number;
+  /** 脑袋上下偏移（负数是仰头） */
+  lift: number;
+  /** 张嘴 0~1 */
+  mouth: number;
+  /** 尾巴甩动角度 */
+  tail: number;
+  /** 扑击腾空 */
+  leap: boolean;
+  /** 前爪抬起 0~1 */
+  paw: number;
+  /** 爪尖闪光 0~1 */
+  glint: number;
+  /** 虎啸蓄力 0~1 */
+  charge: number;
+  swipe?: { from: number; to: number; alpha: number };
+}
+
 const lerp = Phaser.Math.Linear;
 const clamp01 = (t: number) => Phaser.Math.Clamp(t, 0, 1);
 const easeOut = Phaser.Math.Easing.Cubic.Out;
@@ -111,6 +131,18 @@ export class PangHuView {
       tg.lineBetween(x0, y, end, y);
       tg.fillStyle(COLORS.redBright, blink);
       tg.fillTriangle(end, y - 10, end, y + 10, end + 18 * b.facing, y);
+    }
+
+    if (move.id === 'pounce') {
+      // 落点红圈：扑击起手就锁定，玩家看到红圈赶紧离开
+      const t = (frame + 1) / move.startup;
+      const r = (move.hit.box.w / 2) * easeOut(clamp01(t * 2));
+      tg.lineStyle(10, COLORS.paper, 0.3 * blink);
+      tg.strokeEllipse(b.aimX, y, r * 2, r * 0.36);
+      tg.fillStyle(COLORS.redBright, (0.25 + 0.3 * t) * blink);
+      tg.fillEllipse(b.aimX, y, r * 2, r * 0.36);
+      tg.lineStyle(4, COLORS.redBright, (0.5 + 0.5 * t) * blink);
+      tg.strokeEllipse(b.aimX, y, r * 2, r * 0.36);
     }
 
     if (move.id === 'slam') {
@@ -322,33 +354,95 @@ export class PangHuView {
     }
   }
 
+  private tigerPose(b: PangHu): TigerPose {
+    const pose: TigerPose = { crouch: 1, lift: 0, mouth: 0, tail: Math.sin(this.time * 0.003) * 6, leap: false, paw: 0, glint: 0, charge: 0 };
+    if (b.stage === 'transform') return { ...pose, lift: -10, mouth: 1 };
+    const { move, frame } = b.runner;
+    if (!move || b.stage === 'defeated') return pose;
+    const { startup, active, recovery } = move;
+    const at = frame - startup;
+    const back = (at - active + 1) / recovery;
+
+    if (move.id === 'pounce') {
+      // 压低身子、尾巴猛甩
+      if (frame < startup) {
+        return { ...pose, crouch: lerp(1, 0.72, easeOut(clamp01(((frame + 1) / startup) * 2))), tail: Math.sin(frame * 0.9) * 26, lift: 4 };
+      }
+      return b.grounded ? { ...pose, crouch: 0.85 } : { ...pose, leap: true, mouth: 0.6, lift: -4 };
+    }
+    if (move.id === 'claw1' || move.id === 'claw2') {
+      // 抬爪，临出手前爪尖闪光
+      if (frame < startup) {
+        const t = (frame + 1) / startup;
+        return { ...pose, paw: easeOut(t), glint: t > 0.6 ? (t - 0.6) / 0.4 : 0, crouch: 0.92 };
+      }
+      if (at < active) {
+        const t = (at + 1) / active;
+        return { ...pose, paw: 1 - t, swipe: { from: -70, to: lerp(-70, 70, t), alpha: 1 } };
+      }
+      return { ...pose, swipe: back < 0.4 ? { from: -70, to: 70, alpha: 1 - back * 2.5 } : undefined };
+    }
+    if (move.id === 'roar') {
+      // 仰头张口，音波往嘴边聚
+      if (frame < startup) {
+        const t = (frame + 1) / startup;
+        return { ...pose, lift: -8 * t, mouth: t, charge: t, crouch: lerp(1, 0.9, t) };
+      }
+      return { ...pose, lift: -10, mouth: back < 0.7 ? 1 : 1 - (back - 0.7) / 0.3 };
+    }
+    return pose;
+  }
+
   /** 猛虎：横着的壮硕身躯、大脑袋、翘尾巴，淡墨虎纹，一点朱红眼 */
   private drawTiger(b: PangHu) {
     const g = this.g;
+    const pose = this.tigerPose(b);
     const flashing = b.flash > 0;
     const fill = flashing ? 0xffffff : COLORS.ink;
-    const roaring = b.stage === 'transform';
     const down = b.stage === 'defeated';
-    const moving = Math.abs(b.body.velocity.x) > 1;
-    const stride = moving ? Math.sin(this.time * 0.016) * 8 : 0;
+    const moving = !b.runner.move && Math.abs(b.body.velocity.x) > 1;
+    const stride = moving ? Math.sin(this.time * 0.018) * 9 : 0;
     const breathe = Math.sin(this.time * 0.005) * 1.5;
-    const squash = down ? 0.55 : 1;
+    const squash = (down ? 0.55 : 1) * pose.crouch;
     const at = (x: number, y: number): Pt => ({ x: b.x + x * b.facing, y: b.feetY + y * squash });
     const line = (a: Pt, c: Pt) => g.lineBetween(a.x, a.y, c.x, c.y);
+    const lift = pose.lift;
 
-    // 尾巴
+    // 尾巴：从尾根往上弯，甩尾时整条转一个角度
+    const tailBase = { x: -62, y: -52 };
+    const tail = [0, 1, 2, 3].map((i) => {
+      const a = Phaser.Math.DegToRad(-150 + pose.tail - i * 28);
+      const r = i * 16;
+      return at(tailBase.x + Math.cos(a) * r, tailBase.y + Math.sin(a) * r + breathe);
+    });
     g.lineStyle(7, fill);
-    const tail = [at(-62, -52), at(-84, -66 + breathe), at(-92, -88 + breathe), at(-84, -100 + breathe)];
     g.strokePoints(tail);
 
-    // 四条腿
+    // 四条腿：腾空时前后伸直，抬爪时最前面那条举起来
     g.lineStyle(14, fill);
     if (!down) {
-      line(at(40, -30), at(44 + stride, 0));
-      line(at(26, -30), at(26 - stride, 0));
-      line(at(-36, -30), at(-40 - stride, 0));
-      line(at(-22, -30), at(-20 + stride, 0));
+      if (pose.leap) {
+        line(at(40, -30), at(74, -18));
+        line(at(26, -30), at(58, -12));
+        line(at(-36, -30), at(-68, -14));
+        line(at(-22, -30), at(-52, -8));
+      } else {
+        const paw = { x: lerp(44 + stride, 104, pose.paw), y: lerp(0, -30, pose.paw) };
+        line(at(40, -30), at(paw.x, paw.y));
+        line(at(26, -30), at(26 - stride, 0));
+        line(at(-36, -30), at(-40 - stride, 0));
+        line(at(-22, -30), at(-20 + stride, 0));
+        if (pose.glint > 0) {
+          const tip = at(paw.x + 4, paw.y - 4);
+          const pulse = 0.5 + 0.5 * Math.sin(this.time * 0.05);
+          g.fillStyle(0xffffff, 0.4 + 0.6 * pose.glint * pulse);
+          g.fillCircle(tip.x, tip.y, 5 + 7 * pose.glint);
+          g.lineStyle(2, COLORS.red, pose.glint);
+          g.strokeCircle(tip.x, tip.y, 9 + 8 * pose.glint);
+        }
+      }
     }
+    if (pose.swipe) this.drawClawTrail(pose.swipe, at);
 
     // 身躯
     const torso = at(0, -46 + breathe);
@@ -362,24 +456,50 @@ export class PangHuView {
     g.lineStyle(4, COLORS.inkLight, flashing ? 0 : 0.9);
     for (const x of [-40, -20, 0, 20]) line(at(x, -72 + breathe), at(x + 8, -52 + breathe));
 
-    // 脑袋：长啸时仰起
-    const lift = roaring ? -10 : 0;
+    // 脑袋和耳朵
     const head = at(66, -60 + lift + breathe);
     g.fillStyle(fill);
     g.fillCircle(head.x, head.y, 24);
-    g.fillTriangle(at(52, -78 + lift).x, at(52, -78 + lift).y, at(58, -92 + lift).x, at(58, -92 + lift).y, at(64, -80 + lift).x, at(64, -80 + lift).y);
-    g.fillTriangle(at(68, -80 + lift).x, at(68, -80 + lift).y, at(76, -92 + lift).x, at(76, -92 + lift).y, at(80, -76 + lift).x, at(80, -76 + lift).y);
-    // 吻部
+    const tri = (a: Pt, c: Pt, d: Pt) => g.fillTriangle(a.x, a.y, c.x, c.y, d.x, d.y);
+    tri(at(52, -78 + lift), at(58, -92 + lift), at(64, -80 + lift));
+    tri(at(68, -80 + lift), at(76, -92 + lift), at(80, -76 + lift));
+    // 吻部，张嘴时露出一道宣纸色
     const snout = at(86, -54 + lift + breathe);
     g.fillEllipse(snout.x, snout.y, 26, 20);
-    if (roaring) {
+    if (pose.mouth > 0) {
       g.fillStyle(COLORS.paper);
-      g.fillTriangle(snout.x - 4 * b.facing, snout.y + 2, snout.x + 14 * b.facing, snout.y - 2, snout.x + 14 * b.facing, snout.y + 12);
+      const open = 12 * pose.mouth;
+      g.fillTriangle(snout.x - 4 * b.facing, snout.y + 2, snout.x + 14 * b.facing, snout.y + 2 - open / 2, snout.x + 14 * b.facing, snout.y + 2 + open);
     }
     // 朱红虎眼
     const eye = at(74, -66 + lift + breathe);
     g.fillStyle(COLORS.red);
     g.fillCircle(eye.x, eye.y, 3.5);
+
+    // 虎啸蓄力：一圈圈往嘴边收
+    if (pose.charge > 0) {
+      const mouth = at(100, -54 + lift);
+      for (let k = 0; k < 3; k++) {
+        const phase = (this.time * 0.0025 + k / 3) % 1;
+        this.fx.lineStyle(3, k === 0 ? COLORS.red : COLORS.ink, pose.charge * (1 - phase) * 0.9);
+        this.fx.strokeCircle(mouth.x, mouth.y, 12 + (1 - phase) * 70);
+      }
+    }
+  }
+
+  /** 爪痕：三道弧线 */
+  private drawClawTrail(swipe: NonNullable<TigerPose['swipe']>, at: (x: number, y: number) => Pt) {
+    const pivot = { x: 64, y: -40 };
+    for (let k = 0; k < 3; k++) {
+      const r = 40 + k * 10;
+      const pts: Pt[] = [];
+      for (let i = 0; i <= 8; i++) {
+        const a = Phaser.Math.DegToRad(lerp(swipe.from, swipe.to, i / 8));
+        pts.push(at(pivot.x + Math.cos(a) * r, pivot.y + Math.sin(a) * r));
+      }
+      this.fx.lineStyle(k === 1 ? 5 : 3, k === 1 ? COLORS.red : COLORS.ink, swipe.alpha);
+      this.fx.strokePoints(pts);
+    }
   }
 
   private drawBlots(delta: number) {

@@ -1,0 +1,65 @@
+import type Phaser from 'phaser';
+import type { Action } from '../input/Controls';
+
+/**
+ * 开发用的逐帧测试工具，只在 npm run dev 时装到 window 上，打包后不存在。
+ * 在浏览器控制台里可以停掉游戏循环、按住指定按键逐帧推进，把整局打法写成脚本来测：
+ *
+ *   __t.go('PangHu')                        // 切到某个场景
+ *   __t.run([[60, ['right']], [2, ['attack']], [30, []]], s => s.player.hp)
+ *                                           // 每段按住哪些键、推进多少帧，返回每帧的探针结果
+ *   __t.wake()                              // 恢复正常运行
+ */
+type Script = [frames: number, held: Action[]][];
+
+export function installDevHarness(game: Phaser.Game) {
+  let time = performance.now();
+  let current = '';
+
+  const step = () => {
+    time += 1000 / 60;
+    game.step(time, 1000 / 60);
+  };
+
+  const scene = () => game.scene.getScene(current) as Phaser.Scene & Record<string, any>;
+
+  const harness = {
+    step,
+    scene,
+    sleep: () => game.loop.sleep(),
+    wake: () => game.loop.wake(),
+    /** 切到某个场景并停掉自动循环；data 会原样传给场景 */
+    go(key: string, data?: object) {
+      game.loop.sleep();
+      const from = game.scene.getScenes(true)[0] ?? game.scene.getScene('Title');
+      current = key;
+      from.scene.start(key, data);
+      for (let i = 0; i < 3; i++) step();
+      return scene();
+    },
+    /** 按脚本逐帧推进；probe 每帧调用一次，结果按帧返回 */
+    run<T>(script: Script, probe: (s: ReturnType<typeof scene>) => T = () => undefined as T) {
+      const s = scene();
+      const keys = s.controls.keys as Record<Action, Phaser.Input.Keyboard.Key[]>;
+      const out: T[] = [];
+      for (const [frames, held] of script) {
+        for (let i = 0; i < frames; i++) {
+          for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = held.includes(a);
+          step();
+          out.push(probe(s));
+        }
+      }
+      for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = false;
+      return out;
+    },
+    /** 把逐帧结果压缩成"有变化的那几帧" */
+    changes<T extends object>(out: T[], keys: (keyof T)[]) {
+      return out
+        .map((o, i) => ({ i, o }))
+        .filter(({ o, i }) => i === 0 || keys.some((k) => o[k] !== out[i - 1][k]))
+        .map(({ i, o }) => `#${i} ` + Object.entries(o).map(([k, v]) => `${k}:${v}`).join(' '));
+    },
+  };
+
+  Object.assign(window, { __t: harness });
+}
