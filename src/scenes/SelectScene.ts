@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import type { HeroView } from '../art/heroView';
 import { drawInkMountains } from '../art/inkMountains';
+import { placeArt } from '../art/slots';
 import { HEROES } from '../characters/heroes';
 import type { Fighter } from '../entities/Fighter';
 import { sceneForStep } from '../game/flow';
@@ -20,7 +21,8 @@ const SCALE = 2.4;
 export class SelectScene extends Phaser.Scene {
   private index = 0;
   private frames!: Phaser.GameObjects.Graphics;
-  private views: { view: HeroView; stand: Fighter }[] = [];
+  /** 没有立绘图的主角用剪影画，card 是对应第几张卡 */
+  private views: { view: HeroView; stand: Fighter; card: number }[] = [];
   private cards: Phaser.Geom.Rectangle[] = [];
   private chosen = false;
 
@@ -51,11 +53,16 @@ export class SelectScene extends Phaser.Scene {
         .text(left, rect.bottom - 120, hero.blurb, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.ink, lineSpacing: 6 })
         .setDepth(12);
 
-      // 立绘：用战斗里同一套画法，放大画在卡片右侧
+      // 立绘：有图用图，没图就用战斗里同一套画法放大画在卡片右侧
+      const art = placeArt(this, id === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia', rect.right - 110, rect.bottom - 130, 220, 320);
+      if (art) {
+        art.setDepth(11);
+        return;
+      }
       const view = hero.createView(this);
       view.setScale(SCALE);
       const stand = standIn(rect.right - 110, rect.y + 330, i === 0 ? 1 : -1, hero.def.ammo?.max ?? 0);
-      this.views.push({ view, stand });
+      this.views.push({ view, stand, card: i });
     });
 
     this.add
@@ -84,7 +91,7 @@ export class SelectScene extends Phaser.Scene {
       this.frames.strokeRect(r.x, r.y, r.width, r.height);
     });
     // 选中的那位发带、长发跟着风飘，没选中的定格
-    this.views.forEach(({ view, stand }, i) => view.draw(stand, i === this.index ? delta : 0));
+    for (const { view, stand, card } of this.views) view.draw(stand, card === this.index ? delta : 0);
   }
 
   private onKey(e: KeyboardEvent) {

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
-import { drawInkMountains } from '../art/inkMountains';
+import { FallingLeaves, drawBambooForest } from '../art/bamboo';
 import type { HeroView } from '../art/heroView';
 import { drawRedBear } from '../art/redBear';
 import { HEROES, type HeroEntry } from '../characters/heroes';
@@ -44,6 +44,7 @@ export abstract class CombatScene extends Phaser.Scene {
   private hud!: RunHud;
   private numbers!: DamageNumbers;
   private debug!: CombatDebug;
+  private leaves!: FallingLeaves;
   private accumulator = 0;
   /** 已经弹出结束大字（胜败、过关），不再重复 */
   private ended = false;
@@ -101,7 +102,8 @@ export abstract class CombatScene extends Phaser.Scene {
     // 从练功场或调试快捷键直接进来时没有一局，临时开一局
     this.run = getRun() ?? startRun('wenShaohua');
 
-    drawInkMountains(this, { width: GAME_WIDTH, horizon: 300, bottom: GROUND_Y, layers: 3, seed: this.backgroundSeed });
+    drawBambooForest(this, { width: GAME_WIDTH, height: GAME_HEIGHT, groundY: GROUND_Y, seed: this.backgroundSeed });
+    this.leaves = new FallingLeaves(this, GAME_WIDTH, GROUND_Y);
 
     // 地面：一道浓墨
     this.ground = this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + 50, GAME_WIDTH, 100, COLORS.ink);
@@ -119,13 +121,18 @@ export abstract class CombatScene extends Phaser.Scene {
     this.player.events.once('dead', () => this.onPlayerDead());
     this.view = this.hero.createView(this);
 
-    this.add.text(24, 20, this.stageName, { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink });
+    // 左上角垫一块淡淡的宣纸，竹林再密也看得清血条和字
+    const backdrop = this.add.graphics().setDepth(49);
+    backdrop.fillGradientStyle(COLORS.paper, COLORS.paper, COLORS.paper, COLORS.paper, 0.85, 0, 0.85, 0);
+    backdrop.fillRect(0, 0, 420, 140);
+    this.add.text(24, 20, this.stageName, { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink }).setDepth(50);
     this.playerBar = new HealthBar(this, 24, 84, 240, this.hero.def.name);
     this.hud = new RunHud(this, 24, 104);
     this.numbers = new DamageNumbers(this);
     this.add
       .text(24, GAME_HEIGHT - 40, this.hero.hint, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
-      .setAlpha(0.8);
+      .setAlpha(0.8)
+      .setDepth(50);
 
     this.setup();
     this.debug = new CombatDebug(this);
@@ -150,6 +157,7 @@ export abstract class CombatScene extends Phaser.Scene {
     }
 
     this.updateRescue(delta);
+    this.leaves.update(delta);
     this.view.draw(this.player, delta);
     this.playerBar.draw(this.player.hp / this.player.maxHp, delta);
     this.hud.draw(this.run, this.player);

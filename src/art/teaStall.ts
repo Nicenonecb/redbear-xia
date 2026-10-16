@@ -6,7 +6,7 @@ import { COLORS, CSS_COLORS, FONT_BRUSH } from '../config';
  * 任新野站在柜台后面，头戴软脚幞头、长衫，眉眼带笑，一副江湖百事通的样子。
  * 坐标以柜台前沿的地面中点为原点。
  */
-export function drawTeaStall(scene: Phaser.Scene, x: number, groundY: number) {
+export function drawTeaStall(scene: Phaser.Scene, x: number, groundY: number, withKeeper = true) {
   const g = scene.add.graphics().setDepth(2);
   const at = (px: number, py: number) => ({ x: x + px, y: groundY + py });
   const line = (a: { x: number; y: number }, b: { x: number; y: number }) => g.lineBetween(a.x, a.y, b.x, b.y);
@@ -20,8 +20,8 @@ export function drawTeaStall(scene: Phaser.Scene, x: number, groundY: number) {
   g.fillStyle(COLORS.inkLight, 0.8);
   for (let i = -200; i <= 200; i += 22) g.fillTriangle(at(i, -238).x, at(i, -238).y, at(i + 11, -238).x, at(i + 11, -238).y, at(i + 6, -224).x, at(i + 6, -224).y);
 
-  // 任新野本人（画在柜台后面，柜台挡住下半身）
-  drawRenXinye(g, at(-10, -40).x, at(-10, -40).y, 1.35);
+  // 任新野本人（画在柜台后面，柜台挡住下半身）；有他的立绘图时就不画剪影了
+  if (withKeeper) drawRenXinye(g, at(-10, -40).x, at(-10, -40).y, 1.35);
 
   // 柜台和算盘
   g.fillStyle(COLORS.ink);

@@ -10,6 +10,7 @@ import { Projectile } from '../entities/Projectile';
 import { PROGRESSION } from '../game/progression';
 import { ChoicePanel } from '../ui/ChoicePanel';
 import { HealthBar } from '../ui/HealthBar';
+import { Portrait } from '../ui/Portrait';
 import { SpeechBubble } from '../ui/SpeechBubble';
 import { CombatScene, GROUND_Y } from './CombatScene';
 
@@ -27,6 +28,7 @@ export class PangHuScene extends CombatScene {
   private bossView!: PangHuView;
   private bossBar!: HealthBar;
   private bubble!: SpeechBubble;
+  private portrait!: Portrait;
   /** 一串台词念完以后要做的事 */
   private queue: { line: string; hold: number }[] = [];
   private afterTalk: (() => void) | null = null;
@@ -45,6 +47,7 @@ export class PangHuScene extends CombatScene {
     this.bossBar = new HealthBar(this, (GAME_WIDTH - BOSS_BAR_WIDTH) / 2, 52, BOSS_BAR_WIDTH, PANGHU.name);
     this.bossBar.setVisible(false);
     this.bubble = new SpeechBubble(this);
+    this.portrait = new Portrait(this, 'portrait_pangHu', 'right');
     this.queue = [];
     this.afterTalk = null;
     this.won = false;
@@ -132,11 +135,14 @@ export class PangHuScene extends CombatScene {
   /** 依次念几句台词（念的时候战斗暂停），念完再做 then */
   private talk(lines: string[], then: () => void) {
     this.setPaused('talk', true);
+    this.portrait.setSlot(this.boss.form === 'tiger' ? 'portrait_pangHuTiger' : 'portrait_pangHu');
+    this.portrait.show();
     const [first, ...rest] = lines;
     this.bubble.say(first, 1200);
     this.queue = rest.map((line) => ({ line, hold: 1400 }));
     this.afterTalk = () => {
       this.setPaused('talk', false);
+      this.portrait.hide();
       then();
     };
   }

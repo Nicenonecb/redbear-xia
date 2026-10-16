@@ -65,10 +65,14 @@ export class RoomScene extends CombatScene {
     this.exitOpen = false;
     this.coins = [];
     this.spawnCount = 0;
-    this.gates = this.add.graphics().setDepth(3);
+    this.gates = this.add.graphics().setDepth(21);
+    const backdrop = this.add.graphics().setDepth(49);
+    backdrop.fillGradientStyle(COLORS.paper, COLORS.paper, COLORS.paper, COLORS.paper, 0, 0.85, 0, 0.85);
+    backdrop.fillRect(GAME_WIDTH - 260, 0, 260, 70);
     this.waveText = this.add
-      .text(GAME_WIDTH - 24, 20, '', { fontFamily: FONT_BRUSH, fontSize: '24px', color: CSS_COLORS.ink })
-      .setOrigin(1, 0);
+      .text(GAME_WIDTH - 50, 20, '', { fontFamily: FONT_BRUSH, fontSize: '24px', color: CSS_COLORS.ink })
+      .setOrigin(1, 0)
+      .setDepth(50);
     this.exitText = this.add
       .text(EXIT_X - 20, GROUND_Y - 150, '出\n口\n↓', {
         fontFamily: FONT_BRUSH,
@@ -78,6 +82,7 @@ export class RoomScene extends CombatScene {
         lineSpacing: -4,
       })
       .setOrigin(0.5, 0)
+      .setDepth(21)
       .setVisible(false);
     this.tweens.add({ targets: this.exitText, alpha: 0.35, duration: 700, yoyo: true, repeat: -1 });
   }

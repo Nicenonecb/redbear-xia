@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
+import { placeArt } from '../art/slots';
 import { CHAPTER1_LETTERS } from '../game/chapter1';
 import { endRun, getRun } from '../game/run';
 
@@ -29,8 +30,9 @@ export class LetterScene extends Phaser.Scene {
     this.finished = false;
 
     drawInkMountains(this, { width: GAME_WIDTH, horizon: 420, bottom: GAME_HEIGHT, layers: 3, seed: 'letter' });
-    const bear = this.add.graphics();
-    drawRedBear(bear, GAME_WIDTH - 200, GAME_HEIGHT - 40, 1.25, 0.85);
+    if (!placeArt(this, 'portrait_redBear', GAME_WIDTH - 200, GAME_HEIGHT, 360, 560)) {
+      drawRedBear(this.add.graphics(), GAME_WIDTH - 200, GAME_HEIGHT - 40, 1.25, 0.85);
+    }
 
     // 信纸
     const paper = this.add.graphics();
