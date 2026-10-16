@@ -28,7 +28,7 @@ export abstract class Actor implements Hurtable {
     x: number,
     feetY: number,
     size: { w: number; h: number },
-    readonly maxHp: number,
+    public maxHp: number,
   ) {
     this.hp = maxHp;
     this.zone = scene.add.zone(x, feetY - size.h / 2, size.w, size.h);

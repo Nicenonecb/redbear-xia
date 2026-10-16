@@ -4,7 +4,9 @@ import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 import { PangHuScene } from './scenes/PangHuScene';
+import { LetterScene } from './scenes/LetterScene';
 import { RoomScene } from './scenes/RoomScene';
+import { ShopScene } from './scenes/ShopScene';
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -20,7 +22,7 @@ const game = new Phaser.Game({
     default: 'arcade',
     arcade: { gravity: { x: 0, y: 1600 }, debug: false },
   },
-  scene: [BootScene, TitleScene, GameScene, RoomScene, PangHuScene],
+  scene: [BootScene, TitleScene, GameScene, RoomScene, ShopScene, PangHuScene, LetterScene],
 });
 
 // 开发时把 game 和逐帧测试工具挂到 window 上，打包后没有这段

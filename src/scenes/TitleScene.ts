@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { drawInkMountains } from '../art/inkMountains';
+import { CHAPTER1_STEPS } from '../game/chapter1';
+import { sceneForStep } from '../game/flow';
+import { startRun } from '../game/run';
 
 export class TitleScene extends Phaser.Scene {
   constructor() {
@@ -56,20 +59,28 @@ export class TitleScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(600, 239, 231, 214);
 
-    // 任意键从第一间战斗房开始；P 进练功场，B 直接打胖虎（调试用）
+    // 任意键开新的一局，从第一间战斗房开始；P 进练功场，B 直接打胖虎（调试用）
     this.entering = false;
-    const shortcuts: Record<string, string> = { KeyP: 'Game', KeyB: 'PangHu' };
-    this.input.keyboard!.on('keydown', (e: KeyboardEvent) => this.enterGame(shortcuts[e.code] ?? 'Room'));
-    this.input.once('pointerdown', () => this.enterGame('Room'));
+    this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
+      if (e.code === 'KeyP') return this.enterGame('Game');
+      const run = startRun('wenShaohua');
+      if (e.code === 'KeyB') run.step = CHAPTER1_STEPS.findIndex((s) => s.kind === 'boss');
+      const { key, data } = sceneForStep(run.step);
+      this.enterGame(key, data);
+    });
+    this.input.once('pointerdown', () => {
+      startRun('wenShaohua');
+      this.enterGame('Room', { room: 0 });
+    });
   }
 
   private entering = false;
 
-  private enterGame(scene: string) {
+  private enterGame(scene: string, data?: object) {
     if (this.entering) return;
     this.entering = true;
     const cam = this.cameras.main;
     cam.fadeOut(400, 239, 231, 214);
-    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start(scene));
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start(scene, data));
   }
 }

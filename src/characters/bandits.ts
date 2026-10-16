@@ -18,7 +18,7 @@ export const BANDIT: EnemyDef = validateEnemy({
   range: [50, 80],
   cooldown: { min: 50, max: 95 },
   exp: 10,
-  coins: [3, 6],
+  coins: [4, 7],
   look: 'bandit',
   attacks: [{ move: 'slash', weight: 1, maxDist: 95 }],
   moves: byId([
@@ -48,7 +48,7 @@ export const THROWER: EnemyDef = validateEnemy({
   range: [260, 420],
   cooldown: { min: 70, max: 120 },
   exp: 12,
-  coins: [4, 7],
+  coins: [5, 8],
   look: 'thrower',
   attacks: [{ move: 'throw', weight: 1, minDist: 120, maxDist: 560 }],
   projectile: {
@@ -85,7 +85,7 @@ export const CHIEF: EnemyDef = validateEnemy({
   range: [70, 150],
   cooldown: { min: 40, max: 80 },
   exp: 60,
-  coins: [25, 35],
+  coins: [35, 45],
   look: 'chief',
   attacks: [
     { move: 'hammer', weight: 2, maxDist: 190 },

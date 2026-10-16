@@ -28,6 +28,11 @@ export class SpeechBubble {
     this.holdMs = holdMs;
   }
 
+  destroy() {
+    this.bg.destroy();
+    this.text.destroy();
+  }
+
   /** 念完并且停留时间也过了 */
   get done() {
     return this.elapsed >= this.line.length * CHAR_MS + this.holdMs;

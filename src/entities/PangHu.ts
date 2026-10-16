@@ -4,7 +4,8 @@ import type { HitSpec } from '../combat/moveTable';
 import { Actor } from './Actor';
 import type { Fighter } from './Fighter';
 
-export type PangHuStage = 'intro' | 'fight' | 'transform' | 'tiger' | 'defeated';
+/** yield：收了买路钱，站着放行 */
+export type PangHuStage = 'intro' | 'fight' | 'transform' | 'tiger' | 'defeated' | 'yield';
 
 /**
  * 第一关 Boss 胖虎。人形用大刀（冲锋劈砍、震地），半血变身猛虎（扑击、虎爪连挥、虎啸）。
@@ -45,6 +46,13 @@ export class PangHu extends Actor {
 
   startFight() {
     if (this.stage === 'intro') this.setStage('fight');
+  }
+
+  /** 收了钱：停手放行。正在出的招直接收掉 */
+  yieldPath() {
+    this.runner.stop();
+    this.pendingTransform = false;
+    this.setStage('yield');
   }
 
   takeHit(hit: HitSpec) {
