@@ -101,7 +101,7 @@ export abstract class CombatScene extends Phaser.Scene {
     this.pauses = new Set();
     this.rescueShow = null;
     // 从练功场或调试快捷键直接进来时没有一局，临时开一局
-    this.run = getRun() ?? startRun('wenShaohua');
+    this.run = getRun() ?? startRun('wenShaohua', false);
 
     drawBambooForest(this, { width: GAME_WIDTH, height: GAME_HEIGHT, groundY: GROUND_Y, seed: this.backgroundSeed });
     this.leaves = new FallingLeaves(this, GAME_WIDTH, GROUND_Y);
@@ -143,7 +143,8 @@ export abstract class CombatScene extends Phaser.Scene {
 
     this.input.keyboard!.on('keydown-ESC', () => {
       if (this.pauses.size) return;
-      endRun();
+      // 存档留着，回到标题可以继续
+      endRun(false);
       this.scene.start('Title');
     });
     this.cameras.main.fadeIn(400, 239, 231, 214);

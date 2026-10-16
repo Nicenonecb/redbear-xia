@@ -1,4 +1,5 @@
 import { PROGRESSION, WEAPONS, type HeroId, type StatId } from './progression';
+import { clearSave, saveRun } from './save';
 
 /**
  * 一局的状态：选了谁、走到第几步、气血、等级、铜钱、武器。
@@ -18,6 +19,8 @@ export interface RunState {
   weapon: { tier: number; refine: number };
   /** 这一章红熊是否已经救过场 */
   rescueUsed: boolean;
+  /** 临时的一局（练功场、调试快捷键），不写存档 */
+  temporary?: boolean;
 }
 
 /** 主角的基础气血 */
@@ -25,7 +28,8 @@ const BASE_HP = 100;
 
 let current: RunState | null = null;
 
-export function startRun(hero: HeroId): RunState {
+/** persist 为 false 时不写存档：练功场、调试快捷键开的临时一局 */
+export function startRun(hero: HeroId, persist = true): RunState {
   current = {
     hero,
     step: 0,
@@ -37,7 +41,9 @@ export function startRun(hero: HeroId): RunState {
     stats: { attack: 0, vitality: 0, agility: 0 },
     weapon: { tier: 0, refine: 0 },
     rescueUsed: false,
+    temporary: !persist,
   };
+  saveRun(current);
   return current;
 }
 
@@ -50,8 +56,13 @@ export function setRun(run: RunState | null) {
   current = run;
 }
 
-export function endRun() {
+/**
+ * 结束这一局。cleared 为 true（死了、通关）时连存档一起清掉；
+ * 只是按 Esc 回标题就保留存档，标题画面可以【继续】
+ */
+export function endRun(cleared = true) {
   current = null;
+  if (cleared) clearSave();
 }
 
 /** 由等级加点和武器算出来的实际属性 */

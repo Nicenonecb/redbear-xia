@@ -6,7 +6,9 @@ import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
 import { placeArt } from '../art/slots';
 import { CHAPTER1_STEPS } from '../game/chapter1';
-import { startRun } from '../game/run';
+import { sceneForStep } from '../game/flow';
+import { setRun, startRun } from '../game/run';
+import { describeSave, loadRun } from '../game/save';
 
 /** 远处山崖的位置，红熊站在崖顶 */
 const CLIFF = { x: 1010, y: 500 };
@@ -76,13 +78,21 @@ export class TitleScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setAngle(-4);
 
+    // 有存档：J 继续、N 重新开始；没有存档：任意键入江湖
+    const saved = loadRun();
     const prompt = this.add
-      .text(cx, GAME_HEIGHT - 90, '— 按任意键 · 入江湖 —', {
+      .text(cx, GAME_HEIGHT - 100, saved ? '— J · 继续　　N · 重新开始 —' : '— 按任意键 · 入江湖 —', {
         fontFamily: FONT_BRUSH,
         fontSize: '30px',
         color: CSS_COLORS.paper,
       })
       .setOrigin(0.5);
+    if (saved) {
+      this.add
+        .text(cx, GAME_HEIGHT - 140, describeSave(saved), { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
+        .setOrigin(0.5)
+        .setAlpha(0.85);
+    }
     this.tweens.add({ targets: prompt, alpha: 0.25, duration: 900, yoyo: true, repeat: -1 });
     this.add
       .text(cx, GAME_HEIGHT - 48, 'P · 练功场　　B · 直接打胖虎　　M · 静音　　- / = · 音量', { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
@@ -91,18 +101,20 @@ export class TitleScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(600, 239, 231, 214);
 
-    // 任意键进选角界面开新的一局；P 进练功场，B 用温少华直接打胖虎（调试用）
+    // P 进练功场，B 用温少华直接打胖虎（调试用，不存档）
     this.entering = false;
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
       if (e.code === 'KeyP') return this.enterGame('Game');
       if (e.code === 'KeyB') {
-        const run = startRun('wenShaohua');
+        const run = startRun('wenShaohua', false);
         run.step = CHAPTER1_STEPS.findIndex((s) => s.kind === 'boss');
         return this.enterGame('PangHu');
       }
-      this.enterGame('Select');
+      if (!saved) return this.enterGame('Select');
+      if (['KeyJ', 'Enter', 'Space'].includes(e.code)) this.continueRun(saved);
+      else if (e.code === 'KeyN') this.enterGame('Select');
     });
-    this.input.once('pointerdown', () => this.enterGame('Select'));
+    this.input.once('pointerdown', () => (saved ? this.continueRun(saved) : this.enterGame('Select')));
   }
 
   private entering = false;
@@ -114,6 +126,13 @@ export class TitleScene extends Phaser.Scene {
       this.bear.clear();
       drawRedBear(this.bear, CLIFF.x + 10, CLIFF.y + 2, 0.5, 0.95, Math.sin(time * 0.0015) * 6);
     }
+  }
+
+  /** 读档：接着上次走到的那一步 */
+  private continueRun(saved: NonNullable<ReturnType<typeof loadRun>>) {
+    setRun(saved);
+    const { key, data } = sceneForStep(saved.step);
+    this.enterGame(key, data);
   }
 
   private enterGame(scene: string, data?: object) {

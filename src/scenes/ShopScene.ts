@@ -33,7 +33,7 @@ export class ShopScene extends Phaser.Scene {
   }
 
   create() {
-    this.run = getRun() ?? startRun('wenShaohua');
+    this.run = getRun() ?? startRun('wenShaohua', false);
     this.leaving = false;
     drawInkMountains(this, { width: GAME_WIDTH, horizon: 300, bottom: GROUND_Y, layers: 3, seed: 'tea-stall' });
     this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + 50, GAME_WIDTH, 100, COLORS.ink);
