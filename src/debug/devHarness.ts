@@ -8,6 +8,7 @@ import type { Action } from '../input/Controls';
  *   __t.go('PangHu')                        // 切到某个场景
  *   __t.run([[60, ['right']], [2, ['attack']], [30, []]], s => s.player.hp)
  *                                           // 每段按住哪些键、推进多少帧，返回每帧的探针结果
+ *   __t.drive(3000, (s, f) => [...])         // 每帧现场决定按什么键，写个简单 AI 替玩家打
  *   __t.wake()                              // 恢复正常运行
  */
 type Script = [frames: number, held: Action[]][];
@@ -48,6 +49,25 @@ export function installDevHarness(game: Phaser.Game) {
           step();
           out.push(probe(s));
         }
+      }
+      for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = false;
+      return out;
+    },
+    /** 每帧由 decide 现场决定按哪些键（写个简单的 AI 替玩家打），直到 until 返回 true 或帧数用完 */
+    drive<T>(
+      maxFrames: number,
+      decide: (s: ReturnType<typeof scene>, frame: number) => Action[],
+      until: (s: ReturnType<typeof scene>) => boolean = () => false,
+      probe: (s: ReturnType<typeof scene>) => T = () => undefined as T,
+    ) {
+      const s = scene();
+      const keys = s.controls.keys as Record<Action, Phaser.Input.Keyboard.Key[]>;
+      const out: T[] = [];
+      for (let f = 0; f < maxFrames && !until(s); f++) {
+        const held = decide(s, f);
+        for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = held.includes(a);
+        step();
+        out.push(probe(s));
       }
       for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = false;
       return out;

@@ -65,3 +65,15 @@ export function drawRoarRing(h: number) {
     }
   };
 }
+
+/** 山贼的飞刀：细长刀身，刀柄缠一点朱红 */
+export function drawThrowingKnife(w: number) {
+  return (g: Phaser.GameObjects.Graphics) => {
+    g.fillStyle(COLORS.ink, 1);
+    g.fillTriangle(-w / 2, -3, -w / 2, 3, w / 2, 0);
+    g.fillStyle(COLORS.red, 1);
+    g.fillRect(-w / 2 - 6, -2, 6, 4);
+    g.lineStyle(2, COLORS.inkLight, 0.6);
+    g.lineBetween(-w / 2 - 22, 0, -w / 2 - 8, 0);
+  };
+}

@@ -41,6 +41,10 @@ export abstract class CombatScene extends Phaser.Scene {
 
   /** 左上角的场景名 */
   protected abstract readonly stageName: string;
+  /** 远山的随机种子 */
+  protected backgroundSeed = 'bamboo-1';
+  /** 玩家出场位置 */
+  protected playerStartX = 360;
   /** 摆敌人、加碰撞，玩家已经创建好了 */
   protected abstract setup(): void;
   /** 玩家的攻击能打到谁 */
@@ -66,13 +70,13 @@ export abstract class CombatScene extends Phaser.Scene {
     this.accumulator = 0;
     this.ended = false;
 
-    drawInkMountains(this, { width: GAME_WIDTH, horizon: 300, bottom: GROUND_Y, layers: 3, seed: 'bamboo-1' });
+    drawInkMountains(this, { width: GAME_WIDTH, horizon: 300, bottom: GROUND_Y, layers: 3, seed: this.backgroundSeed });
 
     // 地面：一道浓墨
     this.ground = this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + 50, GAME_WIDTH, 100, COLORS.ink);
     this.physics.add.existing(this.ground, true);
 
-    this.player = new Fighter(this, 360, GROUND_Y, WEN_SHAOHUA, this.controls);
+    this.player = new Fighter(this, this.playerStartX, GROUND_Y, WEN_SHAOHUA, this.controls);
     this.physics.add.collider(this.player.zone, this.ground);
     this.player.events.on('move', (e: MoveEvent) => this.onPlayerMove(e));
     this.player.events.once('dead', () => this.onPlayerDead());
@@ -126,6 +130,15 @@ export abstract class CombatScene extends Phaser.Scene {
       this.numbers.show(box.centerX, box.top - 10, hit.damage, target === this.player, heavy);
       if (heavy) this.shake(0.006, 120);
     }
+  }
+
+  /** 淡出后切到下一个场景 */
+  protected transitionTo(key: string, data?: object) {
+    if (this.ended) return;
+    this.ended = true;
+    const cam = this.cameras.main;
+    cam.fadeOut(400, 239, 231, 214);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start(key, data));
   }
 
   /** 战斗结束：大字提示，过一会儿切到下一个场景 */

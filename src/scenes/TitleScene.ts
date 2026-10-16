@@ -50,16 +50,17 @@ export class TitleScene extends Phaser.Scene {
       .setOrigin(0.5);
     this.tweens.add({ targets: prompt, alpha: 0.25, duration: 900, yoyo: true, repeat: -1 });
     this.add
-      .text(cx, GAME_HEIGHT - 48, 'P · 练功场', { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
+      .text(cx, GAME_HEIGHT - 48, 'P · 练功场　　B · 直接打胖虎', { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
       .setOrigin(0.5)
       .setAlpha(0.6);
 
     this.cameras.main.fadeIn(600, 239, 231, 214);
 
-    // 关卡流程还没串起来，先直接进第一关关底打胖虎
+    // 任意键从第一间战斗房开始；P 进练功场，B 直接打胖虎（调试用）
     this.entering = false;
-    this.input.keyboard!.on('keydown', (e: KeyboardEvent) => this.enterGame(e.code === 'KeyP' ? 'Game' : 'PangHu'));
-    this.input.once('pointerdown', () => this.enterGame('PangHu'));
+    const shortcuts: Record<string, string> = { KeyP: 'Game', KeyB: 'PangHu' };
+    this.input.keyboard!.on('keydown', (e: KeyboardEvent) => this.enterGame(shortcuts[e.code] ?? 'Room'));
+    this.input.once('pointerdown', () => this.enterGame('Room'));
   }
 
   private entering = false;

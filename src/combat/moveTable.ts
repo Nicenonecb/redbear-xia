@@ -78,6 +78,11 @@ export interface MoveDef {
   oncePerAir?: boolean;
   /** 敌人用：收招结束后自动接这一招（连招） */
   followUp?: MoveId;
+  /**
+   * 敌人用：前摇提示怎么画。
+   * glint：武器上闪一下光；ground：把判定框的横向范围画成地上的红色区域
+   */
+  telegraph?: 'glint' | 'ground';
   events?: MoveEvent[];
 }
 
@@ -90,6 +95,43 @@ export interface ProjectileSpec {
   life: number;
   /** 是否穿透（打中后不消失，同一目标仍只打一次） */
   pierce: boolean;
+}
+
+/** 敌人级别。精英这一级先留着，MVP 里还没有精英怪 */
+export type EnemyTier = 'minion' | 'brute' | 'elite' | 'boss';
+
+/** 敌人在攻击距离内会从这些招里按权重挑一招 */
+export interface EnemyAttack {
+  move: MoveId;
+  weight: number;
+  /** 离玩家在这个距离区间内才会用这招 */
+  minDist?: number;
+  maxDist: number;
+}
+
+/** 普通敌人（小怪、大怪）的数据；Boss 的行为太特殊，单独写 */
+export interface EnemyDef {
+  id: string;
+  name: string;
+  tier: EnemyTier;
+  hp: number;
+  body: { w: number; h: number };
+  walkSpeed: number;
+  /** 霸体：挨打只闪白、顿帧，不会被打断，也不会被击退 */
+  superArmor: boolean;
+  /** 想和玩家保持的距离 [最近, 最远]：太近就后退，太远就靠近 */
+  range: [number, number];
+  /** 两招之间歇多少帧 */
+  cooldown: { min: number; max: number };
+  moves: Record<MoveId, MoveDef>;
+  attacks: EnemyAttack[];
+  /** 招式事件 spawn 时放出的飞行道具 */
+  projectile?: ProjectileSpec;
+  /** 打倒后给的经验和铜钱 [最少, 最多] */
+  exp: number;
+  coins: [number, number];
+  /** 用哪套剪影来画 */
+  look: 'bandit' | 'thrower' | 'chief';
 }
 
 export interface CharacterDef {
@@ -134,6 +176,14 @@ export function validateMoves(owner: string, moves: Record<MoveId, MoveDef>) {
     }
   }
   return moves;
+}
+
+export function validateEnemy(def: EnemyDef) {
+  validateMoves(def.name, def.moves);
+  for (const a of def.attacks) {
+    if (!def.moves[a.move]) throw new Error(`[招式表] ${def.name}：出招列表引用了不存在的招式 ${a.move}`);
+  }
+  return def;
 }
 
 export function validateCharacter(def: CharacterDef) {
