@@ -1,4 +1,4 @@
-import { byId, validateCharacter, type CharacterDef, type HitSpec } from '../combat/moveTable';
+import { byId, validateCharacter, type CharacterDef, type ProjectileSpec } from '../combat/moveTable';
 
 /**
  * 温少华 · 江南 · 剑。中速、高伤害、稳扎稳打。
@@ -10,6 +10,7 @@ import { byId, validateCharacter, type CharacterDef, type HitSpec } from '../com
 export const WEN_SHAOHUA: CharacterDef = validateCharacter({
   id: 'wenShaohua',
   name: '温少华',
+  hp: 100,
   moveSpeed: 280,
   jumpSpeed: 680,
   body: { w: 28, h: 72 },
@@ -119,16 +120,9 @@ export const WEN_SHAOHUA: CharacterDef = validateCharacter({
 });
 
 /** 少华一剑放出的剑气，按蓄力程度分三档 */
-export interface SwordQiLevel {
+export interface SwordQiLevel extends ProjectileSpec {
   /** 蓄力比例达到多少用这一档 */
   minCharge: number;
-  /** 判定框以剑气中心为原点 */
-  hit: HitSpec;
-  speed: number;
-  /** 存在多少帧 */
-  life: number;
-  /** 是否穿透（能连着打中多个目标） */
-  pierce: boolean;
 }
 
 export const SWORD_QI_LEVELS: SwordQiLevel[] = [

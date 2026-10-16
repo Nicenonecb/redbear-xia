@@ -49,16 +49,26 @@ export class TitleScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.tweens.add({ targets: prompt, alpha: 0.25, duration: 900, yoyo: true, repeat: -1 });
+    this.add
+      .text(cx, GAME_HEIGHT - 48, 'P · 练功场', { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
+      .setOrigin(0.5)
+      .setAlpha(0.6);
 
     this.cameras.main.fadeIn(600, 239, 231, 214);
 
-    this.input.keyboard!.once('keydown', () => this.enterGame());
-    this.input.once('pointerdown', () => this.enterGame());
+    // 关卡流程还没串起来，先直接进第一关关底打胖虎
+    this.entering = false;
+    this.input.keyboard!.on('keydown', (e: KeyboardEvent) => this.enterGame(e.code === 'KeyP' ? 'Game' : 'PangHu'));
+    this.input.once('pointerdown', () => this.enterGame('PangHu'));
   }
 
-  private enterGame() {
+  private entering = false;
+
+  private enterGame(scene: string) {
+    if (this.entering) return;
+    this.entering = true;
     const cam = this.cameras.main;
     cam.fadeOut(400, 239, 231, 214);
-    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Game'));
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start(scene));
   }
 }

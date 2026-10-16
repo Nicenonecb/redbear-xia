@@ -67,8 +67,8 @@ export class WenShaohuaView {
   private time = 0;
 
   constructor(scene: Phaser.Scene) {
-    this.fx = scene.add.graphics();
-    this.g = scene.add.graphics();
+    this.fx = scene.add.graphics().setDepth(9);
+    this.g = scene.add.graphics().setDepth(10);
   }
 
   draw(f: Fighter, delta: number) {
@@ -82,7 +82,20 @@ export class WenShaohuaView {
     const g = this.g;
     g.clear();
     this.fx.clear();
-    g.setAlpha(f.invulnerable ? 0.55 : 1);
+    // 闪避时半透明；受击保护期一闪一闪
+    const blinking = !f.evading && f.mercyFrames > 0 && Math.floor(this.time / 70) % 2 === 0;
+    g.setAlpha(f.evading ? 0.55 : blinking ? 0.3 : 1);
+    // 受击闪白：身体填白、描一圈墨边
+    const flashing = f.flash > 0;
+    const ink = flashing ? 0xffffff : COLORS.ink;
+    const poly = (pts: Pt[]) => {
+      g.fillStyle(ink);
+      g.fillPoints(pts, true);
+      if (flashing) {
+        g.lineStyle(1.5, COLORS.ink);
+        g.strokePoints(pts, true);
+      }
+    };
 
     this.drawGhosts(f, delta);
     if (pose.trail) this.drawTrail(pose.trail, P);
@@ -92,14 +105,13 @@ export class WenShaohuaView {
     g.lineStyle(3, COLORS.red);
     g.strokePoints(this.ribbon);
 
-    g.fillStyle(COLORS.ink);
-    g.fillPoints([at(-3, -74), at(-8, -62), at(-13, -44), at(-5, -52)], true);
+    poly([at(-3, -74), at(-8, -62), at(-13, -44), at(-5, -52)]);
 
     // 腿
     const speed = Math.abs(f.body.velocity.x);
     const running = !f.runner.move && f.grounded && speed > 1;
     const stride = running ? Math.sin(this.time * 0.018) * 7 : 0;
-    g.lineStyle(5, COLORS.ink);
+    g.lineStyle(5, ink);
     if (f.grounded) {
       this.line(at(-3, -20), at(-6 + stride, 0));
       this.line(at(3, -20), at(6 - stride, 0));
@@ -110,13 +122,18 @@ export class WenShaohuaView {
 
     // 长袍，跑动时下摆张开
     const flare = Math.min(speed / 280, 1) * 4;
-    g.fillPoints([at(-8, -57), at(8, -57), at(15 + flare, -12), at(-17 - flare, -12)], true);
+    poly([at(-8, -57), at(8, -57), at(15 + flare, -12), at(-17 - flare, -12)]);
 
     // 头与发冠
     const head = at(1, -65);
     const crown = at(0, -75);
+    g.fillStyle(ink);
     g.fillCircle(head.x, head.y, 8.5);
     g.fillCircle(crown.x, crown.y, 3.5);
+    if (flashing) {
+      g.lineStyle(1.5, COLORS.ink);
+      g.strokeCircle(head.x, head.y, 8.5);
+    }
 
     // 腰间玉佩
     const cord = at(5, -34);
@@ -129,8 +146,7 @@ export class WenShaohuaView {
     // 宽袖与持剑手
     const handL = local(pose.sword, ARM);
     const hand = P(handL);
-    g.fillStyle(COLORS.ink);
-    g.fillPoints([at(-2, -57), at(6, -56), hand, at(handL.x - 7, handL.y + 13)], true);
+    poly([at(-2, -57), at(6, -56), hand, at(handL.x - 7, handL.y + 13)]);
 
     // 剑身、护手
     const tip = P(local(pose.sword, ARM + BLADE));
@@ -149,6 +165,9 @@ export class WenShaohuaView {
   }
 
   private pose(f: Fighter): Pose {
+    // 受击后仰；气血打空就跪倒
+    if (f.dead) return { sword: 95, lean: -14, crouch: 0.6 };
+    if (f.hurtFrames > 0) return { sword: 110, lean: -10, crouch: 0.95 };
     const { move, frame } = f.runner;
     if (!move) {
       if (!f.grounded) return { sword: f.body.velocity.y < 0 ? -50 : 20, lean: 2, crouch: 1 };
@@ -198,7 +217,7 @@ export class WenShaohuaView {
 
   /** 闪避残影 */
   private drawGhosts(f: Fighter, delta: number) {
-    if (f.invulnerable) {
+    if (f.evading) {
       this.ghostTimer -= delta;
       if (this.ghostTimer <= 0) {
         this.ghosts.push({ x: f.x, y: f.feetY, facing: f.facing, life: 1 });

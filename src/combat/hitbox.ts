@@ -3,6 +3,8 @@ import type { Box, HitSpec } from './moveTable';
 
 /** 能被打中的东西：敌人、Boss、木人桩 */
 export interface Hurtable {
+  /** 无敌时判定直接跳过，不算打中过 */
+  readonly invulnerable?: boolean;
   hurtbox(): Phaser.Geom.Rectangle;
   /** dir：攻击方向，1 向右，-1 向左 */
   takeHit(hit: HitSpec, dir: 1 | -1): void;

@@ -79,9 +79,21 @@ export interface MoveDef {
   events?: MoveEvent[];
 }
 
+/** 飞行道具：剑气、冲击波 */
+export interface ProjectileSpec {
+  /** 判定框以道具中心为原点 */
+  hit: HitSpec;
+  speed: number;
+  /** 存在多少帧 */
+  life: number;
+  /** 是否穿透（打中后不消失，同一目标仍只打一次） */
+  pierce: boolean;
+}
+
 export interface CharacterDef {
   id: string;
   name: string;
+  hp: number;
   moveSpeed: number;
   jumpSpeed: number;
   body: { w: number; h: number };
@@ -101,15 +113,15 @@ export function byId(moves: MoveDef[]): Record<MoveId, MoveDef> {
 }
 
 /** 加载时检查招式表，写错招式名之类的问题直接报出来，不留到运行时才发现 */
-export function validateCharacter(def: CharacterDef) {
+export function validateMoves(owner: string, moves: Record<MoveId, MoveDef>) {
   const fail = (msg: string) => {
-    throw new Error(`[招式表] ${def.name}：${msg}`);
+    throw new Error(`[招式表] ${owner}：${msg}`);
   };
   const exists = (id: MoveId | undefined, where: string) => {
-    if (id && !def.moves[id]) fail(`${where}引用了不存在的招式 ${id}`);
+    if (id && !moves[id]) fail(`${where}引用了不存在的招式 ${id}`);
   };
 
-  for (const [key, m] of Object.entries(def.moves)) {
+  for (const [key, m] of Object.entries(moves)) {
     if (m.id !== key) fail(`招式 ${key} 的 id 写成了 ${m.id}`);
     if (m.startup < 1) fail(`${m.id} 至少要有 1 帧前摇`);
     m.cancels?.forEach((c) => exists(c.into, `${m.id} 的取消窗口`));
@@ -118,6 +130,13 @@ export function validateCharacter(def: CharacterDef) {
       if (m.active || m.recovery) fail(`蓄力招 ${m.id} 只能有前摇帧，判定交给松手招`);
     }
   }
-  for (const [action, id] of Object.entries(def.neutral)) exists(id, `起手招 ${action} `);
+  return moves;
+}
+
+export function validateCharacter(def: CharacterDef) {
+  validateMoves(def.name, def.moves);
+  for (const [action, id] of Object.entries(def.neutral)) {
+    if (id && !def.moves[id]) throw new Error(`[招式表] ${def.name}：起手招 ${action} 引用了不存在的招式 ${id}`);
+  }
   return def;
 }

@@ -21,6 +21,12 @@ export class MoveRunner {
     return this.eventsAt(0);
   }
 
+  /** 打断当前招式（受击、变身） */
+  stop() {
+    this.move = null;
+    this.frame = 0;
+  }
+
   /** 推进一帧，返回进入新一帧时触发的事件 */
   advance(): MoveEvent[] {
     const move = this.move;
