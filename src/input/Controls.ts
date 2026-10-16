@@ -49,6 +49,11 @@ export class Controls {
     return this.pressed.has(action);
   }
 
+  /** 本帧刚按下的全部动作，用来喂输入缓冲 */
+  get justPressedActions(): ReadonlySet<Action> {
+    return this.pressed;
+  }
+
   /** 本帧刚松开（用于蓄力招式） */
   justReleased(action: Action) {
     return this.released.has(action);

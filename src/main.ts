@@ -4,7 +4,7 @@ import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   width: GAME_WIDTH,
@@ -20,3 +20,6 @@ new Phaser.Game({
   },
   scene: [BootScene, TitleScene, GameScene],
 });
+
+// 开发时把 game 挂到 window 上，方便在控制台里查看状态
+if (import.meta.env.DEV) Object.assign(window, { game });
