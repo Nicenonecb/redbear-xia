@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import type { Action } from '../input/Controls';
+import { autoPlayer } from './autoPlayer';
 
 /**
  * 开发用的逐帧测试工具，只在 npm run dev 时装到 window 上，打包后不存在。
@@ -9,6 +10,8 @@ import type { Action } from '../input/Controls';
  *   __t.run([[60, ['right']], [2, ['attack']], [30, []]], s => s.player.hp)
  *                                           // 每段按住哪些键、推进多少帧，返回每帧的探针结果
  *   __t.drive(3000, (s, f) => [...])         // 每帧现场决定按什么键，写个简单 AI 替玩家打
+ *   __t.drive(3000, __t.autoPlayer(0.75))    // 用自带的自动打法（会失手的普通玩家）
+ *   __t.fast = true                         // 只跑逻辑不画画面，模拟整章时用
  *   __t.wake()                              // 恢复正常运行
  */
 type Script = [frames: number, held: Action[]][];
@@ -17,14 +20,18 @@ export function installDevHarness(game: Phaser.Game) {
   let time = performance.now();
   let current = '';
 
+  /** fast 为 true 时只跑逻辑不画画面，跑整章模拟时快很多 */
   const step = () => {
     time += 1000 / 60;
-    game.step(time, 1000 / 60);
+    if (harness.fast) game.headlessStep(time, 1000 / 60);
+    else game.step(time, 1000 / 60);
   };
 
   const scene = () => game.scene.getScene(current) as Phaser.Scene & Record<string, any>;
 
   const harness = {
+    fast: false,
+    autoPlayer,
     step,
     scene,
     sleep: () => game.loop.sleep(),

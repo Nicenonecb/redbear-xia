@@ -78,7 +78,7 @@ export const CHIEF: EnemyDef = validateEnemy({
   id: 'chief',
   name: '山贼头目',
   tier: 'brute',
-  hp: 150,
+  hp: 190,
   body: { w: 52, h: 100 },
   walkSpeed: 90,
   superArmor: true,

@@ -7,7 +7,8 @@ import { byId, validateMoves, type ProjectileSpec } from '../combat/moveTable';
  */
 export const PANGHU = {
   name: '胖虎',
-  hp: 300,
+  /** 人形、猛虎各一半。到关底时主角伤害大约翻倍（新兵器 + 加点），血要厚一点才打得出来回 */
+  hp: 640,
   body: { w: 60, h: 112 },
   walkSpeed: 110,
   /** 气血降到这个比例时变身 */
