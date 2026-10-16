@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import type { Controls } from '../input/Controls';
+import type { HitResult, Hurtable } from '../combat/hitbox';
+import type { Action, Controls } from '../input/Controls';
 import { InputBuffer } from '../combat/InputBuffer';
 import { inRange, type CharacterDef, type HitSpec, type MoveId } from '../combat/moveTable';
 import { Actor } from './Actor';
@@ -34,6 +35,10 @@ export class Fighter extends Actor {
    * 0 表示这一章已经救过了
    */
   rescueBelow = 0;
+  /** 剩余弹药（于无瑕的飞镖），没有弹药系统的角色一直是 0 */
+  ammo = 0;
+  /** 暂时不能用的按键（掷扇飞在外面时不能挥扇） */
+  private readonly locked = new Set<Action>();
   private speedScale = 1;
   private evadeBonus = 0;
   private usedInAir = new Set<MoveId>();
@@ -48,6 +53,24 @@ export class Fighter extends Actor {
   ) {
     super(scene, x, feetY, def.body, stats?.maxHp ?? def.hp);
     if (stats) this.applyStats(stats);
+    this.ammo = def.ammo?.max ?? 0;
+  }
+
+  isLocked(action: Action) {
+    return this.locked.has(action);
+  }
+
+  lock(action: Action, locked: boolean) {
+    if (locked) this.locked.add(action);
+    else this.locked.delete(action);
+  }
+
+  /** 近战打中会回弹药 */
+  override resolveHits(targets: Hurtable[]): HitResult[] {
+    const results = super.resolveHits(targets);
+    const ammo = this.def.ammo;
+    if (ammo && results.length) this.ammo = Math.min(ammo.max, this.ammo + ammo.refillOnMeleeHit * results.length);
+    return results;
   }
 
   /** 换上新的成长属性（进场时、升级后、商店买完东西后） */
@@ -108,7 +131,7 @@ export class Fighter extends Actor {
 
     const current = this.runner.move;
     if (current) {
-      const next = this.buffer.consume((a) => this.allow(this.runner.cancelInto(a)));
+      const next = this.buffer.consume((a) => this.allow(a, this.runner.cancelInto(a)));
       const hold = current.hold;
       if (next) {
         this.begin(next);
@@ -121,7 +144,7 @@ export class Fighter extends Actor {
     }
 
     if (!this.runner.move) {
-      const next = this.buffer.consume((a) => this.allow(this.def.neutral[a]));
+      const next = this.buffer.consume((a) => this.allow(a, this.def.neutral[a]));
       if (next) this.begin(next);
     }
 
@@ -131,8 +154,9 @@ export class Fighter extends Actor {
     this.buffer.age();
   }
 
-  private allow(id: MoveId | undefined) {
-    if (!id) return undefined;
+  private allow(action: Action, id: MoveId | undefined) {
+    if (!id || this.locked.has(action)) return undefined;
+    if (this.def.ammo?.action === action && this.ammo <= 0) return undefined;
     if (this.def.moves[id].oncePerAir && !this.grounded && this.usedInAir.has(id)) return undefined;
     return id;
   }
@@ -143,6 +167,7 @@ export class Fighter extends Actor {
     const dir = this.controls.moveX;
     if (dir) this.facing = dir > 0 ? 1 : -1;
     if (move.oncePerAir && !this.grounded) this.usedInAir.add(id);
+    if (this.def.ammo && id === this.def.neutral[this.def.ammo.action]) this.ammo--;
     this.startMove(move, charge);
   }
 

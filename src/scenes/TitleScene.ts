@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { drawInkMountains } from '../art/inkMountains';
 import { CHAPTER1_STEPS } from '../game/chapter1';
-import { sceneForStep } from '../game/flow';
 import { startRun } from '../game/run';
 
 export class TitleScene extends Phaser.Scene {
@@ -59,19 +58,18 @@ export class TitleScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(600, 239, 231, 214);
 
-    // 任意键开新的一局，从第一间战斗房开始；P 进练功场，B 直接打胖虎（调试用）
+    // 任意键进选角界面开新的一局；P 进练功场，B 用温少华直接打胖虎（调试用）
     this.entering = false;
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
       if (e.code === 'KeyP') return this.enterGame('Game');
-      const run = startRun('wenShaohua');
-      if (e.code === 'KeyB') run.step = CHAPTER1_STEPS.findIndex((s) => s.kind === 'boss');
-      const { key, data } = sceneForStep(run.step);
-      this.enterGame(key, data);
+      if (e.code === 'KeyB') {
+        const run = startRun('wenShaohua');
+        run.step = CHAPTER1_STEPS.findIndex((s) => s.kind === 'boss');
+        return this.enterGame('PangHu');
+      }
+      this.enterGame('Select');
     });
-    this.input.once('pointerdown', () => {
-      startRun('wenShaohua');
-      this.enterGame('Room', { room: 0 });
-    });
+    this.input.once('pointerdown', () => this.enterGame('Select'));
   }
 
   private entering = false;

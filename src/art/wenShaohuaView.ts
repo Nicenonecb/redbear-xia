@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../config';
 import type { Fighter } from '../entities/Fighter';
+import { HeroView, type Pt } from './heroView';
 import { SWORD_QI_LEVELS, swordQiLevel } from '../characters/wenShaohua';
 
 /**
@@ -46,7 +47,6 @@ interface Pose {
   trail?: { from: number; to: number; alpha: number };
 }
 
-type Pt = { x: number; y: number };
 
 const lerp = Phaser.Math.Linear;
 const local = (deg: number, r: number, base: Pt = SHOULDER): Pt => {
@@ -54,25 +54,15 @@ const local = (deg: number, r: number, base: Pt = SHOULDER): Pt => {
   return { x: base.x + Math.cos(a) * r, y: base.y + Math.sin(a) * r };
 };
 
-export class WenShaohuaView {
-  private readonly fx: Phaser.GameObjects.Graphics;
-  private readonly g: Phaser.GameObjects.Graphics;
+export class WenShaohuaView extends HeroView {
   private readonly ribbon: Pt[] = [];
   private readonly tassel: Pt[] = [];
-  private ghosts: { x: number; y: number; facing: 1 | -1; life: number }[] = [];
-  private ghostTimer = 0;
   private chargeTier = 0;
   /** 蓄力升档时放一圈光环，1 → 0 */
   private ring = 0;
-  private time = 0;
-
-  constructor(scene: Phaser.Scene) {
-    this.fx = scene.add.graphics().setDepth(9);
-    this.g = scene.add.graphics().setDepth(10);
-  }
 
   draw(f: Fighter, delta: number) {
-    this.time += delta;
+    this.begin(f, delta);
     const pose = this.pose(f);
     const P = (p: Pt): Pt => ({
       x: f.x + (p.x + pose.lean * (-p.y / 72)) * f.facing,
@@ -80,24 +70,9 @@ export class WenShaohuaView {
     });
     const at = (x: number, y: number) => P({ x, y });
     const g = this.g;
-    g.clear();
-    this.fx.clear();
-    // 闪避时半透明；受击保护期一闪一闪
-    const blinking = !f.evading && f.mercyFrames > 0 && Math.floor(this.time / 70) % 2 === 0;
-    g.setAlpha(f.evading ? 0.55 : blinking ? 0.3 : 1);
-    // 受击闪白：身体填白、描一圈墨边
-    const flashing = f.flash > 0;
-    const ink = flashing ? 0xffffff : COLORS.ink;
-    const poly = (pts: Pt[]) => {
-      g.fillStyle(ink);
-      g.fillPoints(pts, true);
-      if (flashing) {
-        g.lineStyle(1.5, COLORS.ink);
-        g.strokePoints(pts, true);
-      }
-    };
+    const ink = this.ink;
+    const poly = (pts: Pt[]) => this.poly(pts);
 
-    this.drawGhosts(f, delta);
     if (pose.trail) this.drawTrail(pose.trail, P);
 
     // 发带：脑后一抹朱红，跟着身形飘
@@ -127,13 +102,8 @@ export class WenShaohuaView {
     // 头与发冠
     const head = at(1, -65);
     const crown = at(0, -75);
-    g.fillStyle(ink);
-    g.fillCircle(head.x, head.y, 8.5);
-    g.fillCircle(crown.x, crown.y, 3.5);
-    if (flashing) {
-      g.lineStyle(1.5, COLORS.ink);
-      g.strokeCircle(head.x, head.y, 8.5);
-    }
+    this.circle(head, 8.5);
+    this.circle(crown, 3.5);
 
     // 腰间玉佩
     const cord = at(5, -34);
@@ -215,29 +185,6 @@ export class WenShaohuaView {
     this.fx.strokePoints(outer);
   }
 
-  /** 闪避残影 */
-  private drawGhosts(f: Fighter, delta: number) {
-    if (f.evading) {
-      this.ghostTimer -= delta;
-      if (this.ghostTimer <= 0) {
-        this.ghosts.push({ x: f.x, y: f.feetY, facing: f.facing, life: 1 });
-        this.ghostTimer = 45;
-      }
-    } else {
-      this.ghostTimer = 0;
-    }
-    for (const gh of this.ghosts) gh.life -= delta / 260;
-    this.ghosts = this.ghosts.filter((gh) => gh.life > 0);
-
-    for (const gh of this.ghosts) {
-      const at = (x: number, y: number) => ({ x: gh.x + x * gh.facing, y: gh.y + y * 0.85 });
-      this.fx.fillStyle(COLORS.inkLight, gh.life * 0.35);
-      this.fx.fillPoints([at(-8, -57), at(8, -57), at(16, 0), at(-18, 0)], true);
-      const head = at(1, -65);
-      this.fx.fillCircle(head.x, head.y, 8.5);
-    }
-  }
-
   /** 蓄力：剑身聚起朱红光晕，升档时放一圈光环，蓄满后光晕跳动 */
   private drawCharge(f: Fighter, blade: Pt, center: Pt, delta: number) {
     if (f.runner.move?.hold) {
@@ -256,30 +203,5 @@ export class WenShaohuaView {
       this.fx.lineStyle(3, COLORS.red, this.ring);
       this.fx.strokeCircle(center.x, center.y, 20 + (1 - this.ring) * 50);
     }
-  }
-
-  /** 发带、剑穗这类软物件：每节受一点重力和后飘，再拉回固定长度 */
-  private follow(chain: Pt[], anchor: Pt, segments: number, segLen: number, facing: 1 | -1, delta: number) {
-    if (chain.length !== segments + 1) {
-      chain.length = 0;
-      for (let i = 0; i <= segments; i++) chain.push({ x: anchor.x, y: anchor.y + i * segLen });
-    }
-    chain[0] = { x: anchor.x, y: anchor.y };
-    const dt = delta / (1000 / 60);
-    for (let i = 1; i < chain.length; i++) {
-      const p = chain[i];
-      const prev = chain[i - 1];
-      p.y += 1.2 * dt;
-      p.x -= (facing * 0.6 + Math.sin(this.time * 0.004 + i) * 0.4) * dt;
-      const dx = p.x - prev.x;
-      const dy = p.y - prev.y;
-      const d = Math.hypot(dx, dy) || 1;
-      p.x = prev.x + (dx / d) * segLen;
-      p.y = prev.y + (dy / d) * segLen;
-    }
-  }
-
-  private line(a: Pt, b: Pt) {
-    this.g.lineBetween(a.x, a.y, b.x, b.y);
   }
 }

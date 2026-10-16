@@ -77,3 +77,31 @@ export function drawThrowingKnife(w: number) {
     g.lineBetween(-w / 2 - 22, 0, -w / 2 - 8, 0);
   };
 }
+
+/** 于无瑕的飞镖：小小一枚，镖尾系一缕红穗 */
+export function drawDart(w: number) {
+  return (g: Phaser.GameObjects.Graphics) => {
+    g.fillStyle(COLORS.ink, 1);
+    g.fillTriangle(-w / 2, -3, -w / 2, 3, w / 2, 0);
+    g.lineStyle(2, COLORS.red, 1);
+    g.lineBetween(-w / 2, 0, -w / 2 - 10, -3);
+    g.lineBetween(-w / 2, 0, -w / 2 - 9, 3);
+  };
+}
+
+/** 掷出去的扇子：展开的扇面，朱红扇边；Boomerang 会让它转起来 */
+export function drawThrownFan(r: number) {
+  return (g: Phaser.GameObjects.Graphics) => {
+    const pts: Phaser.Math.Vector2[] = [new Phaser.Math.Vector2(0, 0)];
+    for (let i = 0; i <= 10; i++) {
+      const a = Phaser.Math.DegToRad(-70 + i * 14);
+      pts.push(new Phaser.Math.Vector2(Math.cos(a) * r, Math.sin(a) * r));
+    }
+    g.fillStyle(COLORS.ink, 0.95);
+    g.fillPoints(pts, true);
+    g.lineStyle(1, COLORS.paper, 0.7);
+    for (let i = 1; i < pts.length; i += 2) g.lineBetween(0, 0, pts[i].x, pts[i].y);
+    g.lineStyle(3, COLORS.red, 1);
+    g.strokePoints(pts.slice(1));
+  };
+}

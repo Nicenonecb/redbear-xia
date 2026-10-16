@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH } from '../config';
 import { PROGRESSION } from '../game/progression';
+import type { Fighter } from '../entities/Fighter';
 import { runStats, type RunState } from '../game/run';
 
 const EXP_WIDTH = 240;
@@ -21,13 +22,14 @@ export class RunHud {
       .setDepth(50);
   }
 
-  draw(run: RunState) {
+  draw(run: RunState, player: Fighter) {
     const ratio = run.exp / PROGRESSION.expToNext(run.level);
     this.g.clear();
     this.g.fillStyle(COLORS.ink, 0.2);
     this.g.fillRect(this.x, this.y, EXP_WIDTH, 4);
     this.g.fillStyle(COLORS.ink, 0.85);
     this.g.fillRect(this.x, this.y, EXP_WIDTH * ratio, 4);
-    this.text.setText(`第 ${run.level} 重 · 铜钱 ${run.coins} 文 · ${runStats(run).weaponName}`);
+    const ammo = player.def.ammo ? ` · 飞镖 ${player.ammo}/${player.def.ammo.max}` : '';
+    this.text.setText(`第 ${run.level} 重 · 铜钱 ${run.coins} 文 · ${runStats(run).weaponName}${ammo}`);
   }
 }

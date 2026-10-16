@@ -10,16 +10,16 @@ export type Team = 'player' | 'enemy';
  */
 export class Projectile {
   alive = true;
-  private readonly hitTargets = new Set<Hurtable>();
-  private readonly g: Phaser.GameObjects.Graphics;
-  private life: number;
+  protected readonly hitTargets = new Set<Hurtable>();
+  protected readonly g: Phaser.GameObjects.Graphics;
+  protected life: number;
   private hitstop = 0;
 
   constructor(
     scene: Phaser.Scene,
-    private x: number,
-    private readonly y: number,
-    private readonly dir: 1 | -1,
+    protected x: number,
+    protected y: number,
+    protected dir: 1 | -1,
     readonly spec: ProjectileSpec,
     readonly team: Team,
     draw: (g: Phaser.GameObjects.Graphics) => void,
@@ -42,7 +42,8 @@ export class Projectile {
       this.hitstop--;
       return [];
     }
-    this.x += (this.spec.speed / 60) * this.dir;
+    this.advance();
+    if (!this.alive) return [];
     this.life--;
 
     const hit = { ...this.spec.hit, damage: Math.round(this.spec.hit.damage * this.damageScale) };
@@ -66,6 +67,11 @@ export class Projectile {
     this.g.setPosition(this.x, this.y);
     this.g.setAlpha(Math.min(1, this.life / 8));
     return results;
+  }
+
+  /** 每帧怎么飞：默认直线；回旋的扇子会改写这里 */
+  protected advance() {
+    this.x += (this.spec.speed / 60) * this.dir;
   }
 
   destroy() {

@@ -144,6 +144,11 @@ export interface CharacterDef {
   moves: Record<MoveId, MoveDef>;
   /** 空闲时按键对应的起手招 */
   neutral: Partial<Record<Action, MoveId>>;
+  /**
+   * 有弹药的招（于无瑕的飞镖）：按 action 出的招每次耗一发，打光了就出不了；
+   * 近战每打中一下回 refillOnMeleeHit 发
+   */
+  ammo?: { action: Action; max: number; refillOnMeleeHit: number };
 }
 
 export type MovePhase = 'startup' | 'active' | 'recovery';

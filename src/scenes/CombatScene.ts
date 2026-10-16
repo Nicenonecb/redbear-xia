@@ -1,15 +1,14 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { drawInkMountains } from '../art/inkMountains';
-import { drawSwordQi } from '../art/projectiles';
+import type { HeroView } from '../art/heroView';
 import { drawRedBear } from '../art/redBear';
-import { WenShaohuaView } from '../art/wenShaohuaView';
-import { SWORD_QI_LEVELS, WEN_SHAOHUA, swordQiLevel } from '../characters/wenShaohua';
+import { HEROES, type HeroEntry } from '../characters/heroes';
 import type { HitResult, Hurtable } from '../combat/hitbox';
 import type { MoveEvent } from '../combat/moveTable';
 import { CombatDebug } from '../debug/CombatDebug';
 import { Fighter } from '../entities/Fighter';
-import { Projectile } from '../entities/Projectile';
+import type { Projectile } from '../entities/Projectile';
 import { advanceRun } from '../game/flow';
 import { PROGRESSION, RESCUE_LINES } from '../game/progression';
 import { endRun, getRun, runStats, startRun, type RunState } from '../game/run';
@@ -29,8 +28,6 @@ const HEAVY_HITSTOP = 8;
 /** 红熊救场演出多长（毫秒） */
 const RESCUE_MS = 2200;
 
-const HINT = 'A/D 移动 · W/空格 跳跃 · J 流云三式 · K 按住蓄力 少华一剑 · L/Shift 闪避 · ` 判定框 · Esc 返回标题';
-
 /**
  * 战斗场景的公共部分：水墨背景和地面、主角、固定帧步进、飞行道具、血条和一局的界面、
  * 红熊濒死救场、调试显示。子类只管摆敌人、写敌人每帧做什么。
@@ -41,7 +38,8 @@ export abstract class CombatScene extends Phaser.Scene {
   protected run!: RunState;
   protected ground!: Phaser.GameObjects.Rectangle;
   protected projectiles: Projectile[] = [];
-  private view!: WenShaohuaView;
+  private hero!: HeroEntry;
+  private view!: HeroView;
   private playerBar!: HealthBar;
   private hud!: RunHud;
   private numbers!: DamageNumbers;
@@ -109,7 +107,8 @@ export abstract class CombatScene extends Phaser.Scene {
     this.ground = this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + 50, GAME_WIDTH, 100, COLORS.ink);
     this.physics.add.existing(this.ground, true);
 
-    this.player = new Fighter(this, this.playerStartX, GROUND_Y, WEN_SHAOHUA, this.controls, {
+    this.hero = HEROES[this.run.hero];
+    this.player = new Fighter(this, this.playerStartX, GROUND_Y, this.hero.def, this.controls, {
       ...runStats(this.run),
       hp: this.run.hp,
     });
@@ -118,14 +117,14 @@ export abstract class CombatScene extends Phaser.Scene {
     this.player.events.on('move', (e: MoveEvent) => this.onPlayerMove(e));
     this.player.events.on('rescue', () => this.rescue());
     this.player.events.once('dead', () => this.onPlayerDead());
-    this.view = new WenShaohuaView(this);
+    this.view = this.hero.createView(this);
 
     this.add.text(24, 20, this.stageName, { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink });
-    this.playerBar = new HealthBar(this, 24, 84, 240, WEN_SHAOHUA.name);
+    this.playerBar = new HealthBar(this, 24, 84, 240, this.hero.def.name);
     this.hud = new RunHud(this, 24, 104);
     this.numbers = new DamageNumbers(this);
     this.add
-      .text(24, GAME_HEIGHT - 40, HINT, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
+      .text(24, GAME_HEIGHT - 40, this.hero.hint, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
       .setAlpha(0.8);
 
     this.setup();
@@ -153,7 +152,7 @@ export abstract class CombatScene extends Phaser.Scene {
     this.updateRescue(delta);
     this.view.draw(this.player, delta);
     this.playerBar.draw(this.player.hp / this.player.maxHp, delta);
-    this.hud.draw(this.run);
+    this.hud.draw(this.run, this.player);
     this.renderWorld(delta);
     this.debug.draw(
       this.player,
@@ -231,13 +230,8 @@ export abstract class CombatScene extends Phaser.Scene {
   }
 
   private onPlayerMove(e: MoveEvent) {
-    if (e.type === 'spawn' && e.name === 'swordQi') {
-      const p = this.player;
-      const level = swordQiLevel(p.runner.charge);
-      const draw = drawSwordQi(SWORD_QI_LEVELS.indexOf(level), level.hit.box.h);
-      this.projectiles.push(
-        new Projectile(this, p.x + 36 * p.facing, p.feetY - 46, p.facing, level, 'player', draw, p.damageScale),
-      );
+    if (e.type === 'spawn') {
+      this.hero.spawn({ scene: this, player: this.player, addProjectile: (p) => this.projectiles.push(p) }, e.name);
     }
     // 音效、特效事件先留着，接入音频后在这里分发
   }
