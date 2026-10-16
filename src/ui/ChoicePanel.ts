@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { sfx } from '../audio/sfx';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 
 export interface ChoiceOption {
@@ -177,11 +178,13 @@ export class ChoicePanel {
         break;
       }
     }
+    sfx.play('ui-move');
     this.redraw();
   }
 
   private pick(i: number) {
     if (this.closed || this.config.options[i]?.disabled) return;
+    sfx.play('ui-confirm');
     if (!this.config.stayOpen) this.close();
     this.config.onPick(i);
   }

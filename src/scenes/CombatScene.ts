@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { sfx } from '../audio/sfx';
 import { FallingLeaves, drawBambooForest } from '../art/bamboo';
 import type { HeroView } from '../art/heroView';
 import { drawRedBear } from '../art/redBear';
@@ -137,6 +138,9 @@ export abstract class CombatScene extends Phaser.Scene {
     this.setup();
     this.debug = new CombatDebug(this);
 
+    sfx.startAmbient();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => sfx.stopAmbient());
+
     this.input.keyboard!.on('keydown-ESC', () => {
       if (this.pauses.size) return;
       endRun();
@@ -204,8 +208,15 @@ export abstract class CombatScene extends Phaser.Scene {
       const box = target.hurtbox();
       const heavy = hit.hitstop >= HEAVY_HITSTOP;
       this.numbers.show(box.centerX, box.top - 10, hit.damage, target === this.player, heavy);
+      sfx.play(target === this.player ? 'hurt' : heavy ? 'hit-heavy' : 'hit');
       if (heavy) this.shake(0.006, 120);
     }
+  }
+
+  /** 敌人招式表里的音效、震屏事件，各个战斗场景共用 */
+  protected onFoeMove(e: MoveEvent) {
+    if (e.type === 'sfx') sfx.play(e.name);
+    if (e.type === 'vfx' && e.name === 'shake') this.shake();
   }
 
   /** 头顶飘一行字（升级、拿到东西） */
@@ -238,10 +249,10 @@ export abstract class CombatScene extends Phaser.Scene {
   }
 
   private onPlayerMove(e: MoveEvent) {
+    if (e.type === 'sfx') sfx.play(e.name);
     if (e.type === 'spawn') {
       this.hero.spawn({ scene: this, player: this.player, addProjectile: (p) => this.projectiles.push(p) }, e.name);
     }
-    // 音效、特效事件先留着，接入音频后在这里分发
   }
 
   /**
@@ -251,6 +262,7 @@ export abstract class CombatScene extends Phaser.Scene {
   private rescue() {
     this.run.rescueUsed = true;
     this.setPaused('rescue', true);
+    sfx.play('rescue');
     const p = this.player;
     const bubble = new SpeechBubble(this);
     bubble.say(Phaser.Utils.Array.GetRandom(RESCUE_LINES), 1500);
@@ -292,6 +304,7 @@ export abstract class CombatScene extends Phaser.Scene {
 
   private onPlayerDead() {
     endRun();
+    sfx.play('death');
     this.finish('胜败乃兵家常事', () => {
       const cam = this.cameras.main;
       cam.fadeOut(500, 239, 231, 214);

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import type { HeroView } from '../art/heroView';
+import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
 import { placeArt } from '../art/slots';
 import { HEROES } from '../characters/heroes';
@@ -78,6 +79,8 @@ export class SelectScene extends Phaser.Scene {
         this.confirm();
       }
     });
+    sfx.startAmbient();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => sfx.stopAmbient());
     this.cameras.main.fadeIn(400, 239, 231, 214);
   }
 
@@ -96,14 +99,17 @@ export class SelectScene extends Phaser.Scene {
 
   private onKey(e: KeyboardEvent) {
     if (this.chosen || e.repeat) return;
-    if (['KeyA', 'ArrowLeft', 'KeyD', 'ArrowRight'].includes(e.code)) this.index = 1 - this.index;
-    else if (['KeyJ', 'Space', 'Enter'].includes(e.code)) this.confirm();
+    if (['KeyA', 'ArrowLeft', 'KeyD', 'ArrowRight'].includes(e.code)) {
+      this.index = 1 - this.index;
+      sfx.play('ui-move');
+    } else if (['KeyJ', 'Space', 'Enter'].includes(e.code)) this.confirm();
     else if (e.code === 'Escape') this.scene.start('Title');
   }
 
   private confirm() {
     if (this.chosen) return;
     this.chosen = true;
+    sfx.play('ui-confirm');
     const run = startRun(ORDER[this.index]);
     const { key, data } = sceneForStep(run.step);
     const cam = this.cameras.main;

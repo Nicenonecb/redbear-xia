@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { sfx } from '../audio/sfx';
 import { FallingLeaves, drawBambooForest } from '../art/bamboo';
 import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
@@ -42,6 +43,9 @@ export class TitleScene extends Phaser.Scene {
       this.bear = this.add.graphics();
     }
     this.leaves = new FallingLeaves(this, GAME_WIDTH, GAME_HEIGHT, 18);
+    // 浏览器要等玩家第一次按键或点击才放出声音，在那之前风声先排着
+    sfx.startAmbient();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => sfx.stopAmbient());
 
     this.add
       .text(cx, 200, '红熊大侠', { fontFamily: FONT_BRUSH, fontSize: '128px', color: CSS_COLORS.ink })
@@ -81,7 +85,7 @@ export class TitleScene extends Phaser.Scene {
       .setOrigin(0.5);
     this.tweens.add({ targets: prompt, alpha: 0.25, duration: 900, yoyo: true, repeat: -1 });
     this.add
-      .text(cx, GAME_HEIGHT - 48, 'P · 练功场　　B · 直接打胖虎', { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
+      .text(cx, GAME_HEIGHT - 48, 'P · 练功场　　B · 直接打胖虎　　M · 静音　　- / = · 音量', { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
       .setOrigin(0.5)
       .setAlpha(0.6);
 

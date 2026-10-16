@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
+import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
 import { hasArt } from '../art/slots';
 import { drawTeaStall } from '../art/teaStall';
@@ -54,6 +55,8 @@ export class ShopScene extends Phaser.Scene {
       options: this.options(),
       onPick: (i) => this.buy(i),
     });
+    sfx.startAmbient();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => sfx.stopAmbient());
     this.cameras.main.fadeIn(400, 239, 231, 214);
   }
 
@@ -112,6 +115,7 @@ export class ShopScene extends Phaser.Scene {
       const maxHp = runStats(run).maxHp;
       run.hp = Math.min(maxHp, run.hp + Math.round(maxHp * potion.heal));
     }
+    sfx.play('coin');
     this.lines = [];
     this.say(Phaser.Utils.Array.GetRandom(CHAPTER1_SHOP_LINES.bought));
     this.panel.update(this.options(), this.status());

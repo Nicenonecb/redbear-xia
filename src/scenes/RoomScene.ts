@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
+import { sfx } from '../audio/sfx';
 import { EnemyView } from '../art/enemyView';
 import { drawThrowingKnife } from '../art/projectiles';
 import { ENEMIES } from '../characters/bandits';
@@ -100,7 +101,11 @@ export class RoomScene extends CombatScene {
     }
     for (const entry of this.enemies) if (entry.enemy.gone) entry.view.destroy();
     this.enemies = this.enemies.filter((e) => !e.enemy.gone);
-    for (const c of this.coins) if (c.tick(this.player)) this.run.coins += c.value;
+    for (const c of this.coins) {
+      if (!c.tick(this.player)) continue;
+      this.run.coins += c.value;
+      sfx.play('coin');
+    }
     this.coins = this.coins.filter((c) => !c.collected);
 
     if (this.cleared) {
@@ -156,7 +161,7 @@ export class RoomScene extends CombatScene {
   }
 
   private onEnemyMove(enemy: Enemy, e: MoveEvent) {
-    if (e.type === 'vfx' && e.name === 'shake') this.shake();
+    this.onFoeMove(e);
     if (e.type === 'spawn' && e.name === 'knife' && enemy.def.projectile) {
       const spec = enemy.def.projectile;
       const draw = drawThrowingKnife(spec.hit.box.w);
@@ -191,7 +196,11 @@ export class RoomScene extends CombatScene {
   /** 打倒敌人：给经验，掉铜钱；升级了在头顶提示一下，等清场再选 */
   private onEnemyDead(enemy: Enemy) {
     const def = enemy.def;
-    if (gainExp(this.run, def.exp) > 0) this.toast('升级！', this.player.x, this.player.feetY - 110);
+    sfx.play('ink');
+    if (gainExp(this.run, def.exp) > 0) {
+      this.toast('升级！', this.player.x, this.player.feetY - 110);
+      sfx.play('levelup');
+    }
     let total = Phaser.Math.Between(def.coins[0], def.coins[1]);
     while (total > 0) {
       const value = Math.min(total, total >= 10 ? 5 : 1);

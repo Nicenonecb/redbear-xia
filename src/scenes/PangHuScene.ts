@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH } from '../config';
+import { sfx } from '../audio/sfx';
 import { PangHuView } from '../art/pangHuView';
 import { drawRoarRing, drawShockwave } from '../art/projectiles';
 import { PANGHU } from '../characters/pangHu';
@@ -56,10 +57,12 @@ export class PangHuScene extends CombatScene {
     this.boss.events.on('move', (e: MoveEvent) => this.onBossMove(e));
     this.boss.events.on('transform', () => this.clearEnemyProjectiles());
     this.boss.events.on('roar', () => {
+      sfx.play('roar');
       this.bubble.say(PANGHU.lines.transform, 900);
       this.shake(0.006, 900);
     });
     this.boss.events.on('burst', () => {
+      sfx.play('burst');
       this.bossView.burst(this.boss.x, this.boss.feetY - 60);
       this.cameras.main.flash(250, 239, 231, 214);
       this.shake(0.014, 300);
@@ -112,7 +115,7 @@ export class PangHuScene extends CombatScene {
   }
 
   private onBossMove(e: MoveEvent) {
-    if (e.type === 'vfx' && e.name === 'shake') this.shake();
+    this.onFoeMove(e);
     if (e.type === 'spawn' && e.name === 'roarRing') {
       const spec = PANGHU.roarRing;
       const draw = drawRoarRing(spec.hit.box.h);
