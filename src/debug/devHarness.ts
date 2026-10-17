@@ -36,8 +36,13 @@ export function installDevHarness(game: Phaser.Game) {
     scene,
     sleep: () => game.loop.sleep(),
     wake: () => game.loop.wake(),
+    /** 图片还在加载时别切场景，不然启动场景一停，没加载完的图就都丢了 */
+    get ready() {
+      return !game.scene.isActive('Boot');
+    },
     /** 切到某个场景并停掉自动循环；data 会原样传给场景 */
     go(key: string, data?: object) {
+      if (!harness.ready) throw new Error('图片还在加载，等 __t.ready 为 true 再切场景');
       game.loop.sleep();
       const from = game.scene.getScenes(true)[0] ?? game.scene.getScene('Title');
       current = key;

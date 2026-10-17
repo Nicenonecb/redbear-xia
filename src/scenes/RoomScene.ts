@@ -3,7 +3,7 @@ import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { EnemyView } from '../art/enemyView';
 import { drawThrowingKnife } from '../art/projectiles';
-import { ENEMIES } from '../characters/bandits';
+import { ENEMIES, ENEMY_INTROS } from '../characters/bandits';
 import type { Hurtable } from '../combat/hitbox';
 import type { MoveEvent } from '../combat/moveTable';
 import { Coin } from '../entities/Coin';
@@ -13,6 +13,7 @@ import { CHAPTER1_ROOMS, type RoomDef, type SpawnDef } from '../game/chapter1';
 import { PROGRESSION, type StatId } from '../game/progression';
 import { applyLevelUp, gainExp } from '../game/run';
 import { ChoicePanel } from '../ui/ChoicePanel';
+import { IntroCard } from '../ui/IntroCard';
 import { CombatScene, GROUND_Y } from './CombatScene';
 
 /** 上一波清完后隔多少帧刷下一波 */
@@ -151,6 +152,7 @@ export class RoomScene extends CombatScene {
       const i = perSide[s.side]++;
       const x = s.side === 'right' ? GAME_WIDTH - 90 - i * 70 : 90 + i * 70;
       const def = ENEMIES[s.enemy];
+      this.introduce(s.enemy);
       const enemy = new Enemy(this, x, GROUND_Y, def, this.player, `${this.room.seed}-${this.spawnCount++}`);
       this.physics.add.collider(enemy.zone, this.ground);
       // 大怪挡路，小怪可以穿过去；闪避时谁都能穿
@@ -192,6 +194,15 @@ export class RoomScene extends CombatScene {
       g.fillGradientStyle(COLORS.red, COLORS.red, COLORS.red, COLORS.red, 0, 0, 0.45, 0.45);
       g.fillRect(GAME_WIDTH - 46, GROUND_Y - 200, 46, 200);
     }
+  }
+
+  /** 这一局第一次见到这种敌人：右下角弹一张登场提示 */
+  private introduce(id: keyof typeof ENEMIES) {
+    const seen = (this.run.seenEnemies ??= []);
+    if (seen.includes(id)) return;
+    seen.push(id);
+    const intro = ENEMY_INTROS[id];
+    this.addOverlay(new IntroCard(this, intro.slot, ENEMIES[id].name, intro.tip, intro.tier));
   }
 
   /** 打倒敌人：给经验，掉铜钱；升级了在头顶提示一下，等清场再选 */

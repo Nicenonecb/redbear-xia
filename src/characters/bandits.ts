@@ -1,3 +1,4 @@
+import type { ArtSlot } from '../art/slots';
 import { byId, validateEnemy, type EnemyDef } from '../combat/moveTable';
 
 /**
@@ -123,3 +124,10 @@ export const CHIEF: EnemyDef = validateEnemy({
 
 export const ENEMIES = { bandit: BANDIT, thrower: THROWER, chief: CHIEF };
 export type EnemyId = keyof typeof ENEMIES;
+
+/** 每种敌人这一局第一次出现时弹出的登场提示：立绘、级别、一句打法（卡片小，十几个字以内） */
+export const ENEMY_INTROS: Record<EnemyId, { slot: ArtSlot; tier: string; tip: string }> = {
+  bandit: { slot: 'portrait_bandit', tier: '小怪', tip: '挨打会被打断，连斩压着打。' },
+  thrower: { slot: 'portrait_thrower', tier: '小怪', tip: '跳过飞刀，贴上去他就跑。' },
+  chief: { slot: 'portrait_chief', tier: '大怪', tip: '霸体打不断！地上亮红先躲开。' },
+};

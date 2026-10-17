@@ -21,6 +21,8 @@ export interface RunState {
   rescueUsed: boolean;
   /** 临时的一局（练功场、调试快捷键），不写存档 */
   temporary?: boolean;
+  /** 这一局已经见过哪些敌人（第一次见才弹登场提示） */
+  seenEnemies?: string[];
 }
 
 /** 主角的基础气血 */

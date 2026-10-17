@@ -9,7 +9,10 @@ import { totalFrames, type MoveEvent } from '../combat/moveTable';
 import { PangHu } from '../entities/PangHu';
 import { Projectile } from '../entities/Projectile';
 import { PROGRESSION } from '../game/progression';
+import type { ArtSlot } from '../art/slots';
+import { BossCard } from '../ui/BossCard';
 import { ChoicePanel } from '../ui/ChoicePanel';
+import { CutIn } from '../ui/CutIn';
 import { HealthBar } from '../ui/HealthBar';
 import { Portrait } from '../ui/Portrait';
 import { SpeechBubble } from '../ui/SpeechBubble';
@@ -36,6 +39,8 @@ export class PangHuScene extends CombatScene {
   private queue: { line: string; hold: number }[] = [];
   private afterTalk: (() => void) | null = null;
   private won = false;
+  /** 名牌只在第一次拔剑时亮 */
+  private introduced = false;
 
   constructor() {
     super('PangHu');
@@ -61,24 +66,31 @@ export class PangHuScene extends CombatScene {
     this.queue = [];
     this.afterTalk = null;
     this.won = false;
+    this.introduced = false;
     this.talk([PANGHU.lines.intro], () => this.offerBribe());
 
     this.boss.events.on('move', (e: MoveEvent) => this.onBossMove(e));
     this.boss.events.on('transform', () => this.clearEnemyProjectiles());
+    // 变身：先怒吼着喊台词，水墨炸开的那一下横幅特写扫过去
     this.boss.events.on('roar', () => {
       sfx.play('roar');
+      this.portrait.setSlot('portrait_pangHu_angry');
+      this.portrait.show();
       this.bubble.say(PANGHU.lines.transform, 900);
       this.shake(0.006, 900);
     });
     this.boss.events.on('burst', () => {
       sfx.play('burst');
+      this.portrait.hide();
+      this.addOverlay(new CutIn(this, 'cutin_pangHu_roar', 230));
       this.bossView.burst(this.boss.x, this.boss.feetY - 60);
       this.cameras.main.flash(250, 239, 231, 214);
       this.shake(0.014, 300);
     });
     this.boss.events.on('defeated', () => {
       this.clearEnemyProjectiles();
-      this.talk([PANGHU.lines.defeated], () => this.win('竹林 · 过关'));
+      // 打赢了，他变回人形一屁股坐在地上认怂
+      this.talk([PANGHU.lines.defeated], () => this.win('竹林 · 过关'), 'portrait_pangHu_beaten');
     });
   }
 
@@ -146,9 +158,9 @@ export class PangHuScene extends CombatScene {
   }
 
   /** 依次念几句台词（念的时候战斗暂停），念完再做 then */
-  private talk(lines: string[], then: () => void) {
+  private talk(lines: string[], then: () => void, slot?: ArtSlot) {
     this.setPaused('talk', true);
-    this.portrait.setSlot(this.boss.form === 'tiger' ? 'portrait_pangHuTiger' : 'portrait_pangHu');
+    this.portrait.setSlot(slot ?? (this.boss.form === 'tiger' ? 'portrait_pangHuTiger' : 'portrait_pangHu'));
     this.portrait.show();
     const [first, ...rest] = lines;
     this.bubble.say(first, 1200);
@@ -201,14 +213,14 @@ export class PangHuScene extends CombatScene {
     if (amount < enough) {
       // 钱照收，照样开打
       const taunt = Phaser.Utils.Array.GetRandom(PANGHU.lines.bribePoor);
-      this.talk([taunt], () => this.drawSword());
+      this.talk([taunt], () => this.drawSword(), 'portrait_pangHu_taunt');
       return;
     }
     this.boss.yieldPath();
     this.clearEnemyProjectiles();
     this.showBossBar(false);
     const lines = amount >= generous ? [PANGHU.lines.bribePass, PANGHU.lines.bribeGenerous] : [PANGHU.lines.bribePass];
-    this.talk(lines, () => this.win('竹林 · 放行'));
+    this.talk(lines, () => this.win('竹林 · 放行'), 'portrait_pangHu_greedy');
   }
 
   private showBossBar(visible: boolean) {
@@ -218,6 +230,10 @@ export class PangHuScene extends CombatScene {
 
   private drawSword() {
     this.setPaused('bribe', false);
+    if (!this.introduced) {
+      this.introduced = true;
+      this.addOverlay(new BossCard(this, 'card_boss_pangHu', '山大王', PANGHU.name));
+    }
     this.boss.startFight();
     this.showBossBar(true);
   }

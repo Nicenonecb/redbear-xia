@@ -74,7 +74,13 @@ export class SelectScene extends Phaser.Scene {
     });
 
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT - 40, 'A / D 选择 · J 确定 · Esc 返回', { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.paper })
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 40, 'A / D 选择 · J 确定 · Esc 返回', {
+        fontFamily: FONT_BRUSH,
+        fontSize: '22px',
+        color: CSS_COLORS.ink,
+        stroke: CSS_COLORS.paper,
+        strokeThickness: 5,
+      })
       .setOrigin(0.5)
       .setAlpha(0.8);
 

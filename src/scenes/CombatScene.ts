@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { FallingLeaves, drawBambooForest } from '../art/bamboo';
-import { addPaperGrain, coverArt, type ArtSlot } from '../art/slots';
+import { addPaperGrain, coverArt, hasArt, type ArtSlot } from '../art/slots';
 import type { HeroView } from '../art/heroView';
 import { drawRedBear } from '../art/redBear';
 import { HEROES, type HeroEntry } from '../characters/heroes';
@@ -18,6 +18,8 @@ import { Controls } from '../input/Controls';
 import { DamageNumbers } from '../ui/DamageNumbers';
 import { HealthBar } from '../ui/HealthBar';
 import { RunHud } from '../ui/RunHud';
+import { CutIn } from '../ui/CutIn';
+import { Portrait } from '../ui/Portrait';
 import { SpeechBubble } from '../ui/SpeechBubble';
 
 export const GROUND_Y = 620;
@@ -28,7 +30,9 @@ const MAX_CATCHUP_FRAMES = 6;
 /** 顿帧达到这么多帧算重击：字更大，还会震屏 */
 const HEAVY_HITSTOP = 8;
 /** 红熊救场演出多长（毫秒） */
-const RESCUE_MS = 2200;
+const RESCUE_MS = 2800;
+/** 特写扫过去以后红熊再开口，台词气泡不压在特写上 */
+const RESCUE_LINE_AT = 0.42;
 
 /**
  * 战斗场景的公共部分：水墨背景和地面、主角、固定帧步进、飞行道具、血条和一局的界面、
@@ -54,6 +58,8 @@ export abstract class CombatScene extends Phaser.Scene {
   private leaving = false;
   /** 暂停战斗的原因（选项面板、救场演出）；有任何一个都不推进逻辑帧 */
   private pauses = new Set<string>();
+  /** 横幅特写、登场卡、Boss 名牌这类叠在画面上、自己会消失的东西；暂停时也照样动 */
+  private overlays: { update(delta: number): void; readonly done: boolean }[] = [];
   /** 正在播的红熊救场演出 */
   private rescueShow: {
     t: number;
@@ -63,6 +69,8 @@ export abstract class CombatScene extends Phaser.Scene {
     dim: Phaser.GameObjects.Graphics;
     bear: Phaser.GameObjects.Graphics;
     bubble: SpeechBubble;
+    withCutIn: boolean;
+    portrait: Portrait;
   } | null = null;
 
   /** 左上角的场景名 */
@@ -103,6 +111,7 @@ export abstract class CombatScene extends Phaser.Scene {
     this.leaving = false;
     this.pauses = new Set();
     this.rescueShow = null;
+    this.overlays = [];
     // 从练功场或调试快捷键直接进来时没有一局，临时开一局
     this.run = getRun() ?? startRun('wenShaohua', false);
 
@@ -168,6 +177,8 @@ export abstract class CombatScene extends Phaser.Scene {
     }
 
     this.updateRescue(delta);
+    for (const o of this.overlays) o.update(delta);
+    this.overlays = this.overlays.filter((o) => !o.done);
     this.leaves.update(delta);
     this.view.draw(this.player, delta);
     this.playerBar.draw(this.player.hp / this.player.maxHp, delta);
@@ -202,6 +213,11 @@ export abstract class CombatScene extends Phaser.Scene {
     this.leaving = true;
     this.run.hp = this.player.hp;
     advanceRun(this);
+  }
+
+  /** 叠一个会自己消失的东西到画面上（特写、登场卡、名牌） */
+  protected addOverlay(o: { update(delta: number): void; readonly done: boolean }) {
+    this.overlays.push(o);
   }
 
   /** 震屏：重击、砸地 */
@@ -270,9 +286,9 @@ export abstract class CombatScene extends Phaser.Scene {
     this.run.rescueUsed = true;
     this.setPaused('rescue', true);
     sfx.play('rescue');
+    this.addOverlay(new CutIn(this, 'cutin_redBear', 230));
     const p = this.player;
     const bubble = new SpeechBubble(this);
-    bubble.say(Phaser.Utils.Array.GetRandom(RESCUE_LINES), 1500);
     this.rescueShow = {
       t: 0,
       bearX: Phaser.Math.Clamp(p.x - 90 * p.facing, 80, GAME_WIDTH - 80),
@@ -281,21 +297,31 @@ export abstract class CombatScene extends Phaser.Scene {
       dim: this.add.graphics().setDepth(30),
       bear: this.add.graphics().setDepth(31),
       bubble,
+      withCutIn: hasArt(this, 'cutin_redBear'),
+      portrait: new Portrait(this, 'portrait_redBear', 'left'),
     };
   }
 
   private updateRescue(delta: number) {
     const r = this.rescueShow;
     if (!r) return;
+    const before = r.t;
     r.t = Math.min(1, r.t + delta / RESCUE_MS);
+    if (before < RESCUE_LINE_AT && r.t >= RESCUE_LINE_AT) {
+      r.bubble.say(Phaser.Utils.Array.GetRandom(RESCUE_LINES), 1100);
+      // 特写扫过去以后，红熊从左下角现身开口
+      if (r.withCutIn) r.portrait.show();
+    }
     // 前 15% 渐暗、红熊现身，最后 20% 一起淡掉
     const a = Math.min(Phaser.Math.Clamp(r.t / 0.15, 0, 1), Phaser.Math.Clamp((1 - r.t) / 0.2, 0, 1));
     r.dim.clear();
     r.dim.fillStyle(COLORS.ink, 0.55 * a);
     r.dim.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    // 有红熊特写图时由特写来演，就不在徒弟身后再画剪影了
     r.bear.clear();
-    drawRedBear(r.bear, r.bearX, GROUND_Y, 1.1, a, Math.sin(r.t * 8) * 4);
-    r.bubble.update(delta, r.bearX, GROUND_Y - 230);
+    if (!r.withCutIn) drawRedBear(r.bear, r.bearX, GROUND_Y, 1.1, a, Math.sin(r.t * 8) * 4);
+    const speaker = r.portrait.head ?? { x: r.bearX, y: GROUND_Y - 230 };
+    r.bubble.update(delta, speaker.x, speaker.y);
     // 气血在演出中段涨回去
     const heal = Phaser.Math.Clamp((r.t - 0.25) / 0.35, 0, 1);
     this.player.hp = Math.round(Phaser.Math.Linear(r.startHp, r.targetHp, heal));
@@ -304,6 +330,7 @@ export abstract class CombatScene extends Phaser.Scene {
     r.dim.destroy();
     r.bear.destroy();
     r.bubble.destroy();
+    r.portrait.hide();
     this.rescueShow = null;
     this.setPaused('rescue', false);
     this.onRescued();
