@@ -66,6 +66,24 @@ export function queueArt(scene: Phaser.Scene) {
   }
 }
 
+/** 一排 N 个的素材图（墨点、竹叶）：切成 N 帧，帧号 0～N-1 */
+const STRIPS: Partial<Record<ArtSlot, number>> = { fx_ink_splats: 6, fx_bamboo_leaves: 6 };
+
+/** 图片加载完以后调用：把一排一排的素材切成帧 */
+export function registerArtFrames(scene: Phaser.Scene) {
+  for (const [slot, count] of Object.entries(STRIPS) as [ArtSlot, number][]) {
+    if (!hasArt(scene, slot)) continue;
+    const tex = scene.textures.get(textureKey(slot));
+    const src = tex.getSourceImage();
+    const w = src.width / count;
+    for (let i = 0; i < count; i++) tex.add(i, 0, i * w, 0, w, src.height);
+  }
+}
+
+export function stripFrames(slot: ArtSlot) {
+  return STRIPS[slot] ?? 0;
+}
+
 export function hasArt(scene: Phaser.Scene, slot: ArtSlot) {
   return scene.textures.exists(textureKey(slot));
 }

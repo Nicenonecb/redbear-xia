@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { FallingLeaves, drawBambooForest } from '../art/bamboo';
+import { InkSplat } from '../art/inkSplat';
 import { addPaperGrain, coverArt, hasArt, type ArtSlot } from '../art/slots';
 import type { HeroView } from '../art/heroView';
 import { drawRedBear } from '../art/redBear';
@@ -231,6 +232,7 @@ export abstract class CombatScene extends Phaser.Scene {
       const box = target.hurtbox();
       const heavy = hit.hitstop >= HEAVY_HITSTOP;
       this.numbers.show(box.centerX, box.top - 10, hit.damage, target === this.player, heavy);
+      this.addOverlay(new InkSplat(this, box.centerX, box.centerY, heavy ? 120 : 70, heavy ? 0.9 : 0.7));
       sfx.play(target === this.player ? 'hurt' : heavy ? 'hit-heavy' : 'hit');
       if (heavy) this.shake(0.006, 120);
     }

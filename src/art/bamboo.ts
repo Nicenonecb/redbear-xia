@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../config';
 import { drawInkMountains } from './inkMountains';
+import { hasArt, stripFrames } from './slots';
 
 export interface BambooOptions {
   width: number;
@@ -130,17 +131,30 @@ export function drawLeaf(g: Phaser.GameObjects.Graphics, x: number, y: number, a
   );
 }
 
-/** 飘落的竹叶：从画面上方慢慢转着落下，左右晃，落到地面就淡掉再从上面重新落 */
+/**
+ * 飘落的竹叶：从画面上方慢慢转着落下，左右晃，落到地面就淡掉再从上面重新落。
+ * 有竹叶素材时每片叶子用素材里的一片（随机挑形状），没有就用代码画
+ */
 export class FallingLeaves {
   private readonly g: Phaser.GameObjects.Graphics;
-  private readonly leaves: { x: number; y: number; a: number; spin: number; sway: number; speed: number; len: number; front: boolean }[] = [];
+  private readonly leaves: {
+    x: number;
+    y: number;
+    a: number;
+    spin: number;
+    sway: number;
+    speed: number;
+    len: number;
+    front: boolean;
+    sprite: Phaser.GameObjects.Image | null;
+  }[] = [];
 
   constructor(
-    scene: Phaser.Scene,
+    private readonly scene: Phaser.Scene,
     private readonly width: number,
     private readonly groundY: number,
     count = 14,
-    depth = 19,
+    private readonly depth = 19,
   ) {
     this.g = scene.add.graphics().setDepth(depth);
     for (let i = 0; i < count; i++) this.leaves.push(this.spawn(Math.random() * groundY));
@@ -154,13 +168,31 @@ export class FallingLeaves {
       l.sway += 0.03 * dt;
       l.x += Math.sin(l.sway) * 0.8 * dt - 0.25 * dt;
       l.a += l.spin * dt;
-      if (l.y > this.groundY + 4 || l.x < -40) Object.assign(l, this.spawn(-20));
+      if (l.y > this.groundY + 4 || l.x < -40) {
+        l.sprite?.destroy();
+        Object.assign(l, this.spawn(-20));
+      }
       const fade = Phaser.Math.Clamp((this.groundY - l.y) / 60, 0, 1);
-      drawLeaf(this.g, l.x, l.y, l.a, l.len, l.len * 0.16, l.front ? COLORS.ink : COLORS.inkLight, (l.front ? 0.75 : 0.45) * fade);
+      const alpha = (l.front ? 0.75 : 0.45) * fade;
+      if (l.sprite) {
+        l.sprite.setPosition(l.x, l.y).setRotation(l.a).setAlpha(alpha);
+        continue;
+      }
+      drawLeaf(this.g, l.x, l.y, l.a, l.len, l.len * 0.16, l.front ? COLORS.ink : COLORS.inkLight, alpha);
     }
   }
 
   private spawn(y: number) {
+    const len = Phaser.Math.FloatBetween(12, 22);
+    const front = Math.random() < 0.35;
+    let sprite: Phaser.GameObjects.Image | null = null;
+    if (hasArt(this.scene, 'fx_bamboo_leaves')) {
+      sprite = this.scene.add
+        .image(0, 0, 'art:fx_bamboo_leaves', Phaser.Math.Between(0, stripFrames('fx_bamboo_leaves') - 1))
+        .setDepth(this.depth);
+      // 远处的叶子小一点、淡一点
+      sprite.setScale(((front ? 1.4 : 1) * len * 1.6) / sprite.width);
+    }
     return {
       x: Math.random() * (this.width + 120),
       y,
@@ -168,8 +200,9 @@ export class FallingLeaves {
       spin: Phaser.Math.FloatBetween(-0.05, 0.05),
       sway: Math.random() * Math.PI * 2,
       speed: Phaser.Math.FloatBetween(0.5, 1.1),
-      len: Phaser.Math.FloatBetween(12, 22),
-      front: Math.random() < 0.35,
+      len,
+      front,
+      sprite,
     };
   }
 }

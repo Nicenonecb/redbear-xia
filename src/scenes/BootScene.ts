@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
-import { queueArt } from '../art/slots';
+import { queueArt, registerArtFrames } from '../art/slots';
 
 const BAR_W = 420;
 
@@ -40,7 +40,10 @@ export class BootScene extends Phaser.Scene {
     };
     draw(0);
     this.load.on(Phaser.Loader.Events.PROGRESS, draw);
-    this.load.once(Phaser.Loader.Events.COMPLETE, () => this.scene.start('Title'));
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      registerArtFrames(this);
+      this.scene.start('Title');
+    });
     this.load.start();
   }
 }

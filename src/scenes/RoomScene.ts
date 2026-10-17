@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { EnemyView } from '../art/enemyView';
+import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
 import { ENEMIES, ENEMY_INTROS } from '../characters/bandits';
 import type { Hurtable } from '../combat/hitbox';
@@ -209,6 +210,7 @@ export class RoomScene extends CombatScene {
   private onEnemyDead(enemy: Enemy) {
     const def = enemy.def;
     sfx.play('ink');
+    this.addOverlay(new InkSplat(this, enemy.x, enemy.feetY - def.body.h / 2, def.tier === 'brute' ? 200 : 130));
     if (gainExp(this.run, def.exp) > 0) {
       this.toast('升级！', this.player.x, this.player.feetY - 110);
       sfx.play('levelup');
