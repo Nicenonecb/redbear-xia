@@ -24,6 +24,8 @@ export class SelectScene extends Phaser.Scene {
   private frames!: Phaser.GameObjects.Graphics;
   /** 没有立绘图的主角用剪影画，card 是对应第几张卡 */
   private views: { view: HeroView; stand: Fighter; card: number }[] = [];
+  /** 有立绘图的主角：选中的那张亮一点、大一点 */
+  private arts: { img: Phaser.GameObjects.Image; card: number; scale: number }[] = [];
   private cards: Phaser.Geom.Rectangle[] = [];
   private chosen = false;
 
@@ -34,6 +36,7 @@ export class SelectScene extends Phaser.Scene {
   create() {
     this.chosen = false;
     this.views = [];
+    this.arts = [];
     this.cards = [];
     drawInkMountains(this, { width: GAME_WIDTH, horizon: 460, bottom: GAME_HEIGHT, layers: 3, seed: 'select' });
     this.add
@@ -55,9 +58,10 @@ export class SelectScene extends Phaser.Scene {
         .setDepth(12);
 
       // 立绘：有图用图，没图就用战斗里同一套画法放大画在卡片右侧
-      const art = placeArt(this, id === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia', rect.right - 110, rect.bottom - 130, 220, 320);
+      const art = placeArt(this, id === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia', rect.right - 125, rect.bottom - 116, 240, 350);
       if (art) {
         art.setDepth(11);
+        this.arts.push({ img: art, card: i, scale: art.scaleX });
         return;
       }
       const view = hero.createView(this);
@@ -93,6 +97,10 @@ export class SelectScene extends Phaser.Scene {
       this.frames.lineStyle(selected ? 5 : 2, selected ? COLORS.red : COLORS.ink, selected ? 1 : 0.6);
       this.frames.strokeRect(r.x, r.y, r.width, r.height);
     });
+    for (const { img, card, scale } of this.arts) {
+      const selected = card === this.index;
+      img.setAlpha(selected ? 1 : 0.5).setScale(scale * (selected ? 1.04 : 1));
+    }
     // 选中的那位发带、长发跟着风飘，没选中的定格
     for (const { view, stand, card } of this.views) view.draw(stand, card === this.index ? delta : 0);
   }

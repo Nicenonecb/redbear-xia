@@ -3,6 +3,18 @@
 > 给 Codex / gpt-image / 即梦 等图像模型用。现在游戏里所有画面都是代码画的剪影，**一张图都不出也能玩**。
 > 出了哪张，就按下面的步骤放进去，对应的地方会自动替换成图片，没出的继续用剪影。
 
+## 现状（2026-10-17）
+
+第一批 7 张已经由 Codex（gpt-image）出好、放进游戏了：标题背景、温少华、于无瑕、胖虎（人形 / 猛虎）、红熊、任新野。
+
+- 游戏里用的是压缩后的 WebP（立绘长边 1024，总共约 1.5MB），原图 PNG 在 `~/Documents/Codex/2026-10-17/codex-gpt-image-1-public-art/outputs/`；
+- 实际用的生成提示词存在 `docs/art/generation-prompts.json`，以后补图、改图可以照着出，画风能对上；
+- 以后再加图也建议先转成 WebP：
+
+```bash
+cwebp -q 88 -alpha_q 95 -m 6 原图.png -o public/art/槽位名.webp
+```
+
 ## 怎么放进游戏
 
 1. 把图片放进 `public/art/`，文件名随意，比如 `wen.png`。

@@ -45,6 +45,10 @@ export class TitleScene extends Phaser.Scene {
       this.bear = this.add.graphics();
     }
     this.leaves = new FallingLeaves(this, GAME_WIDTH, GAME_HEIGHT, 18);
+    // 底部压一道渐淡的墨，下面那几行提示字在亮的标题画上也看得清
+    const band = this.add.graphics();
+    band.fillGradientStyle(COLORS.ink, COLORS.ink, COLORS.ink, COLORS.ink, 0, 0, 0.78, 0.78);
+    band.fillRect(0, GAME_HEIGHT - 190, GAME_WIDTH, 190);
     // 浏览器要等玩家第一次按键或点击才放出声音，在那之前风声先排着
     sfx.startAmbient();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => sfx.stopAmbient());

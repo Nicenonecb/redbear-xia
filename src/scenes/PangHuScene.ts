@@ -100,8 +100,9 @@ export class PangHuScene extends CombatScene {
 
     this.bossView.draw(this.boss, delta);
     this.bossBar.draw(this.boss.hp / this.boss.maxHp, delta);
-    const headY = this.boss.feetY - (this.boss.form === 'human' ? 132 : 100);
-    this.bubble.update(delta, this.boss.x, headY);
+    // 说话时有立绘就从立绘嘴边冒气泡，没有就从剪影头顶
+    const head = this.portrait.head ?? { x: this.boss.x, y: this.boss.feetY - (this.boss.form === 'human' ? 132 : 100) };
+    this.bubble.update(delta, head.x, head.y);
   }
 
   protected override foeHitboxes() {

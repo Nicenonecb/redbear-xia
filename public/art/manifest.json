@@ -1,4 +1,12 @@
 {
   "说明": "把图片放进 public/art/，再在下面 images 里写上 槽位名: 文件名，游戏就会用图片替换占位剪影。槽位名见 docs/art-prompts.md。",
-  "images": {}
+  "images": {
+    "title": "title.webp",
+    "portrait_wenShaohua": "portrait_wenShaohua.webp",
+    "portrait_yuWuxia": "portrait_yuWuxia.webp",
+    "portrait_pangHu": "portrait_pangHu.webp",
+    "portrait_pangHuTiger": "portrait_pangHuTiger.webp",
+    "portrait_redBear": "portrait_redBear.webp",
+    "portrait_renXinye": "portrait_renXinye.webp"
+  }
 }
