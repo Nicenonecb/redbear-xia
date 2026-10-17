@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
-import { hasArt } from '../art/slots';
+import { hasArt, type ArtSlot } from '../art/slots';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 
 export interface ChoiceOption {
   label: string;
   detail?: string;
+  /** 图标槽位：有图就画在卡片顶上（横排）或行首（竖排） */
+  icon?: ArtSlot;
   /** 不能选（钱不够、已满级），画成淡墨 */
   disabled?: boolean;
 }
@@ -28,6 +30,9 @@ export interface ChoiceConfig {
 }
 
 const CARD = { w: 250, h: 170, gap: 36 };
+/** 横排卡片上有图标时加高 */
+const CARD_WITH_ICON_H = 236;
+const ROW_ICON = 50;
 const ROW = { w: 560, h: 66, gap: 12 };
 
 /**
@@ -38,13 +43,16 @@ export class ChoicePanel {
   private readonly container: Phaser.GameObjects.Container;
   private readonly cards: {
     bg: Phaser.GameObjects.Graphics;
-    texts: Phaser.GameObjects.Text[];
-    /** 文字没被选中时的 y，选中时整张卡往上提一点 */
+    /** 卡片上的字和图标，选中时一起往上提 */
+    items: (Phaser.GameObjects.Text | Phaser.GameObjects.Image)[];
+    /** 没被选中时的 y */
     baseY: number[];
     rect: Phaser.Geom.Rectangle;
   }[] = [];
   private index = 0;
   private closed = false;
+  /** 横排卡片的高度（有图标时加高） */
+  private cardH = CARD.h;
   private readonly onKey = (e: KeyboardEvent) => this.handleKey(e);
   private readonly onPointer = (p: Phaser.Input.Pointer) => this.handlePointer(p);
 
@@ -89,6 +97,8 @@ export class ChoicePanel {
 
     const cx = this.config.centerX ?? GAME_WIDTH / 2;
     const titleY = layout === 'row' ? 170 : 120;
+    const icons = options.some((o) => o.icon && hasArt(this.scene, o.icon));
+    this.cardH = icons ? CARD_WITH_ICON_H : CARD.h;
     this.drawBackdrop(cx, titleY, options.length, layout);
     // 有卷轴底时标题写在卷面上，用浓墨；没有卷轴、又盖了暗幕时用宣纸色
     const titleColor = noDim || this.usesScroll() ? CSS_COLORS.ink : CSS_COLORS.paper;
@@ -111,33 +121,44 @@ export class ChoicePanel {
               cx - (options.length * CARD.w + (options.length - 1) * CARD.gap) / 2 + i * (CARD.w + CARD.gap),
               300,
               CARD.w,
-              CARD.h,
+              this.cardH,
             )
           : new Phaser.Geom.Rectangle(cx - ROW.w / 2, 220 + i * (ROW.h + ROW.gap), ROW.w, ROW.h);
       const bg = this.scene.add.graphics();
       const label = this.scene.add.text(0, 0, opt.label, { fontFamily: FONT_BRUSH, fontSize: layout === 'row' ? '36px' : '28px', color: CSS_COLORS.ink });
-      const texts = [label];
+      const items: (Phaser.GameObjects.Text | Phaser.GameObjects.Image)[] = [label];
+      const icon = opt.icon && hasArt(this.scene, opt.icon) ? this.scene.add.image(0, 0, `art:${opt.icon}`) : null;
       if (layout === 'row') {
-        label.setOrigin(0.5, 0).setPosition(rect.centerX, rect.y + 22);
+        // 有图标：图标在上、名字居中、说明在下
+        const top = icon ? 66 : 0;
+        if (icon) {
+          icon.setPosition(rect.centerX, rect.y + 50).setScale(80 / icon.width);
+          items.push(icon);
+        }
+        label.setOrigin(0.5, 0).setPosition(rect.centerX, rect.y + 22 + top);
         if (opt.detail) {
-          texts.push(
+          items.push(
             this.scene.add
-              .text(rect.centerX, rect.y + 82, opt.detail, { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.ink, align: 'center', lineSpacing: 4 })
+              .text(rect.centerX, rect.y + 82 + top, opt.detail, { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.ink, align: 'center', lineSpacing: 4 })
               .setOrigin(0.5, 0),
           );
         }
       } else {
-        label.setOrigin(0, 0.5).setPosition(rect.x + 22, rect.centerY);
+        if (icon) {
+          icon.setPosition(rect.x + 14 + ROW_ICON / 2, rect.centerY).setScale(ROW_ICON / icon.width);
+          items.push(icon);
+        }
+        label.setOrigin(0, 0.5).setPosition(rect.x + (icon ? 28 + ROW_ICON : 22), rect.centerY);
         if (opt.detail) {
-          texts.push(
+          items.push(
             this.scene.add
               .text(rect.right - 22, rect.centerY, opt.detail, { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.ink })
               .setOrigin(1, 0.5),
           );
         }
       }
-      this.container.add([bg, ...texts]);
-      this.cards.push({ bg, texts, baseY: texts.map((t) => t.y), rect });
+      this.container.add([bg, ...items]);
+      this.cards.push({ bg, items, baseY: items.map((t) => t.y), rect });
     });
 
     if (this.config.options[this.index]?.disabled) this.index = this.firstEnabled();
@@ -167,7 +188,7 @@ export class ChoicePanel {
     if (this.usesScroll()) {
       const contentW = count * CARD.w + (count - 1) * CARD.gap + 80;
       const top = titleY - 40;
-      const bottom = 300 + CARD.h + 24;
+      const bottom = 300 + this.cardH + 24;
       // 卷轴图里真正的纸面只占高度的中间 56%、宽度的中间 80%（上下是轴头，左右是木轴），按纸面来放大
       const img = this.scene.add
         .image(cx, (top + bottom) / 2, 'art:ui_scroll')
@@ -188,7 +209,7 @@ export class ChoicePanel {
   }
 
   private redraw() {
-    this.cards.forEach(({ bg, texts, baseY, rect }, i) => {
+    this.cards.forEach(({ bg, items, baseY, rect }, i) => {
       const opt = this.config.options[i];
       const selected = i === this.index;
       const lift = selected ? 6 : 0;
@@ -197,7 +218,7 @@ export class ChoicePanel {
       bg.fillRect(rect.x, rect.y - lift, rect.width, rect.height);
       bg.lineStyle(selected ? 4 : 2, selected ? COLORS.red : COLORS.ink);
       bg.strokeRect(rect.x, rect.y - lift, rect.width, rect.height);
-      texts.forEach((t, k) => t.setAlpha(opt.disabled ? 0.35 : 1).setY(baseY[k] - lift));
+      items.forEach((t, k) => t.setAlpha(opt.disabled ? 0.35 : 1).setY(baseY[k] - lift));
     });
   }
 

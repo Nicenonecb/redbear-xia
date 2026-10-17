@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
-import { addPaperGrain, coverArt, placeArt } from '../art/slots';
+import { addPaperGrain, coverArt, placeArt, type ArtSlot } from '../art/slots';
 import { drawTeaStall } from '../art/teaStall';
 import { CHAPTER1_SHOP_LINES } from '../game/chapter1';
 import { advanceRun } from '../game/flow';
@@ -96,16 +96,18 @@ export class ShopScene extends Phaser.Scene {
     const refinePrice = refine.prices[run.weapon.refine];
     const maxHp = runStats(run).maxHp;
     const price = (p: number) => (run.coins >= p ? `${p} 文` : `${p} 文（差 ${p - run.coins}）`);
+    const who = run.hero === 'wenShaohua' ? 'wen' : 'yu';
+    const nextIcon = `icon_weapon_${who}_${Math.min(2, run.weapon.tier + 1)}` as ArtSlot;
     return [
       refinePrice === undefined
-        ? { label: `强化${current.name}`, detail: '已强化到头', disabled: true }
-        : { label: `强化${current.name}（伤害 +10%）`, detail: price(refinePrice), disabled: run.coins < refinePrice },
+        ? { label: `强化${current.name}`, detail: '已强化到头', disabled: true, icon: 'icon_refine' }
+        : { label: `强化${current.name}（伤害 +10%）`, detail: price(refinePrice), disabled: run.coins < refinePrice, icon: 'icon_refine' },
       next
-        ? { label: `购买${next.name}`, detail: price(next.price), disabled: run.coins < next.price }
-        : { label: '购买新兵器', detail: '已是最好的', disabled: true },
+        ? { label: `购买${next.name}`, detail: price(next.price), disabled: run.coins < next.price, icon: nextIcon }
+        : { label: '购买新兵器', detail: '已是最好的', disabled: true, icon: nextIcon },
       run.hp >= maxHp
-        ? { label: `${potion.name}（回复一半气血）`, detail: '气血是满的', disabled: true }
-        : { label: `${potion.name}（回复一半气血）`, detail: price(potion.price), disabled: run.coins < potion.price },
+        ? { label: `${potion.name}（回复一半气血）`, detail: '气血是满的', disabled: true, icon: 'icon_potion' }
+        : { label: `${potion.name}（回复一半气血）`, detail: price(potion.price), disabled: run.coins < potion.price, icon: 'icon_potion' },
       { label: '告辞', detail: '前面就是山寨' },
     ];
   }

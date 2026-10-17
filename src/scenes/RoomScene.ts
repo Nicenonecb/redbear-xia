@@ -233,7 +233,11 @@ export class RoomScene extends CombatScene {
     new ChoicePanel(this, {
       title: `第 ${this.run.level - this.run.pendingLevelUps + 1} 重 · 功力精进`,
       subtitle: this.run.pendingLevelUps > 1 ? `还有 ${this.run.pendingLevelUps} 次可选` : undefined,
-      options: stats.map((id) => ({ label: L[id].name, detail: `${L[id].detail}\n（已加 ${this.run.stats[id]} 次）` })),
+      options: stats.map((id) => ({
+        label: L[id].name,
+        detail: `${L[id].detail}\n（已加 ${this.run.stats[id]} 次）`,
+        icon: `icon_stat_${id}` as const,
+      })),
       onPick: (i) => {
         applyLevelUp(this.run, stats[i]);
         this.refreshPlayerStats();

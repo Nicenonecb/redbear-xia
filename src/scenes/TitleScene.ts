@@ -68,20 +68,25 @@ export class TitleScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setAlpha(0.7);
 
-    // 朱红印章
+    // 朱红印章：有篆刻印的图就用图，没有就画一个红方块写"红熊"
     const sealX = cx + 290;
     const sealY = 150;
-    this.add.rectangle(sealX, sealY, 64, 64, COLORS.red).setAngle(-4);
-    this.add
-      .text(sealX, sealY, '红\n熊', {
-        fontFamily: FONT_BRUSH,
-        fontSize: '26px',
-        color: CSS_COLORS.paper,
-        align: 'center',
-        lineSpacing: -6,
-      })
-      .setOrigin(0.5)
-      .setAngle(-4);
+    const seal = placeArt(this, 'seal_redBear', sealX, sealY, 84, 84, 0.5, 0.5);
+    if (seal) {
+      seal.setAngle(-4);
+    } else {
+      this.add.rectangle(sealX, sealY, 64, 64, COLORS.red).setAngle(-4);
+      this.add
+        .text(sealX, sealY, '红\n熊', {
+          fontFamily: FONT_BRUSH,
+          fontSize: '26px',
+          color: CSS_COLORS.paper,
+          align: 'center',
+          lineSpacing: -6,
+        })
+        .setOrigin(0.5)
+        .setAngle(-4);
+    }
 
     // 有存档：J 继续、N 重新开始；没有存档：任意键入江湖
     const saved = loadRun();
