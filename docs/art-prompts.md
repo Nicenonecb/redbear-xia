@@ -5,6 +5,8 @@
 
 ## 现状（2026-10-17）
 
+> 第二批（场景背景、胖虎表情差分、图标、印章等 39 张）的清单和提示词见 [art-batch2.md](art-batch2.md)。
+
 第一批 7 张已经由 Codex（gpt-image）出好、放进游戏了：标题背景、温少华、于无瑕、胖虎（人形 / 猛虎）、红熊、任新野。
 
 - 游戏里用的是压缩后的 WebP（立绘长边 1024，总共约 1.5MB），原图 PNG 在 `~/Documents/Codex/2026-10-17/codex-gpt-image-1-public-art/outputs/`；
