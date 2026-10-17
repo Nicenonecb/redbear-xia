@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 
 /**
  * 立绘槽位：图片放进 public/art/，在 public/art/manifest.json 的 images 里登记一行，
@@ -91,7 +92,8 @@ export function hasArt(scene: Phaser.Scene, slot: ArtSlot) {
 /** 背景图：等比放大铺满整个画面（多出来的边裁掉）；没有这张图就返回 null */
 export function coverArt(scene: Phaser.Scene, slot: ArtSlot, depth = 0) {
   if (!hasArt(scene, slot)) return null;
-  const { width, height } = scene.scale;
+  const width = GAME_WIDTH;
+  const height = GAME_HEIGHT;
   const img = scene.add.image(width / 2, height / 2, textureKey(slot)).setDepth(depth);
   img.setScale(Math.max(width / img.width, height / img.height));
   return img;
@@ -103,7 +105,8 @@ export function coverArt(scene: Phaser.Scene, slot: ArtSlot, depth = 0) {
  */
 export function addPaperGrain(scene: Phaser.Scene) {
   if (!hasArt(scene, 'paper_texture')) return;
-  const { width, height } = scene.scale;
+  const width = GAME_WIDTH;
+  const height = GAME_HEIGHT;
   scene.add
     .tileSprite(0, 0, width, height, textureKey('paper_texture'))
     .setOrigin(0)

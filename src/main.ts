@@ -1,20 +1,25 @@
 import Phaser from 'phaser';
 import { sfx } from './audio/sfx';
+import { canvasSize, installSharpRendering, sharpCameraPlugin } from './render/sharp';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from './config';
 import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
 import { PangHuScene } from './scenes/PangHuScene';
 import { LetterScene } from './scenes/LetterScene';
+import { MapScene } from './scenes/MapScene';
 import { RoomScene } from './scenes/RoomScene';
 import { SelectScene } from './scenes/SelectScene';
 import { ShopScene } from './scenes/ShopScene';
+import { UIScene } from './scenes/UIScene';
 
+// 画布按屏幕实际像素来开，镜头再放大回 1280×720 的设计画面（见 render/sharp.ts）
+const size = canvasSize();
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
-  width: GAME_WIDTH,
-  height: GAME_HEIGHT,
+  width: size.width,
+  height: size.height,
   backgroundColor: COLORS.paper,
   scale: {
     mode: Phaser.Scale.FIT,
@@ -24,8 +29,12 @@ const game = new Phaser.Game({
     default: 'arcade',
     arcade: { gravity: { x: 0, y: 1600 }, debug: false },
   },
-  scene: [BootScene, TitleScene, SelectScene, GameScene, RoomScene, ShopScene, PangHuScene, LetterScene],
+  plugins: { scene: [sharpCameraPlugin] },
+  // 顺序就是画的顺序：界面层 UI 要排在大地图 Map 后面，才压在地图上面
+  scene: [BootScene, TitleScene, SelectScene, MapScene, UIScene, GameScene, RoomScene, ShopScene, PangHuScene, LetterScene],
 });
+
+installSharpRendering(game);
 
 // 音效借用 Phaser 的 AudioContext；M 静音，- / = 调音量（随时可按）
 sfx.bind(game);

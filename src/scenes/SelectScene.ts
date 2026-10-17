@@ -86,7 +86,7 @@ export class SelectScene extends Phaser.Scene {
 
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => this.onKey(e));
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
-      const i = this.cards.findIndex((r) => r.contains(p.x, p.y));
+      const i = this.cards.findIndex((r) => r.contains(p.worldX, p.worldY));
       if (i >= 0) {
         this.index = i;
         this.confirm();

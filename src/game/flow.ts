@@ -7,9 +7,8 @@ import { saveRun } from './save';
 export function sceneForStep(step: number): { key: string; data?: object } {
   const s = CHAPTER1_STEPS[step];
   if (!s) return { key: 'Title' };
-  if (s.kind === 'room') return { key: 'Room', data: { room: s.room } };
-  if (s.kind === 'shop') return { key: 'Shop' };
-  if (s.kind === 'boss') return { key: 'PangHu' };
+  // 改造成斜俯视大地图中：战斗房、茶摊、胖虎都在同一张地图上（见 docs/topdown-plan.md）
+  if (s.kind === 'room' || s.kind === 'shop' || s.kind === 'boss') return { key: 'Map' };
   return { key: 'Letter' };
 }
 

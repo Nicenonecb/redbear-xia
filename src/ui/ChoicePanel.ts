@@ -260,7 +260,7 @@ export class ChoicePanel {
   }
 
   private handlePointer(p: Phaser.Input.Pointer) {
-    const i = this.cards.findIndex((c) => c.rect.contains(p.x, p.y));
+    const i = this.cards.findIndex((c) => c.rect.contains(p.worldX, p.worldY));
     if (i < 0) return;
     this.index = i;
     this.pick(i);

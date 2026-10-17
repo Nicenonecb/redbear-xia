@@ -4,11 +4,14 @@ import Phaser from 'phaser';
  * 游戏动作。逻辑层只认动作，不认具体按键，
  * 以后接手柄只需要在这里加一组绑定。
  */
-export type Action = 'left' | 'right' | 'jump' | 'attack' | 'special' | 'dodge' | 'throw';
+export type Action = 'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'special' | 'dodge' | 'throw';
 
 const KEYBOARD_BINDINGS: Record<Action, string[]> = {
   left: ['A', 'LEFT'],
   right: ['D', 'RIGHT'],
+  // 上下用在斜俯视的大地图上；横版场景里 W 还是跳
+  up: ['W', 'UP'],
+  down: ['S', 'DOWN'],
   jump: ['W', 'SPACE', 'UP'],
   attack: ['J'],
   special: ['K'],
@@ -62,5 +65,10 @@ export class Controls {
   /** 水平方向：-1 左，0 不动，1 右 */
   get moveX() {
     return (this.isDown('right') ? 1 : 0) - (this.isDown('left') ? 1 : 0);
+  }
+
+  /** 竖直方向（大地图上）：-1 往上（远离镜头），0 不动，1 往下 */
+  get moveY() {
+    return (this.isDown('down') ? 1 : 0) - (this.isDown('up') ? 1 : 0);
   }
 }
