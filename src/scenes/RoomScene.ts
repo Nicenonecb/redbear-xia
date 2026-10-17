@@ -56,6 +56,7 @@ export class RoomScene extends CombatScene {
     this.roomIndex = data.room ?? 0;
     this.room = CHAPTER1_ROOMS[this.roomIndex];
     this.backgroundSeed = this.room.seed;
+    this.backgroundArt = this.room.art;
   }
 
   protected setup() {

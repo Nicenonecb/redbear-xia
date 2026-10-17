@@ -5,6 +5,7 @@ import { CombatScene, GROUND_Y } from './CombatScene';
 /** 练功场：温少华对着木人桩试招，调手感用。 */
 export class GameScene extends CombatScene {
   protected readonly stageName = '竹林 · 练功场';
+  protected override backgroundArt = 'bg_training' as const;
   private dummy!: TrainingDummy;
 
   constructor() {

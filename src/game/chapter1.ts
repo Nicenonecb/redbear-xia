@@ -1,3 +1,4 @@
+import type { ArtSlot } from '../art/slots';
 import type { EnemyId } from '../characters/bandits';
 
 /**
@@ -11,8 +12,10 @@ export interface SpawnDef {
 
 export interface RoomDef {
   name: string;
-  /** 背景远山的随机种子，每间房的山形不一样 */
+  /** 背景远山的随机种子，每间房的山形不一样（没有背景图时用代码画） */
   seed: string;
+  /** 背景图槽位，有图就用图 */
+  art: ArtSlot;
   waves: SpawnDef[][];
 }
 
@@ -23,6 +26,7 @@ export const CHAPTER1_ROOMS: RoomDef[] = [
   {
     name: '竹林 · 入山',
     seed: 'bamboo-room-1',
+    art: 'bg_room1',
     waves: [
       [R('bandit'), R('bandit')],
       [R('bandit'), R('thrower'), R('bandit')],
@@ -31,6 +35,7 @@ export const CHAPTER1_ROOMS: RoomDef[] = [
   {
     name: '竹林 · 深处',
     seed: 'bamboo-room-2',
+    art: 'bg_room2',
     waves: [
       [R('bandit'), R('thrower'), R('bandit')],
       [L('bandit'), R('bandit'), R('bandit')],
@@ -40,6 +45,7 @@ export const CHAPTER1_ROOMS: RoomDef[] = [
   {
     name: '竹林 · 山寨前',
     seed: 'bamboo-room-3',
+    art: 'bg_room3',
     waves: [
       [R('bandit'), L('bandit'), R('thrower')],
       [R('chief'), R('bandit')],

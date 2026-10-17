@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
+import { hasArt } from '../art/slots';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 
 export interface ChoiceOption {
@@ -88,7 +89,9 @@ export class ChoicePanel {
 
     const cx = this.config.centerX ?? GAME_WIDTH / 2;
     const titleY = layout === 'row' ? 170 : 120;
-    const titleColor = noDim ? CSS_COLORS.ink : CSS_COLORS.paper;
+    this.drawBackdrop(cx, titleY, options.length, layout);
+    // 有卷轴底时标题写在卷面上，用浓墨；没有卷轴、又盖了暗幕时用宣纸色
+    const titleColor = noDim || this.usesScroll() ? CSS_COLORS.ink : CSS_COLORS.paper;
     this.container.add(
       this.scene.add.text(cx, titleY, title, { fontFamily: FONT_BRUSH, fontSize: '44px', color: titleColor }).setOrigin(0.5),
     );
@@ -143,12 +146,45 @@ export class ChoicePanel {
         .text(cx, GAME_HEIGHT - 70, `A / D 选择 · J 确定${this.config.onCancel ? ' · K 返回' : ''}`, {
           fontFamily: FONT_BRUSH,
           fontSize: '20px',
-          color: titleColor,
+          color: noDim ? CSS_COLORS.ink : CSS_COLORS.paper,
         })
         .setOrigin(0.5)
         .setAlpha(0.7),
     );
     this.redraw();
+  }
+
+  /** 横排的面板矮而宽，正好配横的卷轴；竖排的列表太高，卷轴放不下 */
+  private usesScroll() {
+    return (this.config.layout ?? 'row') === 'row' && hasArt(this.scene, 'ui_scroll');
+  }
+
+  /**
+   * 面板底：横排面板铺一幅卷轴，内容写在卷面上；
+   * 竖排、又不盖暗幕的（商店）垫一块淡宣纸，免得标题压在花哨的背景上看不清
+   */
+  private drawBackdrop(cx: number, titleY: number, count: number, layout: 'row' | 'column') {
+    if (this.usesScroll()) {
+      const contentW = count * CARD.w + (count - 1) * CARD.gap + 80;
+      const top = titleY - 40;
+      const bottom = 300 + CARD.h + 24;
+      // 卷轴图里真正的纸面只占高度的中间 56%、宽度的中间 80%（上下是轴头，左右是木轴），按纸面来放大
+      const img = this.scene.add
+        .image(cx, (top + bottom) / 2, 'art:ui_scroll')
+        .setDisplaySize(contentW / 0.8, (bottom - top) / 0.56);
+      this.container.add(img);
+      return;
+    }
+    if (!this.config.noDim || layout !== 'column') return;
+    const top = titleY - 50;
+    const bottom = 220 + count * (ROW.h + ROW.gap) + 16;
+    const w = ROW.w + 60;
+    const g = this.scene.add.graphics();
+    g.fillStyle(COLORS.paper, 0.88);
+    g.fillRoundedRect(cx - w / 2, top, w, bottom - top, 14);
+    g.lineStyle(2, COLORS.ink, 0.5);
+    g.strokeRoundedRect(cx - w / 2, top, w, bottom - top, 14);
+    this.container.add(g);
   }
 
   private redraw() {

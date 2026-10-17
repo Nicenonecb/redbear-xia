@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
-import { placeArt } from '../art/slots';
+import { addPaperGrain, coverArt, placeArt } from '../art/slots';
 import { drawTeaStall } from '../art/teaStall';
 import { CHAPTER1_SHOP_LINES } from '../game/chapter1';
 import { advanceRun } from '../game/flow';
@@ -34,7 +34,10 @@ export class ShopScene extends Phaser.Scene {
   create() {
     this.run = getRun() ?? startRun('wenShaohua', false);
     this.leaving = false;
-    drawInkMountains(this, { width: GAME_WIDTH, horizon: 300, bottom: GROUND_Y, layers: 3, seed: 'tea-stall' });
+    if (!coverArt(this, 'bg_shop')) {
+      drawInkMountains(this, { width: GAME_WIDTH, horizon: 300, bottom: GROUND_Y, layers: 3, seed: 'tea-stall' });
+    }
+    addPaperGrain(this);
     this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + 50, GAME_WIDTH, 100, COLORS.ink);
     // 有任新野的立绘就让他本人站在那儿（立绘里自带柜台、算盘和灯笼），没有就画剪影茶摊
     const art = placeArt(this, 'portrait_renXinye', STALL_X, GROUND_Y + 24, 340, 470);
@@ -45,7 +48,10 @@ export class ShopScene extends Phaser.Scene {
       drawTeaStall(this, STALL_X, GROUND_Y);
       this.head = { x: STALL_X - 10, y: GROUND_Y - 200 };
     }
-    this.add.text(24, 20, '竹林 · 任新野的茶摊', { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink });
+    const backdrop = this.add.graphics().setDepth(49);
+    backdrop.fillGradientStyle(COLORS.paper, COLORS.paper, COLORS.paper, COLORS.paper, 0.85, 0, 0.85, 0);
+    backdrop.fillRect(0, 0, 420, 70);
+    this.add.text(24, 20, '竹林 · 任新野的茶摊', { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink }).setDepth(50);
 
     this.bubble = new SpeechBubble(this);
     this.lines = [CHAPTER1_SHOP_LINES.greeting, CHAPTER1_SHOP_LINES.intel];

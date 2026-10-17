@@ -4,7 +4,7 @@ import { sfx } from '../audio/sfx';
 import { FallingLeaves, drawBambooForest } from '../art/bamboo';
 import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
-import { placeArt } from '../art/slots';
+import { addPaperGrain, placeArt } from '../art/slots';
 import { CHAPTER1_STEPS } from '../game/chapter1';
 import { sceneForStep } from '../game/flow';
 import { setRun, startRun } from '../game/run';
@@ -45,6 +45,7 @@ export class TitleScene extends Phaser.Scene {
       this.bear = this.add.graphics();
     }
     this.leaves = new FallingLeaves(this, GAME_WIDTH, GAME_HEIGHT, 18);
+    addPaperGrain(this);
     // 底部压一道渐淡的墨，下面那几行提示字在亮的标题画上也看得清
     const band = this.add.graphics();
     band.fillGradientStyle(COLORS.ink, COLORS.ink, COLORS.ink, COLORS.ink, 0, 0, 0.78, 0.78);

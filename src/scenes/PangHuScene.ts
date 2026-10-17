@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH } from '../config';
+import { COLORS, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { PangHuView } from '../art/pangHuView';
 import { drawRoarRing, drawShockwave } from '../art/projectiles';
@@ -25,9 +25,11 @@ const BOSS_BAR_WIDTH = 520;
  */
 export class PangHuScene extends CombatScene {
   protected readonly stageName = '竹林 · 山大王';
+  protected override backgroundArt = 'bg_boss' as const;
   private boss!: PangHu;
   private bossView!: PangHuView;
   private bossBar!: HealthBar;
+  private bossBackdrop!: Phaser.GameObjects.Graphics;
   private bubble!: SpeechBubble;
   private portrait!: Portrait;
   /** 一串台词念完以后要做的事 */
@@ -45,8 +47,15 @@ export class PangHuScene extends CombatScene {
     // 闪避的无敌帧里可以从胖虎身上穿过去
     this.physics.add.collider(this.player.zone, this.boss.zone, undefined, () => !this.player.evading);
     this.bossView = new PangHuView(this);
-    this.bossBar = new HealthBar(this, (GAME_WIDTH - BOSS_BAR_WIDTH) / 2, 52, BOSS_BAR_WIDTH, PANGHU.name);
-    this.bossBar.setVisible(false);
+    // 血条后面垫一块淡宣纸，背景是聚义厅这类深色建筑时也看得清名字
+    const barX = (GAME_WIDTH - BOSS_BAR_WIDTH) / 2;
+    const backdrop = this.add.graphics().setDepth(49);
+    backdrop.fillStyle(COLORS.paper, 0.8);
+    backdrop.fillRoundedRect(barX - 24, 14, BOSS_BAR_WIDTH + 48, 62, 10);
+    backdrop.setVisible(false);
+    this.bossBackdrop = backdrop;
+    this.bossBar = new HealthBar(this, barX, 52, BOSS_BAR_WIDTH, PANGHU.name);
+    this.showBossBar(false);
     this.bubble = new SpeechBubble(this);
     this.portrait = new Portrait(this, 'portrait_pangHu', 'right');
     this.queue = [];
@@ -197,15 +206,20 @@ export class PangHuScene extends CombatScene {
     }
     this.boss.yieldPath();
     this.clearEnemyProjectiles();
-    this.bossBar.setVisible(false);
+    this.showBossBar(false);
     const lines = amount >= generous ? [PANGHU.lines.bribePass, PANGHU.lines.bribeGenerous] : [PANGHU.lines.bribePass];
     this.talk(lines, () => this.win('竹林 · 放行'));
+  }
+
+  private showBossBar(visible: boolean) {
+    this.bossBar.setVisible(visible);
+    this.bossBackdrop.setVisible(visible);
   }
 
   private drawSword() {
     this.setPaused('bribe', false);
     this.boss.startFight();
-    this.bossBar.setVisible(true);
+    this.showBossBar(true);
   }
 
   private win(title: string) {

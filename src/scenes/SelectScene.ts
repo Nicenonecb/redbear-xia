@@ -3,7 +3,7 @@ import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../conf
 import type { HeroView } from '../art/heroView';
 import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
-import { placeArt } from '../art/slots';
+import { addPaperGrain, coverArt, placeArt } from '../art/slots';
 import { HEROES } from '../characters/heroes';
 import type { Fighter } from '../entities/Fighter';
 import { sceneForStep } from '../game/flow';
@@ -38,7 +38,10 @@ export class SelectScene extends Phaser.Scene {
     this.views = [];
     this.arts = [];
     this.cards = [];
-    drawInkMountains(this, { width: GAME_WIDTH, horizon: 460, bottom: GAME_HEIGHT, layers: 3, seed: 'select' });
+    if (!coverArt(this, 'bg_select')) {
+      drawInkMountains(this, { width: GAME_WIDTH, horizon: 460, bottom: GAME_HEIGHT, layers: 3, seed: 'select' });
+    }
+    addPaperGrain(this);
     this.add
       .text(GAME_WIDTH / 2, 70, '红熊门下', { fontFamily: FONT_BRUSH, fontSize: '56px', color: CSS_COLORS.ink })
       .setOrigin(0.5);

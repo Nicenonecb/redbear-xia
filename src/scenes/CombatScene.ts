@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { FallingLeaves, drawBambooForest } from '../art/bamboo';
+import { addPaperGrain, coverArt, type ArtSlot } from '../art/slots';
 import type { HeroView } from '../art/heroView';
 import { drawRedBear } from '../art/redBear';
 import { HEROES, type HeroEntry } from '../characters/heroes';
@@ -66,8 +67,10 @@ export abstract class CombatScene extends Phaser.Scene {
 
   /** 左上角的场景名 */
   protected abstract readonly stageName: string;
-  /** 远山的随机种子 */
+  /** 远山的随机种子（没有背景图时用代码画竹林） */
   protected backgroundSeed = 'bamboo-1';
+  /** 背景图槽位，有图就用图 */
+  protected backgroundArt: ArtSlot | null = null;
   /** 玩家出场位置 */
   protected playerStartX = 360;
   /** 摆敌人、加碰撞，玩家已经创建好了 */
@@ -103,7 +106,10 @@ export abstract class CombatScene extends Phaser.Scene {
     // 从练功场或调试快捷键直接进来时没有一局，临时开一局
     this.run = getRun() ?? startRun('wenShaohua', false);
 
-    drawBambooForest(this, { width: GAME_WIDTH, height: GAME_HEIGHT, groundY: GROUND_Y, seed: this.backgroundSeed });
+    if (!this.backgroundArt || !coverArt(this, this.backgroundArt)) {
+      drawBambooForest(this, { width: GAME_WIDTH, height: GAME_HEIGHT, groundY: GROUND_Y, seed: this.backgroundSeed });
+    }
+    addPaperGrain(this);
     this.leaves = new FallingLeaves(this, GAME_WIDTH, GROUND_Y);
 
     // 地面：一道浓墨
