@@ -1,5 +1,4 @@
 import type { ArtSlot } from '../art/slots';
-import type { EnemyId } from '../characters/bandits';
 
 /**
  * 第一章 · 竹林的大地图（斜俯视）。坐标是地面上的位置，单位和设计画面一样是像素，
@@ -22,6 +21,8 @@ export interface MapArea {
   /** 空地的中心和半径：竹子不长在这里面，走进来就算到了这片区域 */
   center: Pt;
   radius: number;
+  /** 这片空地里打哪一场遭遇战（chapter1.ts 的 CHAPTER1_ROOMS 下标） */
+  room?: number;
 }
 
 export const CHAPTER1_MAP = {
@@ -46,26 +47,22 @@ export const CHAPTER1_MAP = {
   ] as Pt[],
   pathWidth: 200,
   areas: [
-    { id: 'entrance', name: '竹林 · 入山', art: 'bg_room1', center: { x: 1250, y: 3480 }, radius: 420 },
-    { id: 'deep', name: '竹林 · 深处', art: 'bg_room2', center: { x: 2650, y: 2580 }, radius: 460 },
+    { id: 'entrance', name: '竹林 · 入山', art: 'bg_room1', center: { x: 1250, y: 3480 }, radius: 420, room: 0 },
+    { id: 'deep', name: '竹林 · 深处', art: 'bg_room2', center: { x: 2650, y: 2580 }, radius: 460, room: 1 },
     { id: 'teahouse', name: '任新野的茶摊', art: 'bg_shop', center: { x: 3700, y: 2230 }, radius: 340 },
-    { id: 'campFront', name: '竹林 · 山寨前', art: 'bg_room3', center: { x: 4700, y: 1450 }, radius: 440 },
+    { id: 'campFront', name: '竹林 · 山寨前', art: 'bg_room3', center: { x: 4700, y: 1450 }, radius: 440, room: 2 },
     { id: 'camp', name: '胖虎山寨', art: 'bg_boss', center: { x: 5600, y: 820 }, radius: 560 },
   ] as MapArea[],
-  /**
-   * 路上守着的山贼：主角走近了才动手。
-   * （第 4 阶段改成走进空地两边合上竹篱、一波一波打）
-   */
-  guards: [
-    { id: 'bandit', at: { x: 2570, y: 2500 } },
-    { id: 'bandit', at: { x: 2730, y: 2530 } },
-    { id: 'bandit', at: { x: 2640, y: 2690 } },
-    { id: 'thrower', at: { x: 2820, y: 2400 } },
-    { id: 'bandit', at: { x: 4600, y: 1420 } },
-    { id: 'bandit', at: { x: 4800, y: 1520 } },
-    { id: 'thrower', at: { x: 4880, y: 1320 } },
-    { id: 'chief', at: { x: 4720, y: 1360 } },
-  ] as { id: EnemyId; at: Pt }[],
+  /** 任新野站在茶摊柜台后面 */
+  renXinye: { x: 3700, y: 2120 },
+  /** 读档时主角出现在哪儿：按一局走到第几步（chapter1.ts 的 CHAPTER1_STEPS） */
+  respawn: [
+    { x: 640, y: 3960 },
+    { x: 1250, y: 3480 },
+    { x: 2650, y: 2580 },
+    { x: 3700, y: 2300 },
+    { x: 4700, y: 1450 },
+  ] as Pt[],
   /** 胖虎守在山寨里 */
   boss: { x: 5640, y: 740 },
   /** 竹子长多密：每多少平方像素长一丛 */

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH } from '../config';
 import { PROGRESSION } from '../game/progression';
-import type { Fighter } from '../entities/Fighter';
+import type { CharacterDef } from '../combat/moveTable';
 import { runStats, type RunState } from '../game/run';
 
 const EXP_WIDTH = 240;
@@ -22,7 +22,8 @@ export class RunHud {
       .setDepth(50);
   }
 
-  draw(run: RunState, player: Fighter) {
+  /** player：横版的 Fighter 或者大地图上的 MapFighter，只读招式表和剩余弹药 */
+  draw(run: RunState, player: { def: CharacterDef; ammo: number }) {
     const ratio = run.exp / PROGRESSION.expToNext(run.level);
     this.g.clear();
     this.g.fillStyle(COLORS.ink, 0.2);

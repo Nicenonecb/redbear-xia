@@ -4,23 +4,28 @@ import type { ArtSlot } from '../art/slots';
 import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
 import { sfx } from '../audio/sfx';
-import { ENEMIES } from '../characters/bandits';
+import { ENEMIES, ENEMY_INTROS, type EnemyId } from '../characters/bandits';
 import { HEROES, type HeroEntry } from '../characters/heroes';
 import { PANGHU } from '../characters/pangHu';
 import type { GroundArea, MoveEvent } from '../combat/moveTable';
-import { endRun, gainExp, getRun, runStats, startRun, type RunState } from '../game/run';
+import { BOSS_STEP, CHAPTER1_ROOMS, CHAPTER1_SHOP_LINES, SHOP_STEP, roomStep, type SpawnDef } from '../game/chapter1';
+import { advanceRun } from '../game/flow';
+import { PROGRESSION, RESCUE_LINES, type StatId } from '../game/progression';
+import { applyLevelUp, endRun, gainExp, getRun, runStats, startRun, type RunState } from '../game/run';
+import { saveRun } from '../game/save';
 import { renderScale } from '../render/sharp';
 import { Controls } from '../input/Controls';
 import { CHAPTER1_MAP, type MapArea, type Pt } from '../map/chapter1Map';
 import { GROUND_SQUASH, areaOf, dirTo, groundAngle, type Vec } from '../map/combat/ground';
 import type { MapActor, MapHitResult, MapHurtable } from '../map/combat/MapActor';
-import { MapDummy } from '../map/combat/MapDummy';
+import { MapCoin } from '../map/combat/MapCoin';
 import { MapEnemy } from '../map/combat/MapEnemy';
 import { MapFighter } from '../map/combat/MapFighter';
 import { MapPangHu } from '../map/combat/MapPangHu';
 import { MapProjectile } from '../map/combat/MapProjectile';
 import { RingWave } from '../map/combat/RingWave';
 import { ChargeAura, DustPuff, InkVortex, SlashFx, type Overlay } from '../map/combat/fx';
+import { Encounter } from '../map/Encounter';
 import { LOOKS, type MapLook } from '../map/looks';
 import {
   BAMBOO_SIZE,
@@ -33,7 +38,7 @@ import {
   drawStonePath,
 } from '../map/mapArt';
 import { MapSprite, poseOf } from '../map/MapSprite';
-import { WALK_MARGIN, distToPath } from '../map/walkable';
+import { WALK_MARGIN, distToPath, type WalkableMap } from '../map/walkable';
 import { DamageNumbers } from '../ui/DamageNumbers';
 import type { ScreenPoint, UIScene } from './UIScene';
 
@@ -53,24 +58,22 @@ const MAX_CATCHUP_FRAMES = 6;
 const HEAVY_HITSTOP = 8;
 /** 伤害数字、判定显示压在所有人和竹子上面 */
 const TOP_DEPTH = 100000;
-/** 第 2 阶段先在"入山"空地里摆几个木人桩试招（第 3 阶段换成山贼） */
-const DUMMIES: Pt[] = [
-  { x: 1180, y: 3400 },
-  { x: 1340, y: 3460 },
-  { x: 1240, y: 3600 },
-];
-
+/** 走到任新野跟前多近能说话 */
+const TALK_RANGE = 150;
+/** 红熊救场演出多长（毫秒）、第几成时开口 */
+const RESCUE_MS = 2800;
+const RESCUE_LINE_AT = 0.42;
 /** 胖虎走到这么近（地面距离）就开口念开场白 */
 const BOSS_INTRO_RANGE = 560;
-/** 开场白念多久（逻辑帧）再开打 */
-const BOSS_INTRO_FRAMES = 170;
-/** 发现主角的山贼会喊上附近多远的同伙 */
-const ALERT_RADIUS = 320;
+/** 走到离茶摊这么近，任新野就招呼一声 */
+const GREET_RANGE = 450;
 
 /**
- * 第一章 · 竹林的大地图（斜俯视）。
- * WASD 八个方向走，竹林走不进去，人物按前后自动遮挡，镜头跟着人，走进新区域亮出区域题卡；
- * 战斗也在地图上打：招式表和横版一样，判定变成脚下朝面向张开的扇形，刀光、剑气朝面向出。
+ * 第一章 · 竹林的大地图（斜俯视），整章都在这一张图上走完：
+ * 入山、深处两场遭遇战（走进空地两头竹篱合上，山贼一波波杀进来，清完选升级、篱笆落下、存档）→
+ * 任新野的茶摊（走到跟前按 J 进去买东西，也可以直接走过去）→ 山寨前的遭遇战（有头目）→
+ * 胖虎山寨（开场白 →【拔剑 / 给钱】→ 开打，半血变身猛虎）→ 红熊的信。
+ * 濒死时红熊救场一次。战斗的招式表和横版一样，判定是脚下朝面向张开的扇形。
  */
 export class MapScene extends Phaser.Scene {
   private run!: RunState;
@@ -85,7 +88,21 @@ export class MapScene extends Phaser.Scene {
   private seenAreas = new Set<string>();
   /** 地图上的竹子和山石，连同它在地图上占的范围（判断挡没挡住主角用） */
   private props: { img: Phaser.GameObjects.Image; rect: Phaser.Geom.Rectangle }[] = [];
-  private dummies: MapDummy[] = [];
+  /** 能走的范围：地图本身加上遭遇战时竹篱圈住的那一块 */
+  private walk!: WalkableMap;
+  private encounters: Encounter[] = [];
+  private coins: MapCoin[] = [];
+  /** 暂停的原因（念台词、选升级、救场演出）；有任何一个逻辑帧都不推进 */
+  private pauses = new Set<string>();
+  /** 正在念的一串台词，念完做 then */
+  private talking: { lines: string[]; then: () => void; where: () => ScreenPoint; portrait?: { slot: ArtSlot; side: 'left' | 'right' } } | null = null;
+  private renSprite!: MapSprite;
+  private renPrompt!: Phaser.GameObjects.Text;
+  private renGreeted = false;
+  private rescueShow: { t: number; startHp: number; targetHp: number; said: boolean } | null = null;
+  /** 胖虎名牌只在第一次拔剑时亮 */
+  private bossIntroduced = false;
+  private leaving = false;
   private projectiles: MapProjectile[] = [];
   private overlays: Overlay[] = [];
   private numbers!: DamageNumbers;
@@ -100,7 +117,7 @@ export class MapScene extends Phaser.Scene {
   private boss: MapPangHu | null = null;
   private bossSprite!: MapSprite;
   private tigerSprite!: MapSprite;
-  private bossIntro = -1;
+  private bossIntro = false;
   private rings: RingWave[] = [];
   /** 地上的红色预警（扇形、红线、红圈），每帧重画 */
   private warn!: Phaser.GameObjects.Graphics;
@@ -144,7 +161,14 @@ export class MapScene extends Phaser.Scene {
     drawStonePath(floor, M.path, M.pathWidth, M.seed);
 
     this.scatterProps();
-    this.dummies = DUMMIES.map((p) => new MapDummy(this, p));
+    this.walk = { path: M.path, pathWidth: M.pathWidth, areas: M.areas, lock: null };
+    this.coins = [];
+    this.pauses = new Set();
+    this.talking = null;
+    this.rescueShow = null;
+    this.bossIntroduced = false;
+    this.leaving = false;
+    this.renGreeted = false;
     this.warn = this.add.graphics().setDepth(-2900);
     this.glints = this.add.graphics().setDepth(TOP_DEPTH - 1);
     this.rings = [];
@@ -152,23 +176,31 @@ export class MapScene extends Phaser.Scene {
     this.timeScale = 1;
     this.vortex = null;
     this.over = false;
-    this.bossIntro = -1;
+    this.bossIntro = false;
 
     // 主角：逻辑在 MapFighter 里，画面在 MapSprite 里
     this.heroEntry = HEROES[this.run.hero];
-    this.player = new MapFighter(M.start.x, M.start.y, this.heroEntry.def, this.controls, M, {
+    // 读档时出现在上一个关口那里
+    const at = M.respawn[Math.min(this.run.step, M.respawn.length - 1)];
+    this.player = new MapFighter(at.x, at.y, this.heroEntry.def, this.controls, this.walk, {
       ...runStats(this.run),
       hp: this.run.hp,
     });
+    this.player.rescueBelow = this.run.rescueUsed ? 0 : PROGRESSION.rescue.below;
     this.player.events.on('move', (e: MoveEvent) => this.onPlayerMove(e));
+    this.player.events.on('rescue', () => this.rescue());
     this.player.events.once('dead', () => this.onPlayerDead());
     const fallback = (this.run.hero === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia') as ArtSlot;
     this.sprite = new MapSprite(this, this.run.hero, fallback, HERO_HEIGHT, 70);
     this.numbers = new DamageNumbers(this, TOP_DEPTH);
-    this.spawnGuards();
+    this.enemies = [];
+    this.encounters = M.areas
+      .filter((a) => a.room !== undefined)
+      .map((a) => new Encounter(this, a, CHAPTER1_ROOMS[a.room!], this.walk, M.path, this.run.step > roomStep(a.room!)));
+    this.spawnRen();
     this.spawnBoss();
 
-    this.camTarget = this.add.zone(M.start.x, M.start.y - 60, 1, 1);
+    this.camTarget = this.add.zone(at.x, at.y - 60, 1, 1);
     const cam = this.cameras.main;
     cam.setBounds(0, 0, M.width, M.height);
     cam.startFollow(this.camTarget, true, 0.12, 0.12);
@@ -177,10 +209,12 @@ export class MapScene extends Phaser.Scene {
     this.showDebug = false;
     this.input.keyboard!.on('keydown-BACKTICK', () => (this.showDebug = !this.showDebug));
 
-    this.scene.launch('UI', { heroName: this.heroEntry.def.name, hint: this.heroEntry.mapHint });
+    this.scene.launch('UI', { heroName: this.heroEntry.def.name, hint: this.heroEntry.mapHint, run: this.run, player: this.player });
     this.ui = this.scene.get('UI') as UIScene;
 
     this.input.keyboard!.on('keydown-ESC', () => {
+      if (this.pauses.size || this.leaving) return;
+      // 存档留着，回到标题可以继续
       endRun(false);
       this.scene.stop('UI');
       this.scene.start('Title');
@@ -195,18 +229,29 @@ export class MapScene extends Phaser.Scene {
 
   update(_time: number, delta: number) {
     this.controls.update();
-    for (const action of this.controls.justPressedActions) this.player.buffer.push(action);
-    this.accumulator = Math.min(this.accumulator + delta * this.timeScale, FRAME_MS * MAX_CATCHUP_FRAMES);
-    while (this.accumulator >= FRAME_MS) {
-      this.accumulator -= FRAME_MS;
-      this.tick();
+    if (!this.pauses.size && !this.leaving) {
+      for (const action of this.controls.justPressedActions) {
+        // 站在任新野跟前，J 是说话不是出招
+        if (action === 'attack' && this.canVisitShop()) {
+          this.visitShop();
+          continue;
+        }
+        this.player.buffer.push(action);
+      }
+      this.accumulator = Math.min(this.accumulator + delta * this.timeScale, FRAME_MS * MAX_CATCHUP_FRAMES);
+      while (this.accumulator >= FRAME_MS && !this.pauses.size) {
+        this.accumulator -= FRAME_MS;
+        this.tick();
+      }
     }
+    this.updateTalk();
+    this.updateRescue(delta);
     this.render(delta);
   }
 
   /**
    * 一个逻辑帧：主角行动 → 和挡路的东西挤开 → 山贼、胖虎行动并结算他们的招 →
-   * 结算主角的招、飞行道具、墨圈 → 木人桩晃
+   * 结算主角的招、飞行道具、墨圈 → 捡铜钱 → 遭遇战刷波
    */
   private tick() {
     const p = this.player;
@@ -214,7 +259,6 @@ export class MapScene extends Phaser.Scene {
     const enemies = this.enemies.map((e) => e.enemy);
     const boss = this.boss;
     if (!p.evading) {
-      for (const d of this.dummies) p.pushOutOf(d);
       for (const e of enemies) if (e.def.superArmor && !e.dead) p.pushOutOf(e);
       if (boss && !boss.dead && boss.stage !== 'yield') p.pushOutOf(boss);
     }
@@ -228,19 +272,25 @@ export class MapScene extends Phaser.Scene {
     for (const entry of this.enemies) if (entry.enemy.gone) entry.sprite.destroy();
     this.enemies = this.enemies.filter((e) => !e.enemy.gone);
     if (boss) {
-      this.tickBossIntro(boss);
+      this.checkBossIntro(boss);
       boss.tick();
       this.reportHits(boss.resolveHits([p]));
     }
 
-    const foes: MapHurtable[] = [...this.dummies, ...this.enemies.map((e) => e.enemy).filter((e) => !e.dead)];
+    const foes: MapHurtable[] = this.enemies.map((e) => e.enemy).filter((e) => !e.dead);
     if (boss && !boss.dead) foes.push(boss);
     this.reportHits(p.resolveHits(foes));
     for (const pr of this.projectiles) this.reportHits(pr.tick(pr.team === 'player' ? foes : [p]));
     this.projectiles = this.projectiles.filter((pr) => pr.alive);
     for (const r of this.rings) this.reportHits(r.tick(r.team === 'player' ? foes : [p]));
     this.rings = this.rings.filter((r) => r.alive);
-    for (const d of this.dummies) d.tick();
+    for (const c of this.coins) {
+      if (!c.tick(p.pos)) continue;
+      this.run.coins += c.value;
+      sfx.play('coin');
+    }
+    this.coins = this.coins.filter((c) => !c.collected);
+    this.tickEncounters();
   }
 
   /** 每个画面帧：画人、木人桩、特效，竹子透明，界面，区域题卡 */
@@ -265,7 +315,9 @@ export class MapScene extends Phaser.Scene {
       },
       delta,
     );
-    for (const d of this.dummies) d.draw();
+    for (const e of this.encounters) e.draw(delta);
+    this.renSprite.update({ x: CHAPTER1_MAP.renXinye.x, y: CHAPTER1_MAP.renXinye.y, facing: { x: 0, y: 1 }, moving: false }, delta);
+    this.renPrompt.setVisible(this.canVisitShop() && !this.pauses.size);
     for (const { enemy: e, sprite, look } of this.enemies) {
       sprite.inkOver = e.dissolve;
       sprite.update(
@@ -364,7 +416,6 @@ export class MapScene extends Phaser.Scene {
       g.strokeEllipse(at.x, at.y, r * 2, r * 2 * GROUND_SQUASH);
     };
     circle(p.pos, p.radius, 0x2a6fdb);
-    for (const d of this.dummies) circle(d.pos, d.radius, 0x2a6fdb);
     for (const pr of this.projectiles) circle(pr.pos, pr.radius, COLORS.red);
     const actors: MapActor[] = [p, ...this.enemies.map((e) => e.enemy)];
     if (this.boss) actors.push(this.boss);
@@ -380,22 +431,135 @@ export class MapScene extends Phaser.Scene {
 
   // ---------------- 山贼 ----------------
 
-  private spawnGuards() {
-    this.enemies = [];
-    CHAPTER1_MAP.guards.forEach((gd, i) => {
-      const def = ENEMIES[gd.id];
-      const enemy = new MapEnemy(gd.at.x, gd.at.y, def, this.player, CHAPTER1_MAP, `guard-${i}`);
-      const look: MapLook = LOOKS[def.look];
-      const sprite = new MapSprite(this, look.mapName, look.fallback, look.height, look.shadow);
-      enemy.events.on('move', (e: MoveEvent) => this.onEnemyMove(enemy, e));
-      enemy.events.once('dead', () => this.onEnemyDead(enemy));
-      enemy.events.once('aggro', () => {
-        sfx.play('growl');
-        for (const o of this.enemies) {
-          if (o.enemy !== enemy && Math.hypot(o.enemy.pos.x - enemy.pos.x, o.enemy.pos.y - enemy.pos.y) < ALERT_RADIUS) o.enemy.alert();
-        }
-      });
-      this.enemies.push({ enemy, sprite, look });
+  /** 走进有遭遇战的空地就开打；场上清空了刷下一波；最后一波清完先选升级再开篱笆 */
+  private tickEncounters() {
+    const p = this.player.pos;
+    for (const enc of this.encounters) {
+      if (enc.shouldStart(p)) {
+        enc.start();
+        sfx.play('bamboo-knock');
+      }
+      if (enc.state !== 'fighting') continue;
+      const alive = this.enemies.filter((e) => !e.enemy.dead).length;
+      const result = enc.tick(alive, (sp, at) => this.spawnEnemy(sp, at));
+      this.ui.setWave(`第 ${Math.max(1, enc.wave)} / ${enc.waves} 波`);
+      if (result === 'done') {
+        enc.state = 'cleared';
+        this.ui.setWave('清场');
+        this.offerLevelUps(() => this.finishEncounter(enc));
+      }
+    }
+    this.greet();
+    // 没进茶摊直接往山寨走：算是路过了
+    if (this.run.step === SHOP_STEP && this.area?.id === 'campFront') this.passCheckpoint();
+  }
+
+  private finishEncounter(enc: Encounter) {
+    enc.open();
+    this.ui.setWave(null);
+    sfx.play('bamboo-knock');
+    this.toast('过关', this.player.pos.x, this.player.pos.y - 200);
+    this.passCheckpoint();
+  }
+
+  /** 过了一个关口：一局往前走一步，存档（主角当前的气血也存进去） */
+  private passCheckpoint() {
+    this.run.step++;
+    this.run.hp = this.player.hp;
+    saveRun(this.run);
+  }
+
+  /** 清场后一次选完攒下的升级，每次三选一；选完了再做 then */
+  private offerLevelUps(then: () => void) {
+    if (this.run.pendingLevelUps <= 0) return then();
+    this.pauses.add('levelUp');
+    const stats: StatId[] = ['attack', 'vitality', 'agility'];
+    const L = PROGRESSION.levelUp;
+    this.ui.choice({
+      title: `第 ${this.run.level - this.run.pendingLevelUps + 1} 重 · 功力精进`,
+      subtitle: this.run.pendingLevelUps > 1 ? `还有 ${this.run.pendingLevelUps} 次可选` : undefined,
+      options: stats.map((id) => ({
+        label: L[id].name,
+        detail: `${L[id].detail}\n（已加 ${this.run.stats[id]} 次）`,
+        icon: `icon_stat_${id}` as const,
+      })),
+      onPick: (i) => {
+        applyLevelUp(this.run, stats[i]);
+        this.player.applyStats({ ...runStats(this.run), hp: this.player.hp });
+        if (stats[i] === 'vitality') this.player.hp = Math.min(this.player.maxHp, this.player.hp + L.vitality.hp);
+        this.pauses.delete('levelUp');
+        this.offerLevelUps(then);
+      },
+    });
+  }
+
+  /** 遭遇战刷出一个山贼：一刷出来就盯上主角；这一局第一次见到的还弹登场提示 */
+  private spawnEnemy(sp: SpawnDef, at: Pt) {
+    const def = ENEMIES[sp.enemy];
+    const enemy = new MapEnemy(at.x, at.y, def, this.player, this.walk, `${this.run.step}-${this.enemies.length}-${this.time.now}`);
+    const look: MapLook = LOOKS[def.look];
+    const sprite = new MapSprite(this, look.mapName, look.fallback, look.height, look.shadow);
+    enemy.events.on('move', (e: MoveEvent) => this.onEnemyMove(enemy, e));
+    enemy.events.once('dead', () => this.onEnemyDead(enemy));
+    enemy.alert();
+    this.enemies.push({ enemy, sprite, look });
+    this.overlays.push(new DustPuff(this, { ...at }, { x: 0, y: 1 }, 420));
+    this.introduce(sp.enemy);
+  }
+
+  private introduce(id: EnemyId) {
+    const seen = (this.run.seenEnemies ??= []);
+    if (seen.includes(id)) return;
+    seen.push(id);
+    const intro = ENEMY_INTROS[id];
+    this.ui.introCard(intro.slot, ENEMIES[id].name, intro.tip, intro.tier);
+  }
+
+  // ---------------- 任新野的茶摊 ----------------
+
+  private spawnRen() {
+    const at = CHAPTER1_MAP.renXinye;
+    this.renSprite = new MapSprite(this, 'renXinye', 'portrait_renXinye', 190, 80);
+    this.renPrompt = this.add
+      .text(at.x, at.y - 230, 'J · 和任新野说话', {
+        fontFamily: FONT_BRUSH,
+        fontSize: '22px',
+        color: CSS_COLORS.ink,
+        stroke: CSS_COLORS.paper,
+        strokeThickness: 5,
+      })
+      .setOrigin(0.5)
+      .setDepth(TOP_DEPTH)
+      .setVisible(false);
+  }
+
+  /** 走近茶摊，任新野招呼一声（还没进过就招呼进来，进过了就送一句） */
+  private greet() {
+    if (this.renGreeted || this.talking || this.run.step < SHOP_STEP) return;
+    const at = CHAPTER1_MAP.renXinye;
+    if (Math.hypot(this.player.pos.x - at.x, this.player.pos.y - at.y) > GREET_RANGE) return;
+    this.renGreeted = true;
+    const line = this.run.step === SHOP_STEP ? CHAPTER1_SHOP_LINES.greeting : CHAPTER1_SHOP_LINES.farewell;
+    this.ui.say(line, 1800, () => this.headOf(at, 190));
+  }
+
+  /** 走到茶摊跟前（还没进过茶摊、附近也没在打架）才能进去 */
+  private canVisitShop() {
+    if (this.run.step !== SHOP_STEP || this.walk.lock) return false;
+    const at = CHAPTER1_MAP.renXinye;
+    return Math.hypot(this.player.pos.x - at.x, this.player.pos.y - at.y) < TALK_RANGE;
+  }
+
+  /** 进茶摊：横版那个茶摊画面原样用，买完出来 advanceRun 会回到地图、站在茶摊前 */
+  private visitShop() {
+    this.leaving = true;
+    this.run.hp = this.player.hp;
+    sfx.play('ui-confirm');
+    const cam = this.cameras.main;
+    cam.fadeOut(400, 239, 231, 214);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.scene.stop('UI');
+      this.scene.start('Shop');
     });
   }
 
@@ -410,15 +574,18 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
-  /** 打倒山贼：溅一大团墨，给经验和铜钱（第 4 阶段接上掉铜钱、升级三选一） */
+  /** 打倒山贼：溅一大团墨、掉铜钱（自己飞到主角身上），给经验；升级了提示一下，清场再选 */
   private onEnemyDead(enemy: MapEnemy) {
     const def = enemy.def;
     const { x, y } = enemy.pos;
     sfx.play('ink');
     this.overlays.push(new InkSplat(this, x, y - enemy.height / 2, def.tier === 'brute' ? 220 : 140, 0.85, y + 2));
-    const coins = Phaser.Math.Between(def.coins[0], def.coins[1]);
-    this.run.coins += coins;
-    this.toast(`+${coins} 文`, x, y - enemy.height - 20, CSS_COLORS.ink);
+    let total = Phaser.Math.Between(def.coins[0], def.coins[1]);
+    while (total > 0) {
+      const value = Math.min(total, total >= 10 ? 5 : 1);
+      total -= value;
+      this.coins.push(new MapCoin(this, { x, y }, value));
+    }
     if (gainExp(this.run, def.exp) > 0) {
       this.toast('升级！', this.player.pos.x, this.player.pos.y - 200);
       sfx.play('levelup');
@@ -446,19 +613,89 @@ export class MapScene extends Phaser.Scene {
     boss.events.once('defeated', () => this.onBossDefeated());
   }
 
-  /** 主角走近了：亮名牌、念开场白，念完开打（第 4 阶段在这里插进【拔剑 / 给钱】） */
-  private tickBossIntro(boss: MapPangHu) {
-    if (boss.stage !== 'intro') return;
-    if (this.bossIntro < 0) {
-      if (boss.distToTarget > BOSS_INTRO_RANGE) return;
-      this.bossIntro = 0;
-      boss.facing = dirTo(boss.pos, this.player.pos, boss.facing);
-      this.ui.bossCard();
-      this.ui.say(PANGHU.lines.intro, 1400, () => this.headOf(boss.pos, LOOKS.pangHu.height));
-      sfx.play('growl');
+  /** 过了山寨前那一关、走近胖虎：念开场白，然后【拔剑 / 给钱】 */
+  private checkBossIntro(boss: MapPangHu) {
+    if (this.bossIntro || boss.stage !== 'intro' || this.run.step < BOSS_STEP) return;
+    if (boss.distToTarget > BOSS_INTRO_RANGE) return;
+    this.bossIntro = true;
+    boss.facing = dirTo(boss.pos, this.player.pos, boss.facing);
+    this.player.vel = { x: 0, y: 0 };
+    sfx.play('growl');
+    this.bossTalk([PANGHU.lines.intro], () => this.offerBribe());
+  }
+
+  /** 胖虎说话：右下角亮立绘（变身后是猛虎），气泡从立绘嘴边冒出来 */
+  private bossTalk(lines: string[], then: () => void, slot?: ArtSlot) {
+    const boss = this.boss!;
+    const tiger = boss.form === 'tiger';
+    this.talk(lines, then, () => this.headOf(boss.pos, tiger ? LOOKS.tiger.height : LOOKS.pangHu.height), {
+      slot: slot ?? (tiger ? 'portrait_pangHuTiger' : 'portrait_pangHu'),
+      side: 'right',
+    });
+  }
+
+  /** 【拔剑 / 给钱】 */
+  private offerBribe() {
+    this.pauses.add('bribe');
+    const coins = this.run.coins;
+    this.ui.choice({
+      title: '拔剑，还是给钱？',
+      subtitle: `身上有 ${coins} 文`,
+      options: [
+        { label: '拔剑', detail: '和他过两招' },
+        { label: '给钱', detail: coins > 0 ? '破财消灾' : '囊中羞涩', disabled: coins <= 0 },
+      ],
+      onPick: (i) => (i === 0 ? this.drawSword() : this.chooseAmount()),
+    });
+  }
+
+  private chooseAmount() {
+    const { small, enough } = PROGRESSION.bribe;
+    const coins = this.run.coins;
+    const amounts = [small, enough, coins];
+    this.ui.choice({
+      title: '给多少？',
+      subtitle: `身上有 ${coins} 文`,
+      layout: 'column',
+      options: [
+        { label: `给 ${small} 文`, disabled: coins < small },
+        { label: `给 ${enough} 文`, disabled: coins < enough },
+        { label: '倾囊相助', detail: `${coins} 文` },
+        { label: '算了，拔剑' },
+      ],
+      onPick: (i) => (i === 3 ? this.drawSword() : this.pay(amounts[i])),
+      onCancel: () => {
+        this.pauses.delete('bribe');
+        this.offerBribe();
+      },
+    });
+  }
+
+  private pay(amount: number) {
+    this.pauses.delete('bribe');
+    this.run.coins -= amount;
+    sfx.play('coin');
+    const { enough, generous } = PROGRESSION.bribe;
+    if (amount < enough) {
+      // 钱照收，照样开打
+      this.bossTalk([Phaser.Utils.Array.GetRandom(PANGHU.lines.bribePoor)], () => this.drawSword(), 'portrait_pangHu_taunt');
       return;
     }
-    if (++this.bossIntro >= BOSS_INTRO_FRAMES) boss.startFight();
+    const boss = this.boss!;
+    boss.yieldPath();
+    for (const pr of this.projectiles) if (pr.team === 'enemy') pr.destroy();
+    for (const r of this.rings) if (r.team === 'enemy') r.destroy();
+    const lines = amount >= generous ? [PANGHU.lines.bribePass, PANGHU.lines.bribeGenerous] : [PANGHU.lines.bribePass];
+    this.bossTalk(lines, () => this.win('竹林 · 放行'), 'portrait_pangHu_greedy');
+  }
+
+  private drawSword() {
+    this.pauses.delete('bribe');
+    if (!this.bossIntroduced) {
+      this.bossIntroduced = true;
+      this.ui.bossCard();
+    }
+    this.boss!.startFight();
   }
 
   private onBossMove(e: MoveEvent) {
@@ -515,7 +752,8 @@ export class MapScene extends Phaser.Scene {
       if (this.vortex) this.vortex.power = k;
     }
     const ratio = boss.hp / boss.maxHp;
-    this.ui.setBoss(boss.stage === 'intro' && this.bossIntro < 0 ? null : boss.dead ? 0 : ratio);
+    const showBar = boss.stage !== 'intro' && boss.stage !== 'yield';
+    this.ui.setBoss(showBar ? (boss.dead ? 0 : ratio) : null);
   }
 
   /** 变身开始：时间放慢、镜头推近、主角定住，胖虎放狠话 */
@@ -572,12 +810,85 @@ export class MapScene extends Phaser.Scene {
     this.time.delayedCall(700, () => this.cameras.main.zoomTo(renderScale(), 600, 'Sine.easeInOut'));
   }
 
+  /** 打赢了：墨炸开，他变回人形一屁股坐在地上认怂，然后过关 */
   private onBossDefeated() {
     const boss = this.boss!;
     sfx.play('ink');
+    for (const pr of this.projectiles) if (pr.team === 'enemy') pr.destroy();
+    for (const r of this.rings) if (r.team === 'enemy') r.destroy();
     this.overlays.push(new InkSplat(this, boss.pos.x, boss.pos.y - 80, 260, 0.9, boss.pos.y + 2));
-    this.ui.say(PANGHU.lines.defeated, 2000, () => this.headOf(boss.pos, LOOKS.tiger.height));
-    this.time.delayedCall(1400, () => this.ui.banner('胖虎服了！'));
+    this.bossTalk([PANGHU.lines.defeated], () => this.win('竹林 · 过关'), 'portrait_pangHu_beaten');
+  }
+
+  /** 过关大字，过一会儿去看红熊的信 */
+  private win(title: string) {
+    if (this.leaving) return;
+    this.leaving = true;
+    this.ui.setBoss(null);
+    this.ui.banner(title);
+    this.time.delayedCall(1800, () => {
+      this.run.hp = this.player.hp;
+      this.scene.stop('UI');
+      advanceRun(this);
+    });
+  }
+
+  // ---------------- 台词、救场 ----------------
+
+  /** 依次念几句台词（念的时候整个地图暂停），念完再做 then */
+  private talk(lines: string[], then: () => void, where: () => ScreenPoint, portrait?: { slot: ArtSlot; side: 'left' | 'right' }) {
+    this.pauses.add('talk');
+    const [first, ...rest] = lines;
+    this.ui.say(first, 1200, where, portrait);
+    this.talking = { lines: rest, then, where, portrait };
+  }
+
+  private updateTalk() {
+    const t = this.talking;
+    if (!t || !this.ui.talkDone) return;
+    const next = t.lines.shift();
+    if (next) return this.ui.say(next, 1400, t.where, t.portrait);
+    this.talking = null;
+    this.ui.endTalk();
+    this.pauses.delete('talk');
+    t.then();
+  }
+
+  /**
+   * 红熊濒死救场：画面一暗，红熊救场的横幅特写扫过，红熊从左下角现身说一句话，气血回到一半。
+   * 演出期间整个地图暂停；打胖虎时救完再给一次给钱的机会
+   */
+  private rescue() {
+    this.run.rescueUsed = true;
+    this.pauses.add('rescue');
+    sfx.play('rescue');
+    this.ui.setDim(true);
+    this.ui.cutIn('cutin_redBear');
+    const p = this.player;
+    this.rescueShow = { t: 0, startHp: p.hp, targetHp: Math.max(p.hp, Math.round(p.maxHp * PROGRESSION.rescue.healTo)), said: false };
+  }
+
+  private updateRescue(delta: number) {
+    const r = this.rescueShow;
+    if (!r) return;
+    r.t = Math.min(1, r.t + delta / RESCUE_MS);
+    if (!r.said && r.t >= RESCUE_LINE_AT) {
+      r.said = true;
+      this.ui.say(Phaser.Utils.Array.GetRandom(RESCUE_LINES), 1100, () => this.headOf(this.player.pos, HERO_HEIGHT), {
+        slot: 'portrait_redBear',
+        side: 'left',
+      });
+    }
+    const heal = Phaser.Math.Clamp((r.t - 0.25) / 0.35, 0, 1);
+    this.player.hp = Math.round(Phaser.Math.Linear(r.startHp, r.targetHp, heal));
+    if (r.t < 0.8) return;
+    this.ui.setDim(false);
+    if (r.t < 1) return;
+    this.rescueShow = null;
+    this.ui.endTalk();
+    this.pauses.delete('rescue');
+    const boss = this.boss;
+    if (boss && (boss.stage === 'fight' || boss.stage === 'tiger') && this.run.coins > 0) this.offerBribe();
   }
 
   private onPlayerDead() {

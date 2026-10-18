@@ -118,7 +118,7 @@ export class TitleScene extends Phaser.Scene {
       if (e.code === 'KeyB') {
         const run = startRun('wenShaohua', false);
         run.step = CHAPTER1_STEPS.findIndex((s) => s.kind === 'boss');
-        return this.enterGame('PangHu');
+        return this.enterGame('Map');
       }
       if (!saved) return this.enterGame('Select');
       if (['KeyJ', 'Enter', 'Space'].includes(e.code)) this.continueRun(saved);
