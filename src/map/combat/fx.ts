@@ -60,7 +60,7 @@ export class SlashFx implements Overlay {
     this.base = groundAngle(facing);
     // 朝上砍时刀光在人身后（先画），朝下砍时在人身前
     const depth = at.y + (facing.y < -0.3 ? -2 : 2);
-    const slot: ArtSlot = (opt.heavy ? 'fx_slash_heavy' : 'fx_slash_arc') as ArtSlot;
+    const slot: ArtSlot = opt.heavy ? 'fx_slash_heavy' : 'fx_slash_arc';
     this.art = groundImage(scene, slot, at.x, at.y - lift, this.base, opt.reach * 2.2);
     if (this.art) {
       this.art.box.setDepth(depth).setAlpha(0);
@@ -152,7 +152,7 @@ export class ChargeAura implements Overlay {
   constructor(scene: Phaser.Scene) {
     this.back = scene.add.graphics();
     this.g = scene.add.graphics();
-    this.art = groundImage(scene, 'fx_charge' as ArtSlot, 0, 0, 0, 260);
+    this.art = groundImage(scene, 'fx_charge', 0, 0, 0, 260);
     this.art?.box.setAlpha(0);
   }
 
@@ -281,6 +281,90 @@ export class DustPuff implements Overlay {
     for (const b of this.bits) {
       g.fillStyle(COLORS.inkLight, 0.3 * (1 - k));
       g.fillEllipse(this.at.x + b.dx * k, this.at.y + b.dy * k - 4, b.r * (1 + k) * 2, b.r * (1 + k) * GROUND_SQUASH * 2);
+    }
+  }
+}
+
+/**
+ * 变身时的墨气旋涡：一缕缕墨从地上卷起来，像一股墨色龙卷把人裹在里面，越转越快、越来越浓。
+ * 转到人身后的那半圈画在人后面，转到身前的画在人前面，看起来是真的裹住了。
+ * 每帧由场景设 power（0~1）；有 fx_ink_vortex 图就在脚下再铺一张转着的图
+ */
+export class InkVortex implements Overlay {
+  power = 0;
+  private readonly back: Phaser.GameObjects.Graphics;
+  private readonly front: Phaser.GameObjects.Graphics;
+  private readonly art: ReturnType<typeof groundImage>;
+  private spin = 0;
+  private finished = false;
+
+  constructor(
+    scene: Phaser.Scene,
+    private readonly at: Vec,
+    private readonly height = 260,
+  ) {
+    this.back = scene.add.graphics().setDepth(at.y - 1);
+    this.front = scene.add.graphics().setDepth(at.y + 1);
+    this.art = groundImage(scene, 'fx_ink_vortex', at.x, at.y, 0, 360);
+    this.art?.box.setDepth(at.y - 2).setAlpha(0);
+  }
+
+  get done() {
+    return this.finished;
+  }
+
+  stop() {
+    this.finished = true;
+    this.back.destroy();
+    this.front.destroy();
+    this.art?.box.destroy();
+  }
+
+  update(delta: number) {
+    if (this.finished) return;
+    const p = this.power;
+    this.spin += (delta / 1000) * (2 + p * 12);
+    if (this.art) {
+      this.art.box.setAlpha(p);
+      this.art.img.setRotation(-this.spin);
+    }
+    this.back.clear();
+    this.front.clear();
+    // 脚下：一团越转越浓的墨
+    for (let i = 0; i < 3; i++) {
+      const r = (70 + i * 40) * (0.6 + p * 0.6);
+      this.back.fillStyle(COLORS.ink, (0.12 + p * 0.2) * (1 - i * 0.28));
+      this.back.fillEllipse(this.at.x, this.at.y, r * 2, r * 2 * GROUND_SQUASH);
+    }
+    const arms = 12;
+    const steps = 16;
+    const baseR = 55 + p * 75;
+    const top = this.height * (0.45 + p * 0.55);
+    for (let i = 0; i < arms; i++) {
+      const phase = (i / arms) * Math.PI * 2;
+      const pts = (k: number) => {
+        const u = k / steps;
+        const a = this.spin * (1 + (i % 3) * 0.15) + phase + u * 2.6;
+        const r = baseR * (1 - u * 0.45) + Math.sin(this.spin * 3 + i) * 8;
+        return { a, x: this.at.x + Math.cos(a) * r, y: this.at.y - u * top + Math.sin(a) * r * GROUND_SQUASH };
+      };
+      for (let j = 0; j < steps; j++) {
+        const s0 = pts(j);
+        const s1 = pts(j + 1);
+        const g = Math.sin((s0.a + s1.a) / 2) >= 0 ? this.front : this.back;
+        const fade = 1 - j / steps;
+        g.lineStyle(4 + fade * 14 * p, COLORS.ink, (0.3 + p * 0.6) * (0.25 + fade * 0.75));
+        g.lineBetween(s0.x, s0.y, s1.x, s1.y);
+        if (i % 4 === 0 && j % 3 === 0) {
+          g.lineStyle(2.5, COLORS.red, 0.6 * p * fade);
+          g.lineBetween(s0.x, s0.y, s1.x, s1.y);
+        }
+      }
+      // 甩出去的墨点
+      const fly = pts(steps * (0.3 + ((this.spin * 0.7 + i) % 1) * 0.7));
+      const g = Math.sin(fly.a) >= 0 ? this.front : this.back;
+      g.fillStyle(COLORS.ink, 0.6 * p);
+      g.fillCircle(fly.x + Math.cos(fly.a) * 24, fly.y, 3 + p * 4);
     }
   }
 }

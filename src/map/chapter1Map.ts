@@ -1,4 +1,5 @@
 import type { ArtSlot } from '../art/slots';
+import type { EnemyId } from '../characters/bandits';
 
 /**
  * 第一章 · 竹林的大地图（斜俯视）。坐标是地面上的位置，单位和设计画面一样是像素，
@@ -51,6 +52,22 @@ export const CHAPTER1_MAP = {
     { id: 'campFront', name: '竹林 · 山寨前', art: 'bg_room3', center: { x: 4700, y: 1450 }, radius: 440 },
     { id: 'camp', name: '胖虎山寨', art: 'bg_boss', center: { x: 5600, y: 820 }, radius: 560 },
   ] as MapArea[],
+  /**
+   * 路上守着的山贼：主角走近了才动手。
+   * （第 4 阶段改成走进空地两边合上竹篱、一波一波打）
+   */
+  guards: [
+    { id: 'bandit', at: { x: 2570, y: 2500 } },
+    { id: 'bandit', at: { x: 2730, y: 2530 } },
+    { id: 'bandit', at: { x: 2640, y: 2690 } },
+    { id: 'thrower', at: { x: 2820, y: 2400 } },
+    { id: 'bandit', at: { x: 4600, y: 1420 } },
+    { id: 'bandit', at: { x: 4800, y: 1520 } },
+    { id: 'thrower', at: { x: 4880, y: 1320 } },
+    { id: 'chief', at: { x: 4720, y: 1360 } },
+  ] as { id: EnemyId; at: Pt }[],
+  /** 胖虎守在山寨里 */
+  boss: { x: 5640, y: 740 },
   /** 竹子长多密：每多少平方像素长一丛 */
   bambooDensity: 36000,
   seed: 'chapter1-bamboo',

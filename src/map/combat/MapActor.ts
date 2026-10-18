@@ -54,8 +54,8 @@ export abstract class MapActor implements MapHurtable {
   constructor(
     x: number,
     y: number,
-    readonly radius: number,
-    readonly height: number,
+    public radius: number,
+    public height: number,
     public maxHp: number,
     protected readonly walk: WalkableMap,
   ) {

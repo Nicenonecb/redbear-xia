@@ -55,7 +55,11 @@ export const ART_SLOTS = {
   fx_bamboo_leaves: '飘落竹叶（一排 6 片）',
 } as const;
 
-export type ArtSlot = keyof typeof ART_SLOTS;
+/**
+ * 一张图的名字：登记过的槽位，或者第三批按前缀认的图（见下面 MAP_ART）。
+ * 第三批的图名就是文件名，比如 map_wenShaohua_strike_se、fx_slash_arc
+ */
+export type ArtSlot = keyof typeof ART_SLOTS | `${'map' | 'fx' | 'ground' | 'prop' | 'cutin'}_${string}`;
 
 const textureKey = (slot: ArtSlot) => `art:${slot}`;
 

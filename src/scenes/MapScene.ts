@@ -1,19 +1,27 @@
 import Phaser from 'phaser';
-import { COLORS } from '../config';
+import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
 import type { ArtSlot } from '../art/slots';
 import { InkSplat } from '../art/inkSplat';
+import { drawThrowingKnife } from '../art/projectiles';
 import { sfx } from '../audio/sfx';
+import { ENEMIES } from '../characters/bandits';
 import { HEROES, type HeroEntry } from '../characters/heroes';
-import type { MoveEvent } from '../combat/moveTable';
-import { endRun, getRun, runStats, startRun, type RunState } from '../game/run';
+import { PANGHU } from '../characters/pangHu';
+import type { GroundArea, MoveEvent } from '../combat/moveTable';
+import { endRun, gainExp, getRun, runStats, startRun, type RunState } from '../game/run';
+import { renderScale } from '../render/sharp';
 import { Controls } from '../input/Controls';
 import { CHAPTER1_MAP, type MapArea, type Pt } from '../map/chapter1Map';
-import { GROUND_SQUASH, areaOf, groundAngle } from '../map/combat/ground';
-import type { MapHitResult, MapHurtable } from '../map/combat/MapActor';
+import { GROUND_SQUASH, areaOf, dirTo, groundAngle, type Vec } from '../map/combat/ground';
+import type { MapActor, MapHitResult, MapHurtable } from '../map/combat/MapActor';
 import { MapDummy } from '../map/combat/MapDummy';
+import { MapEnemy } from '../map/combat/MapEnemy';
 import { MapFighter } from '../map/combat/MapFighter';
-import type { MapProjectile } from '../map/combat/MapProjectile';
-import { ChargeAura, DustPuff, SlashFx, type Overlay } from '../map/combat/fx';
+import { MapPangHu } from '../map/combat/MapPangHu';
+import { MapProjectile } from '../map/combat/MapProjectile';
+import { RingWave } from '../map/combat/RingWave';
+import { ChargeAura, DustPuff, InkVortex, SlashFx, type Overlay } from '../map/combat/fx';
+import { LOOKS, type MapLook } from '../map/looks';
 import {
   BAMBOO_SIZE,
   BAMBOO_VARIANTS,
@@ -27,7 +35,7 @@ import {
 import { MapSprite, poseOf } from '../map/MapSprite';
 import { WALK_MARGIN, distToPath } from '../map/walkable';
 import { DamageNumbers } from '../ui/DamageNumbers';
-import type { UIScene } from './UIScene';
+import type { ScreenPoint, UIScene } from './UIScene';
 
 /** 主角在地图上画多高（设计像素） */
 const HERO_HEIGHT = 170;
@@ -51,6 +59,13 @@ const DUMMIES: Pt[] = [
   { x: 1340, y: 3460 },
   { x: 1240, y: 3600 },
 ];
+
+/** 胖虎走到这么近（地面距离）就开口念开场白 */
+const BOSS_INTRO_RANGE = 560;
+/** 开场白念多久（逻辑帧）再开打 */
+const BOSS_INTRO_FRAMES = 170;
+/** 发现主角的山贼会喊上附近多远的同伙 */
+const ALERT_RADIUS = 320;
 
 /**
  * 第一章 · 竹林的大地图（斜俯视）。
@@ -81,6 +96,21 @@ export class MapScene extends Phaser.Scene {
   private lastPhase: string | null = null;
   private debug!: Phaser.GameObjects.Graphics;
   private showDebug = false;
+  private enemies: { enemy: MapEnemy; sprite: MapSprite; look: MapLook }[] = [];
+  private boss: MapPangHu | null = null;
+  private bossSprite!: MapSprite;
+  private tigerSprite!: MapSprite;
+  private bossIntro = -1;
+  private rings: RingWave[] = [];
+  /** 地上的红色预警（扇形、红线、红圈），每帧重画 */
+  private warn!: Phaser.GameObjects.Graphics;
+  /** 出招前武器上的一下闪光 */
+  private glints!: Phaser.GameObjects.Graphics;
+  /** 变身演出中：主角不能动，逻辑放慢 */
+  private cinematic = false;
+  private timeScale = 1;
+  private vortex: InkVortex | null = null;
+  private over = false;
 
   constructor() {
     super('Map');
@@ -115,6 +145,14 @@ export class MapScene extends Phaser.Scene {
 
     this.scatterProps();
     this.dummies = DUMMIES.map((p) => new MapDummy(this, p));
+    this.warn = this.add.graphics().setDepth(-2900);
+    this.glints = this.add.graphics().setDepth(TOP_DEPTH - 1);
+    this.rings = [];
+    this.cinematic = false;
+    this.timeScale = 1;
+    this.vortex = null;
+    this.over = false;
+    this.bossIntro = -1;
 
     // 主角：逻辑在 MapFighter 里，画面在 MapSprite 里
     this.heroEntry = HEROES[this.run.hero];
@@ -123,9 +161,12 @@ export class MapScene extends Phaser.Scene {
       hp: this.run.hp,
     });
     this.player.events.on('move', (e: MoveEvent) => this.onPlayerMove(e));
+    this.player.events.once('dead', () => this.onPlayerDead());
     const fallback = (this.run.hero === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia') as ArtSlot;
     this.sprite = new MapSprite(this, this.run.hero, fallback, HERO_HEIGHT, 70);
     this.numbers = new DamageNumbers(this, TOP_DEPTH);
+    this.spawnGuards();
+    this.spawnBoss();
 
     this.camTarget = this.add.zone(M.start.x, M.start.y - 60, 1, 1);
     const cam = this.cameras.main;
@@ -155,7 +196,7 @@ export class MapScene extends Phaser.Scene {
   update(_time: number, delta: number) {
     this.controls.update();
     for (const action of this.controls.justPressedActions) this.player.buffer.push(action);
-    this.accumulator = Math.min(this.accumulator + delta, FRAME_MS * MAX_CATCHUP_FRAMES);
+    this.accumulator = Math.min(this.accumulator + delta * this.timeScale, FRAME_MS * MAX_CATCHUP_FRAMES);
     while (this.accumulator >= FRAME_MS) {
       this.accumulator -= FRAME_MS;
       this.tick();
@@ -163,23 +204,51 @@ export class MapScene extends Phaser.Scene {
     this.render(delta);
   }
 
-  /** 一个逻辑帧：主角行动 → 和木人桩挤开 → 结算主角的招和飞行道具 → 木人桩晃 */
+  /**
+   * 一个逻辑帧：主角行动 → 和挡路的东西挤开 → 山贼、胖虎行动并结算他们的招 →
+   * 结算主角的招、飞行道具、墨圈 → 木人桩晃
+   */
   private tick() {
     const p = this.player;
-    p.tick();
-    if (!p.evading) for (const d of this.dummies) p.pushOutOf(d);
+    if (!this.cinematic) p.tick();
+    const enemies = this.enemies.map((e) => e.enemy);
+    const boss = this.boss;
+    if (!p.evading) {
+      for (const d of this.dummies) p.pushOutOf(d);
+      for (const e of enemies) if (e.def.superArmor && !e.dead) p.pushOutOf(e);
+      if (boss && !boss.dead && boss.stage !== 'yield') p.pushOutOf(boss);
+    }
     this.watchPlayerMove();
-    const foes: MapHurtable[] = this.dummies;
+
+    for (const e of enemies) {
+      e.tick();
+      this.reportHits(e.resolveHits([p]));
+      e.separateFrom(enemies);
+    }
+    for (const entry of this.enemies) if (entry.enemy.gone) entry.sprite.destroy();
+    this.enemies = this.enemies.filter((e) => !e.enemy.gone);
+    if (boss) {
+      this.tickBossIntro(boss);
+      boss.tick();
+      this.reportHits(boss.resolveHits([p]));
+    }
+
+    const foes: MapHurtable[] = [...this.dummies, ...this.enemies.map((e) => e.enemy).filter((e) => !e.dead)];
+    if (boss && !boss.dead) foes.push(boss);
     this.reportHits(p.resolveHits(foes));
     for (const pr of this.projectiles) this.reportHits(pr.tick(pr.team === 'player' ? foes : [p]));
     this.projectiles = this.projectiles.filter((pr) => pr.alive);
+    for (const r of this.rings) this.reportHits(r.tick(r.team === 'player' ? foes : [p]));
+    this.rings = this.rings.filter((r) => r.alive);
     for (const d of this.dummies) d.tick();
   }
 
   /** 每个画面帧：画人、木人桩、特效，竹子透明，界面，区域题卡 */
   private render(delta: number) {
     const p = this.player;
-    this.camTarget.setPosition(p.pos.x, p.pos.y - 60);
+    // 变身演出时镜头对着胖虎
+    const focus = this.cinematic && this.boss ? this.boss.pos : p.pos;
+    this.camTarget.setPosition(focus.x, focus.y - (this.cinematic ? 100 : 60));
     this.sprite.update(
       {
         x: p.pos.x,
@@ -197,6 +266,27 @@ export class MapScene extends Phaser.Scene {
       delta,
     );
     for (const d of this.dummies) d.draw();
+    for (const { enemy: e, sprite, look } of this.enemies) {
+      sprite.inkOver = e.dissolve;
+      sprite.update(
+        {
+          x: e.pos.x,
+          y: e.pos.y,
+          z: e.z,
+          facing: e.facing,
+          moving: !e.runner.move && e.hurtFrames <= 0 && !e.dead && Math.hypot(e.vel.x, e.vel.y) > 10,
+          pose: e.dead ? 'idle' : poseOf(e.runner, look.poses),
+          flash: e.flash > 0,
+          shaking: e.frozen,
+        },
+        delta,
+      );
+      sprite.img.setAlpha(1 - e.dissolve);
+      sprite.shadow.setAlpha(1 - e.dissolve);
+    }
+    this.renderBoss(delta);
+    for (const r of this.rings) r.draw();
+    this.drawWarnings();
     this.aura?.follow(p.pos, p.chargeRatio);
     for (const o of this.overlays) o.update(delta);
     this.overlays = this.overlays.filter((o) => !o.done);
@@ -276,18 +366,328 @@ export class MapScene extends Phaser.Scene {
     circle(p.pos, p.radius, 0x2a6fdb);
     for (const d of this.dummies) circle(d.pos, d.radius, 0x2a6fdb);
     for (const pr of this.projectiles) circle(pr.pos, pr.radius, COLORS.red);
-    const area = p.activeArea();
-    if (area) {
-      const base = groundAngle(p.facing);
-      const half = Phaser.Math.DegToRad(Math.min(area.arc, 360)) / 2;
-      const pts: Pt[] = [{ ...p.pos }];
-      for (let i = 0; i <= 20; i++) {
-        const a = base - half + (2 * half * i) / 20;
-        pts.push({ x: p.pos.x + Math.cos(a) * area.reach, y: p.pos.y + Math.sin(a) * area.reach * GROUND_SQUASH });
+    const actors: MapActor[] = [p, ...this.enemies.map((e) => e.enemy)];
+    if (this.boss) actors.push(this.boss);
+    for (const a of actors) {
+      circle(a.pos, a.radius, 0x2a6fdb);
+      const area = a.activeArea();
+      if (area) {
+        g.fillStyle(COLORS.red, 0.25);
+        fillSector(g, a.pos, a.facing, area);
       }
-      g.fillStyle(COLORS.red, 0.25);
-      g.fillPoints(pts, true);
     }
+  }
+
+  // ---------------- 山贼 ----------------
+
+  private spawnGuards() {
+    this.enemies = [];
+    CHAPTER1_MAP.guards.forEach((gd, i) => {
+      const def = ENEMIES[gd.id];
+      const enemy = new MapEnemy(gd.at.x, gd.at.y, def, this.player, CHAPTER1_MAP, `guard-${i}`);
+      const look: MapLook = LOOKS[def.look];
+      const sprite = new MapSprite(this, look.mapName, look.fallback, look.height, look.shadow);
+      enemy.events.on('move', (e: MoveEvent) => this.onEnemyMove(enemy, e));
+      enemy.events.once('dead', () => this.onEnemyDead(enemy));
+      enemy.events.once('aggro', () => {
+        sfx.play('growl');
+        for (const o of this.enemies) {
+          if (o.enemy !== enemy && Math.hypot(o.enemy.pos.x - enemy.pos.x, o.enemy.pos.y - enemy.pos.y) < ALERT_RADIUS) o.enemy.alert();
+        }
+      });
+      this.enemies.push({ enemy, sprite, look });
+    });
+  }
+
+  private onEnemyMove(enemy: MapEnemy, e: MoveEvent) {
+    if (e.type === 'sfx') sfx.play(e.name);
+    if (e.type === 'vfx' && e.name === 'shake') this.cameras.main.shake(180, 0.008);
+    if (e.type === 'spawn' && e.name === 'knife' && enemy.def.projectile) {
+      const spec = enemy.def.projectile;
+      const { x, y } = enemy.pos;
+      const f = enemy.facing;
+      this.projectiles.push(new MapProjectile(this, x + f.x * 24, y + f.y * 24, { ...f }, spec, 'enemy', drawThrowingKnife(spec.hit.box.w), 1, 70));
+    }
+  }
+
+  /** 打倒山贼：溅一大团墨，给经验和铜钱（第 4 阶段接上掉铜钱、升级三选一） */
+  private onEnemyDead(enemy: MapEnemy) {
+    const def = enemy.def;
+    const { x, y } = enemy.pos;
+    sfx.play('ink');
+    this.overlays.push(new InkSplat(this, x, y - enemy.height / 2, def.tier === 'brute' ? 220 : 140, 0.85, y + 2));
+    const coins = Phaser.Math.Between(def.coins[0], def.coins[1]);
+    this.run.coins += coins;
+    this.toast(`+${coins} 文`, x, y - enemy.height - 20, CSS_COLORS.ink);
+    if (gainExp(this.run, def.exp) > 0) {
+      this.toast('升级！', this.player.pos.x, this.player.pos.y - 200);
+      sfx.play('levelup');
+    }
+  }
+
+  // ---------------- 胖虎 ----------------
+
+  private spawnBoss() {
+    const at = CHAPTER1_MAP.boss;
+    const boss = new MapPangHu(at.x, at.y, this.player, CHAPTER1_MAP);
+    this.boss = boss;
+    this.bossSprite = new MapSprite(this, LOOKS.pangHu.mapName, LOOKS.pangHu.fallback, LOOKS.pangHu.height, LOOKS.pangHu.shadow);
+    this.tigerSprite = new MapSprite(this, LOOKS.tiger.mapName, LOOKS.tiger.fallback, LOOKS.tiger.height, LOOKS.tiger.shadow);
+    this.tigerSprite.setVisible(false);
+    boss.events.on('move', (e: MoveEvent) => this.onBossMove(e));
+    boss.events.on('transform', () => this.onTransform());
+    boss.events.on('roar', () => this.onTransformRoar());
+    boss.events.on('wrap', () => this.onTransformWrap());
+    boss.events.on('burst', () => this.onTransformBurst());
+    boss.events.on('land', () => {
+      this.cameras.main.shake(200, 0.01);
+      this.overlays.push(new DustPuff(this, { ...boss.pos }, { x: 0, y: 1 }, 500));
+    });
+    boss.events.once('defeated', () => this.onBossDefeated());
+  }
+
+  /** 主角走近了：亮名牌、念开场白，念完开打（第 4 阶段在这里插进【拔剑 / 给钱】） */
+  private tickBossIntro(boss: MapPangHu) {
+    if (boss.stage !== 'intro') return;
+    if (this.bossIntro < 0) {
+      if (boss.distToTarget > BOSS_INTRO_RANGE) return;
+      this.bossIntro = 0;
+      boss.facing = dirTo(boss.pos, this.player.pos, boss.facing);
+      this.ui.bossCard();
+      this.ui.say(PANGHU.lines.intro, 1400, () => this.headOf(boss.pos, LOOKS.pangHu.height));
+      sfx.play('growl');
+      return;
+    }
+    if (++this.bossIntro >= BOSS_INTRO_FRAMES) boss.startFight();
+  }
+
+  private onBossMove(e: MoveEvent) {
+    const boss = this.boss!;
+    if (e.type === 'sfx') sfx.play(e.name);
+    if (e.type === 'vfx' && e.name === 'shake') this.cameras.main.shake(200, 0.01);
+    if (e.type === 'spawn' && e.name === 'shockwave') {
+      const w = PANGHU.shockwave;
+      this.rings.push(new RingWave(this, { ...boss.pos }, w.speed, w.life, 44, w.hit, 'enemy', 'fx_shock_ring'));
+    }
+    if (e.type === 'spawn' && e.name === 'roarRing') {
+      const w = PANGHU.roarRing;
+      this.rings.push(new RingWave(this, { ...boss.pos }, w.speed, w.life, 56, w.hit, 'enemy', 'fx_roar_ring', true));
+    }
+    // 重刀落下、猛虎挥爪：甩出一道刀光 / 爪痕
+    const m = boss.runner.move;
+    if (e.type === 'sfx' && (e.name === 'chop' || e.name === 'claw') && m?.hit) {
+      const area = areaOf(m.hit);
+      this.overlays.push(new SlashFx(this, { ...boss.pos }, boss.facing, { reach: area.reach, arc: area.arc, heavy: e.name === 'chop' }, 80));
+    }
+  }
+
+  private renderBoss(delta: number) {
+    const boss = this.boss;
+    if (!boss) return;
+    const tiger = boss.form === 'tiger';
+    const sprite = tiger ? this.tigerSprite : this.bossSprite;
+    const look = tiger ? LOOKS.tiger : LOOKS.pangHu;
+    const state = {
+      x: boss.pos.x,
+      y: boss.pos.y,
+      z: boss.z,
+      facing: boss.facing,
+      moving: !boss.runner.move && Math.hypot(boss.vel.x, boss.vel.y) > 10,
+      pose: poseOf(boss.runner, look.poses),
+      flash: boss.flash > 0,
+      shaking: boss.frozen || (boss.stage === 'transform' && boss.stageFrame < PANGHU.transform.burstAt),
+    };
+    sprite.update(state, delta);
+    if (boss.stage === 'transform' && !tiger) {
+      // 墨气裹住以后，人形和猛虎一闪一闪地交替，越闪越快
+      const t = PANGHU.transform;
+      const f = boss.stageFrame;
+      const k = Phaser.Math.Clamp((f - t.wrapAt) / (t.burstAt - t.wrapAt), 0, 1);
+      this.bossSprite.inkOver = k * 0.75;
+      const period = Math.max(3, Math.round(12 - k * 9));
+      const showTiger = f > t.wrapAt + 15 && Math.floor(f / period) % 2 === 1;
+      this.tigerSprite.setVisible(showTiger);
+      this.bossSprite.img.setVisible(!showTiger);
+      if (showTiger) {
+        this.tigerSprite.inkOver = 0.6;
+        this.tigerSprite.update({ ...state, shaking: true }, delta);
+      }
+      if (this.vortex) this.vortex.power = k;
+    }
+    const ratio = boss.hp / boss.maxHp;
+    this.ui.setBoss(boss.stage === 'intro' && this.bossIntro < 0 ? null : boss.dead ? 0 : ratio);
+  }
+
+  /** 变身开始：时间放慢、镜头推近、主角定住，胖虎放狠话 */
+  private onTransform() {
+    const boss = this.boss!;
+    this.cinematic = true;
+    this.timeScale = 0.4;
+    this.player.vel = { x: 0, y: 0 };
+    this.cameras.main.zoomTo(renderScale() * 1.35, 600, 'Sine.easeInOut');
+    this.ui.say(PANGHU.lines.transform, 1200, () => this.headOf(boss.pos, LOOKS.pangHu.height));
+    this.bossSprite.forceArt('map_pangHu_transform_1');
+    for (const pr of this.projectiles) if (pr.team === 'enemy') pr.destroy();
+  }
+
+  /** 仰天怒吼：怒吼横幅扫过，时间恢复 */
+  private onTransformRoar() {
+    this.timeScale = 1;
+    this.ui.cutIn('cutin_pangHu_roar');
+    sfx.play('roar');
+    this.cameras.main.shake(400, 0.012);
+  }
+
+  /** 墨气从地上卷起来裹住胖虎 */
+  private onTransformWrap() {
+    this.vortex = new InkVortex(this, { ...this.boss!.pos });
+    this.overlays.push(this.vortex);
+    this.tigerSprite.forceArt('map_pangHu_transform_2');
+  }
+
+  /** 墨气炸开、满屏一白，猛虎显形，气浪把主角推开 */
+  private onTransformBurst() {
+    const boss = this.boss!;
+    this.vortex?.stop();
+    this.vortex = null;
+    this.cameras.main.flash(380, 255, 252, 245);
+    this.cameras.main.shake(500, 0.02);
+    this.ui.cutIn('cutin_tiger_reveal');
+    sfx.play('roar');
+    sfx.play('slam');
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const at = { x: boss.pos.x + Math.cos(a) * 90, y: boss.pos.y + Math.sin(a) * 90 * GROUND_SQUASH };
+      this.overlays.push(new InkSplat(this, at.x, at.y - 60, 170, 0.9, at.y + 2));
+    }
+    this.bossSprite.setVisible(false);
+    this.bossSprite.img.setVisible(false);
+    this.tigerSprite.forceArt(null);
+    this.tigerSprite.inkOver = 0;
+    this.tigerSprite.setVisible(true);
+    // 一圈只吓人不伤人的气浪
+    this.rings.push(new RingWave(this, { ...boss.pos }, 900, 30, 60, { ...PANGHU.roarRing.hit, damage: 0 }, 'player', 'fx_shock_ring'));
+    this.player.shove(dirTo(boss.pos, this.player.pos, { x: 0, y: 1 }), 620);
+    this.cinematic = false;
+    this.time.delayedCall(700, () => this.cameras.main.zoomTo(renderScale(), 600, 'Sine.easeInOut'));
+  }
+
+  private onBossDefeated() {
+    const boss = this.boss!;
+    sfx.play('ink');
+    this.overlays.push(new InkSplat(this, boss.pos.x, boss.pos.y - 80, 260, 0.9, boss.pos.y + 2));
+    this.ui.say(PANGHU.lines.defeated, 2000, () => this.headOf(boss.pos, LOOKS.tiger.height));
+    this.time.delayedCall(1400, () => this.ui.banner('胖虎服了！'));
+  }
+
+  private onPlayerDead() {
+    if (this.over) return;
+    this.over = true;
+    endRun();
+    sfx.play('death');
+    this.ui.banner('胜败乃兵家常事');
+    this.time.delayedCall(2600, () => {
+      const cam = this.cameras.main;
+      cam.fadeOut(500, 239, 231, 214);
+      cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+        this.scene.stop('UI');
+        this.scene.start('Title');
+      });
+    });
+  }
+
+  // ---------------- 预警、工具 ----------------
+
+  /**
+   * 地上的红色预警，前摇越往后越亮：头目的扇形、胖虎冲锋的红线、震地的红圈、扑击落点的红圈、虎啸的波纹；
+   * 小怪出手前武器上闪一下
+   */
+  private drawWarnings() {
+    const g = this.warn;
+    const gl = this.glints;
+    g.clear();
+    gl.clear();
+    for (const { enemy: e, look } of this.enemies) {
+      const m = e.runner.move;
+      if (!m || e.dead || e.runner.phase !== 'startup') continue;
+      const k = e.runner.frame / m.startup;
+      if (m.telegraph === 'ground' && m.hit) {
+        g.fillStyle(COLORS.red, 0.12 + k * 0.3);
+        fillSector(g, e.pos, e.facing, areaOf(m.hit));
+      }
+      if (m.telegraph === 'glint' && m.startup - e.runner.frame <= 10) {
+        this.glint(gl, e.pos, e.facing, look.height, 1 - (m.startup - e.runner.frame) / 10);
+      }
+    }
+    const boss = this.boss;
+    const m = boss?.runner.move;
+    if (!boss || !m) return;
+    const f = boss.runner.frame;
+    const k = Math.min(1, f / m.startup);
+    const startup = f < m.startup;
+    if (m.id === 'chargeChop' && f < m.startup + 18) {
+      // 冲过来的路线：冲刺距离 + 刀够得着的距离
+      const len = 300 + 130;
+      const p0 = boss.pos;
+      const p1 = { x: p0.x + boss.facing.x * len, y: p0.y + boss.facing.y * len };
+      g.lineStyle(110, COLORS.red, startup ? 0.1 + k * 0.28 : 0.15);
+      g.lineBetween(p0.x, p0.y, p1.x, p1.y);
+      g.lineStyle(3, COLORS.red, 0.6);
+      g.lineBetween(p0.x, p0.y, p1.x, p1.y);
+    }
+    if (m.id === 'slam' && startup) {
+      g.fillStyle(COLORS.red, 0.12 + k * 0.3);
+      fillSector(g, boss.pos, boss.facing, areaOf(m.hit!));
+      // 冲击波会扩到多远：淡淡一圈
+      const R = (PANGHU.shockwave.speed * PANGHU.shockwave.life) / 60;
+      g.lineStyle(2, COLORS.red, 0.15 + k * 0.25);
+      g.strokeEllipse(boss.pos.x, boss.pos.y, R * 2, R * 2 * GROUND_SQUASH);
+    }
+    if (m.id === 'pounce' && boss.activeArea() === null && f < m.startup + m.active) {
+      g.fillStyle(COLORS.red, 0.15 + k * 0.3);
+      fillSector(g, boss.aim, { x: 0, y: 1 }, areaOf(m.hit!));
+      g.lineStyle(3, COLORS.red, 0.7);
+      const r = areaOf(m.hit!).reach;
+      g.strokeEllipse(boss.aim.x, boss.aim.y, r * 2, r * 2 * GROUND_SQUASH);
+    }
+    if (m.id === 'roar' && startup) {
+      for (let i = 0; i < 3; i++) {
+        const r = 60 + ((f * 3 + i * 40) % 120);
+        g.lineStyle(3, COLORS.red, (0.15 + k * 0.4) * (1 - (r - 60) / 120));
+        g.strokeEllipse(boss.pos.x, boss.pos.y, r * 2, r * 2 * GROUND_SQUASH);
+      }
+    }
+    if ((m.id === 'claw1' || m.id === 'claw2') && startup && m.startup - f <= 10) {
+      this.glint(gl, boss.pos, boss.facing, LOOKS.tiger.height, 1 - (m.startup - f) / 10);
+    }
+  }
+
+  /** 武器上的一下闪光：一个朱红十字星，闪出来再缩回去 */
+  private glint(g: Phaser.GameObjects.Graphics, at: Vec, facing: Vec, height: number, t: number) {
+    const x = at.x + facing.x * 26;
+    const y = at.y - height * 0.6 + facing.y * 10;
+    const s = Math.sin(t * Math.PI) * 18;
+    g.fillStyle(0xffffff, 0.9);
+    g.fillCircle(x, y, s * 0.25);
+    g.lineStyle(3, COLORS.red, 0.9);
+    g.lineBetween(x - s, y, x + s, y);
+    g.lineBetween(x, y - s, x, y + s);
+  }
+
+  /** 地图上一点的头顶在画面（设计坐标）上的哪儿：台词气泡用 */
+  private headOf(at: Vec, height: number): ScreenPoint {
+    const v = this.cameras.main.worldView;
+    const k = GAME_WIDTH / v.width;
+    return { x: (at.x - v.x) * k, y: (at.y - height - v.y) * k };
+  }
+
+  /** 头顶飘一行字（升级、拿到铜钱） */
+  private toast(text: string, x: number, y: number, color: string = CSS_COLORS.red) {
+    const t = this.add
+      .text(x, y, text, { fontFamily: FONT_BRUSH, fontSize: '28px', color, stroke: CSS_COLORS.paper, strokeThickness: 5 })
+      .setOrigin(0.5)
+      .setDepth(TOP_DEPTH);
+    this.tweens.add({ targets: t, y: y - 50, alpha: 0, delay: 500, duration: 700, onComplete: () => t.destroy() });
   }
 
   /**
@@ -376,4 +776,17 @@ export class MapScene extends Phaser.Scene {
     const w = img.displayWidth * (rock ? 0.8 : 0.6);
     this.props.push({ img, rect: new Phaser.Geom.Rectangle(x - w / 2, y - img.displayHeight * (size.footY / size.h), w, img.displayHeight * (size.footY / size.h)) });
   }
+}
+
+/** 在地上画一个压扁的扇形（判定范围、红色预警） */
+function fillSector(g: Phaser.GameObjects.Graphics, at: Vec, facing: Vec, area: GroundArea) {
+  const base = groundAngle(facing);
+  const half = Phaser.Math.DegToRad(Math.min(area.arc, 360)) / 2;
+  const pts: Vec[] = area.arc >= 360 ? [] : [{ ...at }];
+  const steps = area.arc >= 360 ? 32 : 20;
+  for (let i = 0; i <= steps; i++) {
+    const a = base - half + (2 * half * i) / steps;
+    pts.push({ x: at.x + Math.cos(a) * area.reach, y: at.y + Math.sin(a) * area.reach * GROUND_SQUASH });
+  }
+  g.fillPoints(pts, true);
 }

@@ -106,6 +106,13 @@ export class MapFighter extends MapActor {
     if (this.dead) this.events.emit('dead', this);
   }
 
+  /** 被推开（胖虎变身炸开的气浪）：不掉血，踉跄一下 */
+  shove(dir: Vec, speed: number) {
+    this.runner.stop();
+    this.vel = { x: dir.x * speed, y: dir.y * speed };
+    this.hurtFrames = 16;
+  }
+
   tick() {
     this.walking = false;
     if (!this.beginTick()) return;

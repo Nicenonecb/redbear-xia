@@ -32,6 +32,7 @@ export const PANGHU = {
         recovery: 40,
         hit: {
           box: { x: 56, y: -56, w: 92, h: 110 },
+          area: { reach: 130, arc: 120 },
           damage: 18,
           hitstop: 8,
           hitstun: 24,
@@ -57,6 +58,7 @@ export const PANGHU = {
         recovery: 44,
         hit: {
           box: { x: 0, y: -32, w: 200, h: 64 },
+          area: { reach: 120, arc: 360 },
           damage: 20,
           hitstop: 9,
           hitstun: 26,
@@ -81,6 +83,8 @@ export const PANGHU = {
         recovery: 34,
         hit: {
           box: { x: 30, y: -45, w: 150, h: 76 },
+          // 地图上只在落地那一下打：落点一圈
+          area: { reach: 120, arc: 360 },
           damage: 16,
           hitstop: 8,
           hitstun: 22,
@@ -101,6 +105,7 @@ export const PANGHU = {
         followUp: 'claw2',
         hit: {
           box: { x: 96, y: -52, w: 84, h: 72 },
+          area: { reach: 150, arc: 110 },
           damage: 10,
           hitstop: 5,
           hitstun: 16,
@@ -117,6 +122,7 @@ export const PANGHU = {
         recovery: 38,
         hit: {
           box: { x: 100, y: -52, w: 90, h: 76 },
+          area: { reach: 160, arc: 130 },
           damage: 14,
           hitstop: 8,
           hitstun: 22,

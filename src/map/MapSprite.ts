@@ -9,10 +9,12 @@ const DIRS: Dir8[] = ['e', 'se', 's', 'sw', 'w', 'nw', 'n', 'ne'];
 const MIRROR: Partial<Record<Dir8, Dir8>> = { w: 'e', sw: 'se', nw: 'ne' };
 
 /**
- * 出招姿势：站着 / 蓄势（收剑、举刀）/ 打出去的一瞬间。
- * 第三批的姿势图叫 map_<名字>_<姿势>_<朝向>；没有姿势图就用站姿图，代码做后仰、前冲顶着
+ * 出招姿势：idle 站着，其余是出图清单里的姿势名（ready 蓄势、strike 出招、raise 举刀、chop 劈地……）。
+ * 第三批的姿势图叫 map_<名字>_<姿势>_<朝向>；没有姿势图就用站姿图，代码做后仰、前冲顶着：
+ * 打出去的那一下（下面这几个）往前冲，其余的蓄势姿势往后收
  */
-export type Pose = 'idle' | 'ready' | 'strike';
+export type Pose = string;
+const STRIKE_POSES = new Set(['strike', 'chop', 'smash', 'throw', 'leap', 'claw']);
 
 /** 地图精图里脚底离图片底边留了 6% 的空白（见出图清单），立绘顶着时脚就在底边 */
 const MAP_ART_FOOT = 0.94;
@@ -26,16 +28,18 @@ export function dirOf(fx: number, fy: number): Dir8 {
 
 /**
  * 按招式表的帧号算出该摆哪个姿势：蓄力招一直是蓄势；有判定或放飞行道具的招，
- * 前摇是蓄势，判定帧到收招前半段是打出去；闪避这类没有攻击的招照常站着（冲刺由代码做）
+ * 前摇是蓄势，判定帧到收招前半段是打出去；闪避这类没有攻击的招照常站着（冲刺由代码做）。
+ * poses 给每一招指定前摇、判定各用哪个姿势名（见 looks.ts），没写的用 ready / strike
  */
-export function poseOf(runner: MoveRunner): Pose {
+export function poseOf(runner: MoveRunner, poses?: Record<string, [string, string]>): Pose {
   const m = runner.move;
   if (!m) return 'idle';
-  if (m.hold) return 'ready';
+  const [ready, strike] = poses?.[m.id] ?? ['ready', 'strike'];
+  if (m.hold) return ready;
   const attacks = !!m.hit || !!m.events?.some((e) => e.type === 'spawn');
   if (!attacks) return 'idle';
-  if (runner.frame < m.startup) return 'ready';
-  return runner.frame < m.startup + m.active + m.recovery * 0.5 ? 'strike' : 'idle';
+  if (runner.frame < m.startup) return ready;
+  return runner.frame < m.startup + m.active + m.recovery * 0.5 ? strike : 'idle';
 }
 
 export interface SpriteState {
@@ -73,6 +77,9 @@ export class MapSprite {
   /** 当前贴图是不是专门的姿势图（是的话就不用代码做后仰前冲了） */
   private poseArt = false;
   private ghosts: { img: Phaser.GameObjects.Image; life: number }[] = [];
+  private forced: ArtSlot | null = null;
+  /** 现在是不是拿立绘顶着 */
+  private usingFallback = false;
   private ghostTimer = 0;
 
   constructor(
@@ -105,12 +112,13 @@ export class MapSprite {
     let oy = 0;
     let lean = s.moving ? s.facing.x * 0.05 * (0.6 + step * 0.4) : 0;
     let squash = 1;
-    if (!this.poseArt && pose === 'ready') {
+    const striking = STRIKE_POSES.has(pose);
+    if (!this.poseArt && pose !== 'idle' && !striking) {
       ox = -s.facing.x * 10;
       oy = -s.facing.y * 6;
       lean = -s.facing.x * 0.16;
       squash = 0.92;
-    } else if (!this.poseArt && pose === 'strike') {
+    } else if (!this.poseArt && striking) {
       ox = s.facing.x * 16;
       oy = s.facing.y * 10;
       lean = s.facing.x * 0.2;
@@ -122,7 +130,10 @@ export class MapSprite {
     this.img.setScale(sx, this.baseScale * (1 + breathe) * squash);
     this.img.setRotation(lean);
     if (s.flash) this.img.setTintFill(0xffffff);
-    else this.img.clearTint();
+    else if (this.inkOver > 0) {
+      const c = Math.round(255 * (1 - this.inkOver) + 0x1a * this.inkOver);
+      this.img.setTint(Phaser.Display.Color.GetColor(c, c, c));
+    } else this.img.clearTint();
     const blink = s.blinking && Math.floor(this.time / 70) % 2 === 0;
     this.img.setAlpha(s.evading ? 0.55 : blink ? 0.35 : 1);
     // 被打飞时影子留在地上、变小变淡
@@ -133,6 +144,15 @@ export class MapSprite {
     this.shadow.setDepth(s.y - 1);
     this.updateGhosts(!!s.evading, delta);
   }
+
+  /** 变身演出这类场合：直接指定一张图（槽位名），null 恢复按朝向、姿势选图 */
+  forceArt(slot: ArtSlot | null) {
+    this.forced = slot;
+    this.applyTexture(this.dir, this.pose);
+  }
+
+  /** 墨色罩一层（0 不罩，1 全黑）：变身时人慢慢被墨吞掉、敌人倒下化墨 */
+  inkOver = 0;
 
   setVisible(v: boolean) {
     this.img.setVisible(v);
@@ -172,23 +192,35 @@ export class MapSprite {
     this.ghosts = this.ghosts.filter((g) => g.life > 0);
   }
 
-  /** 朝左的三个方向都用朝右的图翻过来；只有立绘顶着时也是往左走就翻 */
+  /**
+   * 地图精图只画朝右的几个方向，朝左的三个翻过来；
+   * 立绘顶着时反过来：现有的立绘人都朝左站，往右走才翻
+   */
   private get mirrored() {
+    if (this.usingFallback) return this.dir === 'e' || this.dir === 'se' || this.dir === 'ne';
     return !!MIRROR[this.dir];
   }
 
-  private artSlot(pose: Pose, dir: Dir8) {
-    return (pose === 'idle' ? `map_${this.mapName}_${dir}` : `map_${this.mapName}_${pose}_${dir}`) as ArtSlot;
+  private artSlot(pose: Pose, dir: Dir8): ArtSlot {
+    return pose === 'idle' ? `map_${this.mapName}_${dir}` : `map_${this.mapName}_${pose}_${dir}`;
   }
 
   private applyTexture(dir: Dir8, pose: Pose) {
     this.dir = dir;
     this.pose = pose;
+    if (this.forced && hasArt(this.scene, this.forced)) {
+      this.poseArt = true;
+      this.usingFallback = false;
+      this.img.setTexture(`art:${this.forced}`).setOrigin(0.5, MAP_ART_FOOT);
+      this.baseScale = this.height / (this.img.height * 0.75);
+      return;
+    }
     const own = MIRROR[dir] ?? dir;
     const poseSlot = this.artSlot(pose, own);
     const idleSlot = this.artSlot('idle', own);
     this.poseArt = pose !== 'idle' && hasArt(this.scene, poseSlot);
     const slot = this.poseArt ? poseSlot : hasArt(this.scene, idleSlot) ? idleSlot : null;
+    this.usingFallback = !slot;
     if (slot) {
       this.img.setTexture(`art:${slot}`).setOrigin(0.5, MAP_ART_FOOT);
       // 精图里人物大约占画面 70～80% 高，按整张图的高度来缩放，同一个人的各张图大小就一致
