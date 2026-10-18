@@ -24,6 +24,7 @@ export const WEN_SHAOHUA: CharacterDef = validateCharacter({
       recovery: 14,
       hit: {
         box: { x: 46, y: -44, w: 70, h: 50 },
+        area: { reach: 105, arc: 120 },
         damage: 8,
         hitstop: 4,
         hitstun: 14,
@@ -44,6 +45,7 @@ export const WEN_SHAOHUA: CharacterDef = validateCharacter({
       recovery: 15,
       hit: {
         box: { x: 50, y: -50, w: 74, h: 70 },
+        area: { reach: 110, arc: 130 },
         damage: 9,
         hitstop: 4,
         hitstun: 16,
@@ -64,6 +66,7 @@ export const WEN_SHAOHUA: CharacterDef = validateCharacter({
       recovery: 24,
       hit: {
         box: { x: 58, y: -40, w: 96, h: 80 },
+        area: { reach: 135, arc: 150 },
         damage: 16,
         hitstop: 8,
         hitstun: 26,

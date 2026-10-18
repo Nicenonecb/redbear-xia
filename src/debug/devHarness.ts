@@ -57,12 +57,14 @@ export function installDevHarness(game: Phaser.Game) {
       const out: T[] = [];
       for (const [frames, held] of script) {
         for (let i = 0; i < frames; i++) {
-          for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = held.includes(a);
+          // 一个键可能绑在几个动作上（W 既是上又是跳），先全松开再按下要按的，免得互相覆盖
+          for (const a of Object.keys(keys) as Action[]) keys[a].forEach((k) => (k.isDown = false));
+          for (const a of held) keys[a].forEach((k) => (k.isDown = true));
           step();
           out.push(probe(s));
         }
       }
-      for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = false;
+      for (const a of Object.keys(keys) as Action[]) keys[a].forEach((k) => (k.isDown = false));
       return out;
     },
     /** 每帧由 decide 现场决定按哪些键（写个简单的 AI 替玩家打），直到 until 返回 true 或帧数用完 */
@@ -77,11 +79,13 @@ export function installDevHarness(game: Phaser.Game) {
       const out: T[] = [];
       for (let f = 0; f < maxFrames && !until(s); f++) {
         const held = decide(s, f);
-        for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = held.includes(a);
+        // 一个键可能绑在几个动作上（W 既是上又是跳），先全松开再按下要按的，免得互相覆盖
+        for (const a of Object.keys(keys) as Action[]) keys[a].forEach((k) => (k.isDown = false));
+        for (const a of held) keys[a].forEach((k) => (k.isDown = true));
         step();
         out.push(probe(s));
       }
-      for (const a of Object.keys(keys) as Action[]) keys[a][0].isDown = false;
+      for (const a of Object.keys(keys) as Action[]) keys[a].forEach((k) => (k.isDown = false));
       return out;
     },
     /** 把逐帧结果压缩成"有变化的那几帧" */

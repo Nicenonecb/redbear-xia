@@ -18,12 +18,13 @@ export class InkSplat {
     y: number,
     size: number,
     private readonly alpha = 0.85,
+    depth = 7,
   ) {
     const frames = stripFrames('fx_ink_splats');
     this.img = hasArt(scene, 'fx_ink_splats')
       ? scene.add
           .image(x, y, 'art:fx_ink_splats', Phaser.Math.Between(0, frames - 1))
-          .setDepth(7)
+          .setDepth(depth)
           .setRotation(Math.random() * Math.PI * 2)
           .setAlpha(this.alpha)
       : null;

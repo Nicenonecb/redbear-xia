@@ -59,11 +59,18 @@ export type ArtSlot = keyof typeof ART_SLOTS;
 
 const textureKey = (slot: ArtSlot) => `art:${slot}`;
 
+/**
+ * 第三批（斜俯视大地图）的图太多，不一个个登记槽位：按出图清单里的文件名前缀认，
+ * 在 manifest 里写上就加载。人物 map_<名字>_<朝向> / map_<名字>_<姿势>_<朝向>、特效 fx_*、
+ * 地面 ground_*、地图物件 prop_*、横幅特写 cutin_*
+ */
+const MAP_ART = /^(map|fx|ground|prop|cutin)_\w+$/;
+
 /** 在 Boot 场景里调用：读清单，把登记了的图片排进加载队列 */
 export function queueArt(scene: Phaser.Scene) {
   const manifest = scene.cache.json.get('artManifest') as { images?: Record<string, string> } | undefined;
   for (const [slot, file] of Object.entries(manifest?.images ?? {})) {
-    if (slot in ART_SLOTS && file) scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
+    if ((slot in ART_SLOTS || MAP_ART.test(slot)) && file) scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
   }
 }
 

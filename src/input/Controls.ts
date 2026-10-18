@@ -19,6 +19,13 @@ const KEYBOARD_BINDINGS: Record<Action, string[]> = {
   throw: ['I'],
 };
 
+/** 大地图（斜俯视）上没有跳：W 只管往上走，空格改成闪避 */
+const MAP_BINDINGS: Record<Action, string[]> = {
+  ...KEYBOARD_BINDINGS,
+  jump: [],
+  dodge: ['L', 'SHIFT', 'SPACE'],
+};
+
 const ACTIONS = Object.keys(KEYBOARD_BINDINGS) as Action[];
 
 export class Controls {
@@ -27,11 +34,12 @@ export class Controls {
   private pressed = new Set<Action>();
   private released = new Set<Action>();
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, mode: 'side' | 'map' = 'side') {
     const keyboard = scene.input.keyboard!;
+    const bindings = mode === 'map' ? MAP_BINDINGS : KEYBOARD_BINDINGS;
     this.keys = {} as Record<Action, Phaser.Input.Keyboard.Key[]>;
     for (const action of ACTIONS) {
-      this.keys[action] = KEYBOARD_BINDINGS[action].map((code) => keyboard.addKey(code));
+      this.keys[action] = bindings[action].map((code) => keyboard.addKey(code));
     }
   }
 

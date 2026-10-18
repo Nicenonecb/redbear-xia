@@ -1,11 +1,19 @@
 import Phaser from 'phaser';
 import { COLORS } from '../config';
 import type { ArtSlot } from '../art/slots';
+import { InkSplat } from '../art/inkSplat';
 import { sfx } from '../audio/sfx';
-import { HEROES } from '../characters/heroes';
+import { HEROES, type HeroEntry } from '../characters/heroes';
+import type { MoveEvent } from '../combat/moveTable';
 import { endRun, getRun, runStats, startRun, type RunState } from '../game/run';
 import { Controls } from '../input/Controls';
 import { CHAPTER1_MAP, type MapArea, type Pt } from '../map/chapter1Map';
+import { GROUND_SQUASH, areaOf, groundAngle } from '../map/combat/ground';
+import type { MapHitResult, MapHurtable } from '../map/combat/MapActor';
+import { MapDummy } from '../map/combat/MapDummy';
+import { MapFighter } from '../map/combat/MapFighter';
+import type { MapProjectile } from '../map/combat/MapProjectile';
+import { ChargeAura, DustPuff, SlashFx, type Overlay } from '../map/combat/fx';
 import {
   BAMBOO_SIZE,
   BAMBOO_VARIANTS,
@@ -16,14 +24,13 @@ import {
   bakeMapTextures,
   drawStonePath,
 } from '../map/mapArt';
-import { MapSprite } from '../map/MapSprite';
-import { WALK_MARGIN, distToPath, keepInside } from '../map/walkable';
+import { MapSprite, poseOf } from '../map/MapSprite';
+import { WALK_MARGIN, distToPath } from '../map/walkable';
+import { DamageNumbers } from '../ui/DamageNumbers';
 import type { UIScene } from './UIScene';
 
 /** 主角在地图上画多高（设计像素） */
 const HERO_HEIGHT = 170;
-/** 主角脚下的碰撞圆有多大 */
-const HERO_RADIUS = 18;
 /** 挡在主角前面的竹子淡到多透明；淡入淡出要多久（毫秒） */
 const SEE_THROUGH_ALPHA = 0.35;
 const SEE_THROUGH_FADE = 150;
@@ -31,38 +38,68 @@ const SEE_THROUGH_FADE = 150;
 const BAMBOO_GAP = 40;
 /** 边界上那排竹子隔多远一丛 */
 const EDGE_SPACING = 90;
+/** 逻辑帧固定 60 帧/秒，招式表的帧数才有意义；卡顿时最多补几帧 */
+const FRAME_MS = 1000 / 60;
+const MAX_CATCHUP_FRAMES = 6;
+/** 顿帧达到这么多帧算重击：字更大、刀光更重、震屏 */
+const HEAVY_HITSTOP = 8;
+/** 伤害数字、判定显示压在所有人和竹子上面 */
+const TOP_DEPTH = 100000;
+/** 第 2 阶段先在"入山"空地里摆几个木人桩试招（第 3 阶段换成山贼） */
+const DUMMIES: Pt[] = [
+  { x: 1180, y: 3400 },
+  { x: 1340, y: 3460 },
+  { x: 1240, y: 3600 },
+];
 
 /**
- * 第一章 · 竹林的大地图（斜俯视）。第 1 阶段：只有走路——
- * WASD 八个方向走，竹丛和山石挡路，人物按前后自动遮挡，镜头跟着人，走进新区域亮出区域题卡。
+ * 第一章 · 竹林的大地图（斜俯视）。
+ * WASD 八个方向走，竹林走不进去，人物按前后自动遮挡，镜头跟着人，走进新区域亮出区域题卡；
+ * 战斗也在地图上打：招式表和横版一样，判定变成脚下朝面向张开的扇形，刀光、剑气朝面向出。
  */
 export class MapScene extends Phaser.Scene {
   private run!: RunState;
   private controls!: Controls;
-  private hero!: Phaser.GameObjects.Zone;
-  private body!: Phaser.Physics.Arcade.Body;
+  private heroEntry!: HeroEntry;
+  private player!: MapFighter;
+  /** 镜头跟着的点（主角脚下） */
+  private camTarget!: Phaser.GameObjects.Zone;
   private sprite!: MapSprite;
-  private facing = { x: 0, y: 1 };
   private ui!: UIScene;
   private area: MapArea | null = null;
   private seenAreas = new Set<string>();
   /** 地图上的竹子和山石，连同它在地图上占的范围（判断挡没挡住主角用） */
   private props: { img: Phaser.GameObjects.Image; rect: Phaser.Geom.Rectangle }[] = [];
+  private dummies: MapDummy[] = [];
+  private projectiles: MapProjectile[] = [];
+  private overlays: Overlay[] = [];
+  private numbers!: DamageNumbers;
+  private accumulator = 0;
+  private aura: ChargeAura | null = null;
+  /** 连段里刀光左右交替 */
+  private slashFlip = false;
+  private lastPhase: string | null = null;
+  private debug!: Phaser.GameObjects.Graphics;
+  private showDebug = false;
 
   constructor() {
-    super({ key: 'Map', physics: { arcade: { gravity: { x: 0, y: 0 } } } });
+    super('Map');
   }
 
   create() {
     this.run = getRun() ?? startRun('wenShaohua', false);
-    this.controls = new Controls(this);
+    this.controls = new Controls(this, 'map');
     this.area = null;
     this.seenAreas = new Set();
     this.props = [];
+    this.projectiles = [];
+    this.overlays = [];
+    this.accumulator = 0;
+    this.aura = null;
+    this.lastPhase = null;
     const M = CHAPTER1_MAP;
 
     bakeMapTextures(this, M.seed);
-    this.physics.world.setBounds(0, 0, M.width, M.height);
 
     // 地面：平铺的纹理 → 大片淡墨晕 → 空地稍亮 → 石板路
     const ground = this.add.tileSprite(0, 0, M.width, M.height, 'gen:ground').setOrigin(0).setDepth(-3000);
@@ -77,21 +114,29 @@ export class MapScene extends Phaser.Scene {
     drawStonePath(floor, M.path, M.pathWidth, M.seed);
 
     this.scatterProps();
+    this.dummies = DUMMIES.map((p) => new MapDummy(this, p));
 
-    // 主角：脚下一个小碰撞圆，贴图按朝向换
-    const hero = HEROES[this.run.hero];
-    this.hero = this.add.zone(M.start.x, M.start.y, HERO_RADIUS * 2, HERO_RADIUS * 2);
-    this.physics.add.existing(this.hero);
-    this.body = this.hero.body as Phaser.Physics.Arcade.Body;
-    this.body.setCircle(HERO_RADIUS).setCollideWorldBounds(true);
+    // 主角：逻辑在 MapFighter 里，画面在 MapSprite 里
+    this.heroEntry = HEROES[this.run.hero];
+    this.player = new MapFighter(M.start.x, M.start.y, this.heroEntry.def, this.controls, M, {
+      ...runStats(this.run),
+      hp: this.run.hp,
+    });
+    this.player.events.on('move', (e: MoveEvent) => this.onPlayerMove(e));
     const fallback = (this.run.hero === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia') as ArtSlot;
     this.sprite = new MapSprite(this, this.run.hero, fallback, HERO_HEIGHT, 70);
+    this.numbers = new DamageNumbers(this, TOP_DEPTH);
 
+    this.camTarget = this.add.zone(M.start.x, M.start.y - 60, 1, 1);
     const cam = this.cameras.main;
     cam.setBounds(0, 0, M.width, M.height);
-    cam.startFollow(this.hero, true, 0.12, 0.12);
+    cam.startFollow(this.camTarget, true, 0.12, 0.12);
 
-    this.scene.launch('UI', { heroName: hero.def.name, hint: 'WASD / 方向键 走 · Esc 返回标题' });
+    this.debug = this.add.graphics().setDepth(TOP_DEPTH);
+    this.showDebug = false;
+    this.input.keyboard!.on('keydown-BACKTICK', () => (this.showDebug = !this.showDebug));
+
+    this.scene.launch('UI', { heroName: this.heroEntry.def.name, hint: this.heroEntry.mapHint });
     this.ui = this.scene.get('UI') as UIScene;
 
     this.input.keyboard!.on('keydown-ESC', () => {
@@ -109,25 +154,140 @@ export class MapScene extends Phaser.Scene {
 
   update(_time: number, delta: number) {
     this.controls.update();
-    let dx = this.controls.moveX;
-    let dy = this.controls.moveY;
-    const moving = dx !== 0 || dy !== 0;
-    if (moving) {
-      const len = Math.hypot(dx, dy);
-      dx /= len;
-      dy /= len;
-      this.facing = { x: dx, y: dy };
+    for (const action of this.controls.justPressedActions) this.player.buffer.push(action);
+    this.accumulator = Math.min(this.accumulator + delta, FRAME_MS * MAX_CATCHUP_FRAMES);
+    while (this.accumulator >= FRAME_MS) {
+      this.accumulator -= FRAME_MS;
+      this.tick();
     }
-    const speed = HEROES[this.run.hero].def.moveSpeed * runStats(this.run).speedScale;
-    this.body.setVelocity(dx * speed, dy * speed);
+    this.render(delta);
+  }
 
-    // 钻进竹林了就推回路上（贴着边走会顺着滑过去）
-    const feet = keepInside(CHAPTER1_MAP, { x: this.body.x + HERO_RADIUS, y: this.body.y + HERO_RADIUS });
-    this.body.position.set(feet.x - HERO_RADIUS, feet.y - HERO_RADIUS);
-    this.sprite.update(feet.x, feet.y, this.facing, moving && this.body.speed > 10, delta);
-    this.seeThrough(feet, delta);
-    this.ui.setHp(this.run.hp, runStats(this.run).maxHp);
-    this.checkArea(feet);
+  /** 一个逻辑帧：主角行动 → 和木人桩挤开 → 结算主角的招和飞行道具 → 木人桩晃 */
+  private tick() {
+    const p = this.player;
+    p.tick();
+    if (!p.evading) for (const d of this.dummies) p.pushOutOf(d);
+    this.watchPlayerMove();
+    const foes: MapHurtable[] = this.dummies;
+    this.reportHits(p.resolveHits(foes));
+    for (const pr of this.projectiles) this.reportHits(pr.tick(pr.team === 'player' ? foes : [p]));
+    this.projectiles = this.projectiles.filter((pr) => pr.alive);
+    for (const d of this.dummies) d.tick();
+  }
+
+  /** 每个画面帧：画人、木人桩、特效，竹子透明，界面，区域题卡 */
+  private render(delta: number) {
+    const p = this.player;
+    this.camTarget.setPosition(p.pos.x, p.pos.y - 60);
+    this.sprite.update(
+      {
+        x: p.pos.x,
+        y: p.pos.y,
+        z: p.z,
+        facing: p.facing,
+        moving: p.walking,
+        pose: poseOf(p.runner),
+        flash: p.flash > 0,
+        // 顿帧时抖；蓄满了也微微发抖，憋着一股劲
+        shaking: p.frozen || !!this.aura?.full,
+        evading: p.evading,
+        blinking: !p.evading && p.mercyFrames > 0,
+      },
+      delta,
+    );
+    for (const d of this.dummies) d.draw();
+    this.aura?.follow(p.pos, p.chargeRatio);
+    for (const o of this.overlays) o.update(delta);
+    this.overlays = this.overlays.filter((o) => !o.done);
+    this.seeThrough(p.pos, delta);
+    this.ui.setHp(p.hp, p.maxHp);
+    this.checkArea(p.pos);
+    this.drawDebug();
+  }
+
+  /**
+   * 盯着主角的招式：一进判定帧就甩出刀光（连段里左右交替，重招更大更重）；
+   * 蓄力招开始时身上聚墨，蓄完就收
+   */
+  private watchPlayerMove() {
+    const r = this.player.runner;
+    const phase = r.phase;
+    if (phase === 'active' && this.lastPhase !== 'active' && r.move?.hit) {
+      const area = areaOf(r.move.hit);
+      const heavy = r.move.hit.hitstop >= HEAVY_HITSTOP;
+      this.overlays.push(
+        new SlashFx(this, { ...this.player.pos }, this.player.facing, {
+          reach: area.reach,
+          arc: Math.min(area.arc + 20, 200),
+          heavy,
+          reverse: this.slashFlip,
+        }),
+      );
+      this.slashFlip = !this.slashFlip;
+    }
+    if (!r.move) this.slashFlip = false;
+    this.lastPhase = phase;
+
+    const charging = !!r.move?.hold;
+    if (charging && !this.aura) {
+      this.aura = new ChargeAura(this);
+      this.overlays.push(this.aura);
+    } else if (!charging && this.aura) {
+      this.aura.stop();
+      this.aura = null;
+    }
+  }
+
+  private onPlayerMove(e: MoveEvent) {
+    const p = this.player;
+    if (e.type === 'sfx') {
+      sfx.play(e.name);
+      // 闪避起步：脚下扬起一团墨尘
+      if (e.name === 'dodge') this.overlays.push(new DustPuff(this, { ...p.pos }, { x: -p.facing.x, y: -p.facing.y }));
+    }
+    if (e.type === 'spawn') {
+      this.heroEntry.spawnOnMap({ scene: this, player: p, addProjectile: (pr) => this.projectiles.push(pr) }, e.name);
+    }
+  }
+
+  /** 每一次实际打中：跳伤害数字、溅墨，重击震屏 */
+  private reportHits(results: MapHitResult[]) {
+    for (const { target, hit } of results) {
+      const heavy = hit.hitstop >= HEAVY_HITSTOP;
+      const { x, y } = target.pos;
+      this.numbers.show(x, y - target.height - 10, hit.damage, target === this.player, heavy);
+      this.overlays.push(new InkSplat(this, x, y - target.height / 2, heavy ? 120 : 70, heavy ? 0.9 : 0.7, y + 2));
+      sfx.play(target === this.player ? 'hurt' : heavy ? 'hit-heavy' : 'hit');
+      if (heavy) this.cameras.main.shake(120, 0.006);
+    }
+  }
+
+  /** ` 键：画出脚下的圆和正在生效的判定扇形，调手感用 */
+  private drawDebug() {
+    const g = this.debug;
+    g.clear();
+    if (!this.showDebug) return;
+    const p = this.player;
+    const circle = (at: Pt, r: number, color: number) => {
+      g.lineStyle(2, color, 0.9);
+      g.strokeEllipse(at.x, at.y, r * 2, r * 2 * GROUND_SQUASH);
+    };
+    circle(p.pos, p.radius, 0x2a6fdb);
+    for (const d of this.dummies) circle(d.pos, d.radius, 0x2a6fdb);
+    for (const pr of this.projectiles) circle(pr.pos, pr.radius, COLORS.red);
+    const area = p.activeArea();
+    if (area) {
+      const base = groundAngle(p.facing);
+      const half = Phaser.Math.DegToRad(Math.min(area.arc, 360)) / 2;
+      const pts: Pt[] = [{ ...p.pos }];
+      for (let i = 0; i <= 20; i++) {
+        const a = base - half + (2 * half * i) / 20;
+        pts.push({ x: p.pos.x + Math.cos(a) * area.reach, y: p.pos.y + Math.sin(a) * area.reach * GROUND_SQUASH });
+      }
+      g.fillStyle(COLORS.red, 0.25);
+      g.fillPoints(pts, true);
+    }
   }
 
   /**

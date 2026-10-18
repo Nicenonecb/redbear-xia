@@ -22,8 +22,20 @@ export interface Box {
   h: number;
 }
 
+/**
+ * 大地图（斜俯视）上的判定范围：以出招者脚下为圆心、朝面向张开的一个扇形。
+ * reach 是半径，arc 是张开的角度（度），360 就是一整圈；from 是内圈半径（环形冲击波用）
+ */
+export interface GroundArea {
+  reach: number;
+  arc: number;
+  from?: number;
+}
+
 export interface HitSpec {
   box: Box;
+  /** 大地图上的判定扇形；不写就按 box 的前后范围、张开 110° 来算 */
+  area?: GroundArea;
   damage: number;
   /** 顿帧：命中时攻防双方一起定住的帧数 */
   hitstop: number;
