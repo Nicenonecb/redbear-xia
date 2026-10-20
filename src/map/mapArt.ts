@@ -36,8 +36,16 @@ function bake(scene: Phaser.Scene, key: string, w: number, h: number, draw: (g: 
 export function bakeMapTextures(scene: Phaser.Scene, seed: string) {
   const rng = new Phaser.Math.RandomDataGenerator([seed]);
   bakeGround(scene, rng);
-  for (let i = 0; i < BAMBOO_VARIANTS; i++) bakeBamboo(scene, `gen:bamboo${i}`, rng);
-  for (let i = 0; i < ROCK_VARIANTS; i++) bakeRock(scene, `gen:rock${i}`, rng);
+  // 有竹丛、山石的精图就不用再画占位了（每张都按屏幕倍数画，也占显存）
+  const hasProps = hasArt(scene, 'prop_bamboo_big') && hasArt(scene, 'prop_rock_big');
+  for (let i = 0; i < BAMBOO_VARIANTS; i++) {
+    if (hasProps) scene.textures.exists(`gen:bamboo${i}`) && scene.textures.remove(`gen:bamboo${i}`);
+    else bakeBamboo(scene, `gen:bamboo${i}`, rng);
+  }
+  for (let i = 0; i < ROCK_VARIANTS; i++) {
+    if (hasProps) scene.textures.exists(`gen:rock${i}`) && scene.textures.remove(`gen:rock${i}`);
+    else bakeRock(scene, `gen:rock${i}`, rng);
+  }
 }
 
 /** 在一块可平铺的贴图上画东西：靠边的会在对边接着画，平铺时看不出接缝 */

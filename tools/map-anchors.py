@@ -9,6 +9,9 @@ Codex 出的图画布都一样大（同一个人的各张图是对着同一块�
 - 脚底的高度：按站姿图找"最下面一行够宽的不透明像素"（刀尖、扇尖只有一小撮，跳过）；
   同一朝向的姿势图沿用站姿图的高度（姿势图里刀、锤常常比脚低，找不准）
 - 人有多高：这个人物几张站姿图"脚底到头顶"的中位数，游戏按它缩放，同一个人各张图一样大
+- trim：四周完全透明的边裁到哪儿（x, y, 宽, 高）。游戏加载完以后只把这一块送进显卡，
+  省显存；原图文件不动，裁掉的只有透明边和边上几乎看不见的杂点
+- 坐标一律是原图上的像素
 
 用法：python3 tools/map-anchors.py   （需要 Pillow 和 numpy）
 """
@@ -18,6 +21,20 @@ from PIL import Image
 
 ART = os.path.join(os.path.dirname(__file__), '..', 'public', 'art')
 DIRS = ['s', 'se', 'e', 'ne', 'n']
+
+
+def trim_box(path):
+    """
+    四周透明的边裁到哪儿，再留 4 像素，免得缩放时边缘采样到外面。
+    出图工具会在人物四周撒几百个几乎看不见的杂点（不透明度不到 10%，一个个孤零零的），
+    按"完全透明"来裁几乎裁不掉什么，所以不透明度 24/255 以下的散点不算；人物本身一个像素都不动
+    """
+    a = np.array(Image.open(path).convert('RGBA'))[:, :, 3] > 24
+    rows = np.where(a.any(1))[0]
+    cols = np.where(a.any(0))[0]
+    x0, y0 = max(0, int(cols[0]) - 4), max(0, int(rows[0]) - 4)
+    x1, y1 = min(a.shape[1], int(cols[-1]) + 5), min(a.shape[0], int(rows[-1]) + 5)
+    return [x0, y0, x1 - x0, y1 - y0]
 
 
 def measure(path):
@@ -53,7 +70,7 @@ for f, name in zip(files, names):
         m = re.fullmatch(r'map_([A-Za-z]+)_([a-z]+)_(s|se|e|ne|n)', name)
         if m and f'map_{m.group(1)}_{m.group(3)}' in idle:
             foot = idle[f'map_{m.group(1)}_{m.group(3)}'][3]
-    images[name] = {'footX': round(w / 2), 'footY': foot}
+    images[name] = {'footX': round(w / 2), 'footY': foot, 'trim': trim_box(f)}
 
 # 地图物件：底边落地的那一行，和那一行附近的水平中心（物件的"脚"）；还有不透明部分的宽度
 props = {}
@@ -70,6 +87,7 @@ for f in sorted(glob.glob(os.path.join(ART, 'prop_*.png'))):
         'left': int(cols[0]),
         'right': int(cols[-1]),
         'top': top,
+        'trim': trim_box(f),
     }
 
 out = {

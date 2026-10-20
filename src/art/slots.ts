@@ -70,11 +70,72 @@ const textureKey = (slot: ArtSlot) => `art:${slot}`;
  */
 const MAP_ART = /^(map|fx|ground|prop|cutin)_\w+$/;
 
-/** 在 Boot 场景里调用：读清单，把登记了的图片排进加载队列 */
-export function queueArt(scene: Phaser.Scene) {
+function manifestImages(scene: Phaser.Scene) {
   const manifest = scene.cache.json.get('artManifest') as { images?: Record<string, string> } | undefined;
-  for (const [slot, file] of Object.entries(manifest?.images ?? {})) {
-    if ((slot in ART_SLOTS || MAP_ART.test(slot)) && file) scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
+  return Object.entries(manifest?.images ?? {}).filter(([, file]) => !!file);
+}
+
+/**
+ * 在 Boot 场景里调用：把标题、选角、界面、茶摊、信这些登记过槽位的图排进加载队列。
+ * 大地图的图（第三批，几百兆）不在这里加载，进地图时再按选的主角加载，见 queueMapArt
+ */
+export function queueArt(scene: Phaser.Scene) {
+  for (const [slot, file] of manifestImages(scene)) {
+    if (slot in ART_SLOTS) scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
+  }
+}
+
+/**
+ * 进大地图前调用：把第三批的图排进加载队列，只加载这一局用得上的——
+ * 没选的那位主角的人物图不加载；上一局留下的那位主角的图从显卡里卸掉。已经加载过的不会重复加载。
+ * 返回排进队列的张数
+ */
+export function queueMapArt(scene: Phaser.Scene, hero: string) {
+  const other = hero === 'wenShaohua' ? 'yuWuxia' : 'wenShaohua';
+  const isOther = (slot: string) => slot.startsWith(`map_${other}_`);
+  for (const key of scene.textures.getTextureKeys()) {
+    if (key.startsWith('art:') && isOther(key.slice(4))) scene.textures.remove(key);
+  }
+  let n = 0;
+  for (const [slot, file] of manifestImages(scene)) {
+    if (slot in ART_SLOTS || !MAP_ART.test(slot) || isOther(slot)) continue;
+    if (scene.textures.exists(textureKey(slot as ArtSlot))) continue;
+    scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
+    n++;
+  }
+  return n;
+}
+
+/**
+ * 把第三批的人物图、地图物件四周的透明边裁掉再送进显卡，省显存（map-anchors.json 的 trim 记了裁到哪儿）。
+ * 裁完的图还假装自己是原来那么大（Phaser 的"带裁边的帧"），所以摆放、对齐、缩放的算法全都不用改，
+ * 画出来和原图一个像素都不差；原图文件也不动
+ */
+export function trimArtTextures(scene: Phaser.Scene) {
+  const data = scene.cache.json.get('mapAnchors') as
+    | { images?: Record<string, { trim?: number[] }>; props?: Record<string, { trim?: number[] }> }
+    | undefined;
+  const all = { ...data?.images, ...data?.props };
+  for (const [slot, info] of Object.entries(all)) {
+    const key = textureKey(slot as ArtSlot);
+    const box = info.trim;
+    if (!box || !scene.textures.exists(key)) continue;
+    const old = scene.textures.get(key);
+    const src = old.getSourceImage() as HTMLImageElement;
+    // 已经裁过了（裁好的是 canvas）
+    if (!(src instanceof HTMLImageElement)) continue;
+    const [x, y, w, h] = box;
+    const fullW = src.naturalWidth || src.width;
+    const fullH = src.naturalHeight || src.height;
+    if (w >= fullW && h >= fullH) continue;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d')!.drawImage(src, x, y, w, h, 0, 0, w, h);
+    scene.textures.remove(key);
+    // 用 create 而不是 addCanvas：CanvasTexture 会在内存里再存一整份像素，省下的显存又花回内存里了
+    const tex = scene.textures.create(key, canvas as unknown as HTMLImageElement, w, h)!;
+    tex.add('__BASE', 0, 0, 0, w, h)!.setTrim(fullW, fullH, x, y, w, h);
   }
 }
 

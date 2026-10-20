@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
-import { hasArt, type ArtSlot } from '../art/slots';
+import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { hasArt, queueMapArt, trimArtTextures, type ArtSlot } from '../art/slots';
 import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
 import { sfx } from '../audio/sfx';
@@ -101,6 +101,8 @@ export class MapScene extends Phaser.Scene {
   /** 正在念的一串台词，念完做 then */
   private talking: { lines: string[]; then: () => void; where: () => ScreenPoint; portrait?: { slot: ArtSlot; side: 'left' | 'right' } } | null = null;
   private renSprite!: MapSprite;
+  /** 铺满屏幕、跟着镜头走的那几层地面 */
+  private groundLayers: Phaser.GameObjects.TileSprite[] = [];
   private renPrompt!: Phaser.GameObjects.Text;
   private renGreeted = false;
   private rescueShow: { t: number; startHp: number; targetHp: number; said: boolean } | null = null;
@@ -137,7 +139,35 @@ export class MapScene extends Phaser.Scene {
     super('Map');
   }
 
+  /**
+   * 进地图前加载这一局用得上的第三批图（第一次进来要等几秒，画一道墨条；之后再进就不用等了）
+   */
+  preload() {
+    const hero = (getRun() ?? startRun('wenShaohua', false)).hero;
+    if (!queueMapArt(this, hero)) return;
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+    const label = this.add.text(cx, cy - 40, '研墨中……', { fontFamily: FONT_BRUSH, fontSize: '30px', color: CSS_COLORS.ink }).setOrigin(0.5);
+    const bar = this.add.graphics();
+    const draw = (p: number) => {
+      bar.clear();
+      bar.fillStyle(COLORS.ink, 0.15);
+      bar.fillRect(cx - 210, cy, 420, 6);
+      bar.fillStyle(COLORS.ink, 0.9);
+      bar.fillRect(cx - 210, cy, 420 * p, 6);
+      bar.fillStyle(COLORS.red);
+      bar.fillCircle(cx - 210 + 420 * p, cy + 3, 4);
+    };
+    draw(0);
+    this.load.on(Phaser.Loader.Events.PROGRESS, draw);
+    this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+      label.destroy();
+      bar.destroy();
+    });
+  }
+
   create() {
+    trimArtTextures(this);
     this.run = getRun() ?? startRun('wenShaohua', false);
     this.controls = new Controls(this, 'map');
     this.area = null;
@@ -291,6 +321,7 @@ export class MapScene extends Phaser.Scene {
   /** 每个画面帧：画人、木人桩、特效，竹子透明，界面，区域题卡 */
   private render(delta: number) {
     const p = this.player;
+    this.followGround();
     // 变身演出时镜头对着胖虎
     const focus = this.cinematic && this.boss ? this.boss.pos : p.pos;
     this.camTarget.setPosition(focus.x, focus.y - (this.cinematic ? 100 : 60));
@@ -1056,45 +1087,78 @@ export class MapScene extends Phaser.Scene {
    */
   private drawGround() {
     const M = CHAPTER1_MAP;
-    const tiled = (slot: ArtSlot, tile: number, depth: number) => {
-      const t = this.add.tileSprite(0, 0, M.width, M.height, `art:${slot}`).setOrigin(0).setDepth(depth);
-      t.setTileScale(tile / t.frame.width);
+    // 平铺的地面不铺满整张地图（那样每层都要一张 6400×4400 的大贴图，几百兆显存），
+    // 只铺一块屏幕大小的，钉在镜头上；镜头走到哪，纹理就跟着挪到哪，看起来就是铺满的
+    const layers: { t: Phaser.GameObjects.TileSprite; region?: Phaser.Geom.Rectangle }[] = [];
+    const tiled = (key: string, tile: number, depth: number, region?: Phaser.Geom.Rectangle) => {
+      const w = region?.width ?? GAME_WIDTH + 64;
+      const h = region?.height ?? GAME_HEIGHT + 64;
+      const t = this.add.tileSprite(region?.x ?? 0, region?.y ?? 0, w, h, key).setOrigin(0).setDepth(depth);
+      // 按"原图"的宽来算（t.frame 是这块平铺自己的画布，大小跟着平铺走，不能用）
+      t.setTileScale(tile / this.textures.getFrame(key).width);
+      if (!region) layers.push({ t });
       return t;
     };
-    if (hasArt(this, 'ground_forest')) tiled('ground_forest', GROUND_ART_TILE, -3000);
-    else {
-      const g = this.add.tileSprite(0, 0, M.width, M.height, 'gen:ground').setOrigin(0).setDepth(-3000);
-      g.setTileScale(GROUND_TILE / g.frame.width);
-    }
-    const wash = this.add.tileSprite(0, 0, M.width, M.height, 'gen:groundWash').setOrigin(0).setDepth(-3000);
-    wash.setTileScale(GROUND_WASH_TILE / wash.frame.width);
+    if (hasArt(this, 'ground_forest')) tiled('art:ground_forest', GROUND_ART_TILE, -3000);
+    else tiled('gen:ground', GROUND_TILE, -3000);
+    tiled('gen:groundWash', GROUND_WASH_TILE, -3000);
+    this.groundLayers = layers.map((l) => l.t);
 
     const floor = this.add.graphics().setDepth(-2999);
     for (const a of M.areas) {
       floor.fillStyle(COLORS.paper, 0.35);
       floor.fillEllipse(a.center.x, a.center.y, a.radius * 2.1, a.radius * 1.5);
     }
+    // 山寨的黄土地、青石板路：只在那一块铺（贴图跟着那一块大小走），再用遮罩剪出形状
     const camp = M.areas.find((a) => a.id === 'camp')!;
     if (hasArt(this, 'ground_camp')) {
+      const rx = camp.radius * 1.1;
+      const ry = camp.radius * 0.95;
+      const region = new Phaser.Geom.Rectangle(camp.center.x - rx, camp.center.y - ry, rx * 2, ry * 2);
       const shape = this.make.graphics({}, false);
       shape.fillStyle(0xffffff);
-      shape.fillEllipse(camp.center.x, camp.center.y, camp.radius * 2.2, camp.radius * 1.9);
-      tiled('ground_camp', GROUND_ART_TILE, -2998).setMask(shape.createGeometryMask()).setAlpha(0.85);
+      shape.fillEllipse(camp.center.x, camp.center.y, rx * 2, ry * 2);
+      tiled('art:ground_camp', GROUND_ART_TILE, -2998, region).setMask(shape.createGeometryMask()).setAlpha(0.85);
     }
     if (hasArt(this, 'ground_stone')) {
-      // 路边先晕一圈淡墨，再铺青石板（只露出路那一条）
       floor.lineStyle(M.pathWidth + 70, COLORS.inkLight, 0.08);
       floor.strokePoints(M.path);
-      const shape = this.make.graphics({}, false);
-      shape.lineStyle(M.pathWidth, 0xffffff);
-      shape.strokePoints(M.path);
-      shape.fillStyle(0xffffff);
-      for (const p of M.path) shape.fillCircle(p.x, p.y, M.pathWidth / 2);
-      tiled('ground_stone', GROUND_STONE_TILE, -2997).setMask(shape.createGeometryMask());
+      // 路是一条斜着的长带，一整块包住它太大了：每一段路单独铺一块
+      for (let i = 0; i < M.path.length - 1; i++) {
+        const a = M.path[i];
+        const b = M.path[i + 1];
+        const pad = M.pathWidth / 2 + 4;
+        const x0 = Math.floor(Math.min(a.x, b.x) - pad);
+        const y0 = Math.floor(Math.min(a.y, b.y) - pad);
+        const region = new Phaser.Geom.Rectangle(x0, y0, Math.ceil(Math.abs(a.x - b.x) + pad * 2), Math.ceil(Math.abs(a.y - b.y) + pad * 2));
+        const shape = this.make.graphics({}, false);
+        shape.lineStyle(M.pathWidth, 0xffffff);
+        shape.lineBetween(a.x, a.y, b.x, b.y);
+        shape.fillStyle(0xffffff);
+        shape.fillCircle(a.x, a.y, M.pathWidth / 2);
+        shape.fillCircle(b.x, b.y, M.pathWidth / 2);
+        const t = tiled('art:ground_stone', GROUND_STONE_TILE, -2997, region).setMask(shape.createGeometryMask());
+        // 各段的纹理对齐到同一张网格上，接头处石板缝是连着的
+        t.setTilePosition(x0 / t.tileScaleX, y0 / t.tileScaleY);
+      }
     } else {
       drawStonePath(floor, M.path, M.pathWidth, M.seed);
     }
   }
+
+  /** 每个画面帧：铺满屏幕的那几层地面跟着镜头挪，纹理按地图坐标对齐，走起来地面不会跟着人滑 */
+  private followGround() {
+    const v = this.cameras.main.worldView;
+    const x = Math.floor(v.x) - 32;
+    const y = Math.floor(v.y) - 32;
+    for (const t of this.groundLayers) {
+      const w = Math.ceil(v.width) + 64;
+      const h = Math.ceil(v.height) + 64;
+      if (t.width !== w || t.height !== h) t.setSize(w, h);
+      t.setPosition(x, y).setTilePosition(x / t.tileScaleX, y / t.tileScaleY);
+    }
+  }
+
 
   /**
    * 种竹子：先沿着能走的边界（石板路两边、每片空地一圈）密密种一排，像一堵墙；
