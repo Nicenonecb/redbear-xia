@@ -9,7 +9,7 @@ import type { MoveId } from '../combat/moveTable';
 export interface MapLook {
   mapName: string;
   fallback: ArtSlot;
-  /** 画多高（设计像素） */
+  /** 画多高（设计像素）：脚底到头顶（地图精图按 map-anchors.json 里站姿的身高缩放） */
   height: number;
   /** 影子多宽 */
   shadow: number;
@@ -36,8 +36,9 @@ export const LOOKS = {
   tiger: {
     mapName: 'tiger',
     fallback: 'portrait_pangHuTiger',
-    height: 170,
-    shadow: 180,
+    // 猛虎的图横着占满画布，按"脚底到背顶"量的身高给大一点，才比人形胖虎还威风
+    height: 270,
+    shadow: 240,
     poses: { pounce: ['crouch', 'leap'], claw1: ['claw', 'claw'], claw2: ['claw', 'claw'], roar: ['roar', 'roar'] },
   },
 } satisfies Record<string, MapLook>;

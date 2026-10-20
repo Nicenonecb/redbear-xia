@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS } from '../config';
-import { hasArt, type ArtSlot } from '../art/slots';
+import { hasArt, mapAnchor, type ArtSlot } from '../art/slots';
 import type { MoveRunner } from '../combat/MoveRunner';
 
 /** 斜俯视下的八个朝向；朝左的三个用朝右的图水平翻转 */
@@ -205,14 +205,26 @@ export class MapSprite {
     return pose === 'idle' ? `map_${this.mapName}_${dir}` : `map_${this.mapName}_${pose}_${dir}`;
   }
 
+  /**
+   * 换成一张地图精图：脚底对准 map-anchors.json 里记的那个像素；
+   * 按这个人物站着时的身高缩放，同一个人的各张图一样大（举刀、扑起来的图不会忽大忽小）
+   */
+  private useMapArt(slot: ArtSlot) {
+    this.img.setTexture(`art:${slot}`);
+    const a = mapAnchor(this.scene, slot, this.mapName);
+    const w = this.img.width;
+    const h = this.img.height;
+    this.img.setOrigin(a ? a.footX / w : 0.5, a ? a.footY / h : MAP_ART_FOOT);
+    this.baseScale = this.height / (a?.bodyHeight ?? h * 0.75);
+  }
+
   private applyTexture(dir: Dir8, pose: Pose) {
     this.dir = dir;
     this.pose = pose;
     if (this.forced && hasArt(this.scene, this.forced)) {
       this.poseArt = true;
       this.usingFallback = false;
-      this.img.setTexture(`art:${this.forced}`).setOrigin(0.5, MAP_ART_FOOT);
-      this.baseScale = this.height / (this.img.height * 0.75);
+      this.useMapArt(this.forced);
       return;
     }
     const own = MIRROR[dir] ?? dir;
@@ -222,9 +234,7 @@ export class MapSprite {
     const slot = this.poseArt ? poseSlot : hasArt(this.scene, idleSlot) ? idleSlot : null;
     this.usingFallback = !slot;
     if (slot) {
-      this.img.setTexture(`art:${slot}`).setOrigin(0.5, MAP_ART_FOOT);
-      // 精图里人物大约占画面 70～80% 高，按整张图的高度来缩放，同一个人的各张图大小就一致
-      this.baseScale = this.height / (this.img.height * 0.75);
+      this.useMapArt(slot);
     } else {
       this.img.setTexture(hasArt(this.scene, this.fallback) ? `art:${this.fallback}` : '__WHITE').setOrigin(0.5, 1);
       this.baseScale = this.height / this.img.height;

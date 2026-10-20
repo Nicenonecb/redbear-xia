@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { ProjectileSpec } from '../../combat/moveTable';
 import type { Team } from '../../entities/Projectile';
+import { hasArt, type ArtSlot } from '../../art/slots';
 import { groundDist, type Vec } from './ground';
 import type { MapHitResult, MapHurtable } from './MapActor';
 
@@ -19,6 +20,8 @@ export class MapProjectile {
   private hitstop = 0;
   /** 消失时调用（掷扇飞完要把扇子还给主角） */
   onGone?: () => void;
+  /** 有特效图时用图代替代码画的样子 */
+  private art: Phaser.GameObjects.Image | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -39,6 +42,16 @@ export class MapProjectile {
     this.g.setRotation(Math.atan2(dir.y, dir.x));
     draw(this.g);
     this.place();
+  }
+
+  /** 有这张特效图（只画朝右的）就换成图，转到飞行方向；width 是图显示多宽 */
+  useArt(scene: Phaser.Scene, slot: ArtSlot, width: number) {
+    if (!hasArt(scene, slot)) return this;
+    this.art = scene.add.image(0, 0, `art:${slot}`).setRotation(Math.atan2(this.dir.y, this.dir.x));
+    this.art.setScale(width / this.art.width);
+    this.g.setVisible(false);
+    this.place();
+    return this;
   }
 
   get radius() {
@@ -75,6 +88,7 @@ export class MapProjectile {
     }
     this.place();
     this.g.setAlpha(Math.min(1, this.life / 8));
+    this.art?.setAlpha(Math.min(1, this.life / 8));
     return results;
   }
 
@@ -86,6 +100,7 @@ export class MapProjectile {
 
   private place() {
     this.g.setPosition(this.pos.x, this.pos.y - this.lift).setDepth(this.pos.y + 1);
+    this.art?.setPosition(this.pos.x, this.pos.y - this.lift).setDepth(this.pos.y + 1);
     this.shadow.setPosition(this.pos.x, this.pos.y).setDepth(this.pos.y);
   }
 
@@ -93,6 +108,7 @@ export class MapProjectile {
     if (!this.alive) return;
     this.alive = false;
     this.g.destroy();
+    this.art?.destroy();
     this.shadow.destroy();
     this.onGone?.();
   }

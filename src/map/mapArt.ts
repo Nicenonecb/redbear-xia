@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../config';
 import { drawLeaf } from '../art/bamboo';
+import { hasArt, type ArtSlot } from '../art/slots';
 import { renderScale } from '../render/sharp';
 import type { Pt } from './chapter1Map';
 
@@ -225,4 +226,27 @@ export function drawStonePath(g: Phaser.GameObjects.Graphics, path: Pt[], width:
       }
     }
   }
+}
+
+/**
+ * 摆一件第三批的地图物件（prop_*）：落地的那一点对准 (x, y)，按"实际画了东西的宽度"缩放到 width。
+ * 落地点和左右范围在 public/art/map-anchors.json 里（tools/map-anchors.py 生成）。没有这张图就返回 null
+ */
+export function placeMapArt(scene: Phaser.Scene, slot: ArtSlot, x: number, y: number, width: number) {
+  if (!hasArt(scene, slot)) return null;
+  const data = scene.cache.json.get('mapAnchors') as
+    | { props: Record<string, { footY: number; left: number; right: number; top: number }> }
+    | undefined;
+  const a = data?.props[slot];
+  const img = scene.add.image(x, y, `art:${slot}`).setDepth(y);
+  const w = img.width;
+  const h = img.height;
+  const left = a?.left ?? 0;
+  const right = a?.right ?? w;
+  img.setOrigin((left + right) / 2 / w, (a?.footY ?? h) / h);
+  img.setScale(width / (right - left));
+  /** 实际画了东西的那一块在地图上占的范围（判断挡没挡住主角用） */
+  const top = a?.top ?? 0;
+  const rect = new Phaser.Geom.Rectangle(x - width / 2, y - ((a?.footY ?? h) - top) * img.scaleY, width, ((a?.footY ?? h) - top) * img.scaleY);
+  return { img, rect };
 }

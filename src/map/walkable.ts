@@ -13,6 +13,8 @@ export interface WalkableMap {
   areas: MapArea[];
   /** 遭遇战时两边竹篱合上：只能在这一圈里走 */
   lock?: { center: Pt; radius: number } | null;
+  /** 走不过去的东西（茶摊、聚义厅、寨门柱子）：脚下一个圆 */
+  solids?: { at: Pt; r: number }[];
 }
 
 /** 走廊比石板路两边各宽出多少：路边留一点草地，再往外就是竹子 */
@@ -38,6 +40,7 @@ export function outside(m: WalkableMap, x: number, y: number) {
   let d = distToPath(x, y, m.path) - (m.pathWidth / 2 + WALK_MARGIN);
   for (const a of m.areas) d = Math.min(d, Phaser.Math.Distance.Between(x, y, a.center.x, a.center.y) - (a.radius - AREA_INSET));
   if (m.lock) d = Math.max(d, Phaser.Math.Distance.Between(x, y, m.lock.center.x, m.lock.center.y) - m.lock.radius);
+  for (const s of m.solids ?? []) d = Math.max(d, s.r - Phaser.Math.Distance.Between(x, y, s.at.x, s.at.y));
   return d;
 }
 

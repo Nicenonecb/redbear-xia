@@ -92,6 +92,18 @@ export function registerArtFrames(scene: Phaser.Scene) {
   }
 }
 
+/**
+ * 地图人物图的对齐数据（tools/map-anchors.py 生成）：脚底在画布上的哪个像素、
+ * 这个人物站着时"脚底到头顶"多高。没有就返回 null（按画布正中、离底边 6% 算）
+ */
+export function mapAnchor(scene: Phaser.Scene, slot: ArtSlot, mapName: string) {
+  const data = scene.cache.json.get('mapAnchors') as
+    | { images: Record<string, { footX: number; footY: number }>; bodyHeight: Record<string, number> }
+    | undefined;
+  const foot = data?.images[slot];
+  return foot ? { ...foot, bodyHeight: data!.bodyHeight[mapName] as number | undefined } : null;
+}
+
 export function stripFrames(slot: ArtSlot) {
   return STRIPS[slot] ?? 0;
 }

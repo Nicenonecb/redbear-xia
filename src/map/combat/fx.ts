@@ -33,6 +33,8 @@ export interface SlashOptions {
   heavy?: boolean;
   /** 反手：从另一边扫过来 */
   reverse?: boolean;
+  /** 用哪张特效图（默认刀光，猛虎挥爪用 fx_claw） */
+  art?: ArtSlot;
 }
 
 /** 扫一下要多久、扫完淡掉要多久（毫秒） */
@@ -60,7 +62,7 @@ export class SlashFx implements Overlay {
     this.base = groundAngle(facing);
     // 朝上砍时刀光在人身后（先画），朝下砍时在人身前
     const depth = at.y + (facing.y < -0.3 ? -2 : 2);
-    const slot: ArtSlot = opt.heavy ? 'fx_slash_heavy' : 'fx_slash_arc';
+    const slot: ArtSlot = opt.art ?? (opt.heavy ? 'fx_slash_heavy' : 'fx_slash_arc');
     this.art = groundImage(scene, slot, at.x, at.y - lift, this.base, opt.reach * 2.2);
     if (this.art) {
       this.art.box.setDepth(depth).setAlpha(0);
@@ -294,7 +296,8 @@ export class InkVortex implements Overlay {
   power = 0;
   private readonly back: Phaser.GameObjects.Graphics;
   private readonly front: Phaser.GameObjects.Graphics;
-  private readonly art: ReturnType<typeof groundImage>;
+  /** fx_ink_vortex 是侧面看的一股墨色龙卷，竖着立在人身上，罩在人前面 */
+  private readonly art: Phaser.GameObjects.Image | null;
   private spin = 0;
   private finished = false;
 
@@ -305,8 +308,9 @@ export class InkVortex implements Overlay {
   ) {
     this.back = scene.add.graphics().setDepth(at.y - 1);
     this.front = scene.add.graphics().setDepth(at.y + 1);
-    this.art = groundImage(scene, 'fx_ink_vortex', at.x, at.y, 0, 360);
-    this.art?.box.setDepth(at.y - 2).setAlpha(0);
+    this.art = hasArt(scene, 'fx_ink_vortex')
+      ? scene.add.image(at.x, at.y + 20, 'art:fx_ink_vortex').setOrigin(0.5, 0.92).setDepth(at.y + 2).setAlpha(0)
+      : null;
   }
 
   get done() {
@@ -317,7 +321,7 @@ export class InkVortex implements Overlay {
     this.finished = true;
     this.back.destroy();
     this.front.destroy();
-    this.art?.box.destroy();
+    this.art?.destroy();
   }
 
   update(delta: number) {
@@ -325,8 +329,10 @@ export class InkVortex implements Overlay {
     const p = this.power;
     this.spin += (delta / 1000) * (2 + p * 12);
     if (this.art) {
-      this.art.box.setAlpha(p);
-      this.art.img.setRotation(-this.spin);
+      // 越卷越高越浓；左右一伸一缩，像在转
+      const h = this.height * (0.6 + p * 0.7);
+      const k = h / this.art.height;
+      this.art.setScale(k * (1 + Math.sin(this.spin * 2) * 0.08), k).setAlpha(Math.min(0.9, p * 1.1));
     }
     this.back.clear();
     this.front.clear();
@@ -366,5 +372,48 @@ export class InkVortex implements Overlay {
       g.fillStyle(COLORS.ink, 0.6 * p);
       g.fillCircle(fly.x + Math.cos(fly.a) * 24, fly.y, 3 + p * 4);
     }
+  }
+}
+
+/**
+ * 一张特效图贴在某处：先一下子放大，再淡掉（命中爆墨 fx_hit、冲刺墨尘 fx_dash_trail）。
+ * angle 是朝向（弧度，图本身朝右）；ground 为 true 时压扁贴在地上。没有这张图就什么都不做
+ */
+export class ArtPop implements Overlay {
+  private readonly box: Phaser.GameObjects.Container | null;
+  private t = 0;
+
+  constructor(
+    scene: Phaser.Scene,
+    slot: ArtSlot,
+    x: number,
+    y: number,
+    width: number,
+    depth: number,
+    angle = Math.random() * Math.PI * 2,
+    ground = false,
+    private readonly life = 260,
+  ) {
+    if (!hasArt(scene, slot)) {
+      this.box = null;
+      return;
+    }
+    const img = scene.add.image(0, 0, `art:${slot}`).setRotation(angle);
+    img.setScale(width / img.width);
+    this.box = scene.add.container(x, y, [img]).setDepth(depth).setScale(0.6, ground ? 0.6 * GROUND_SQUASH : 0.6);
+  }
+
+  get done() {
+    return !this.box || this.t >= this.life;
+  }
+
+  update(delta: number) {
+    if (!this.box) return;
+    this.t += delta;
+    const k = Math.min(1, this.t / this.life);
+    const grow = 0.6 + 0.4 * Math.min(1, k * 3);
+    const sy = this.box.scaleY / this.box.scaleX;
+    this.box.setScale(grow, grow * sy).setAlpha(1 - k * k);
+    if (this.done) this.box.destroy();
   }
 }

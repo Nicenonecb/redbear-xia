@@ -67,7 +67,9 @@ export const HEROES: Record<HeroId, HeroEntry> = {
       const level = swordQiLevel(p.runner.charge);
       const draw = drawSwordQi(SWORD_QI_LEVELS.indexOf(level), level.hit.box.h);
       const { x, y } = p.pos;
-      addProjectile(new MapProjectile(scene, x + p.facing.x * MUZZLE, y + p.facing.y * MUZZLE, { ...p.facing }, level, 'player', draw, p.damageScale));
+      const qi = new MapProjectile(scene, x + p.facing.x * MUZZLE, y + p.facing.y * MUZZLE, { ...p.facing }, level, 'player', draw, p.damageScale);
+      // 剑气图：蓄得越满越大
+      addProjectile(qi.useArt(scene, 'fx_sword_qi', 90 + level.hit.box.h * 1.4));
     },
   },
   yuWuxia: {

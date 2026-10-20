@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { COLORS } from '../config';
 import type { RoomDef, SpawnDef } from '../game/chapter1';
 import type { MapArea, Pt } from './chapter1Map';
+import { placeMapArt } from './mapArt';
 import { AREA_INSET, WALK_MARGIN, type WalkableMap } from './walkable';
 
 /** 上一波清完后隔多少帧刷下一波 */
@@ -33,6 +34,8 @@ export class Encounter {
   private raise = 0;
   private raiseTarget = 0;
   private readonly stakes: { off: number; h: number; lean: number }[] = [];
+  /** 有竹篱笆的图（prop_fence_h）就用图，每个路口一段，升起时从地里长出来 */
+  private readonly fenceArt: { img: Phaser.GameObjects.Image; scaleY: number }[] = [];
 
   constructor(
     scene: Phaser.Scene,
@@ -50,6 +53,20 @@ export class Encounter {
     for (let off = -half; off <= half; off += 17) {
       this.stakes.push({ off: off + rng.realInRange(-3, 3), h: rng.realInRange(80, 112), lean: rng.realInRange(-0.06, 0.06) });
     }
+    for (const gate of this.gates) {
+      // 篱笆要和路垂直地拦着：路差不多竖着走时用横着的那段（prop_fence_h），
+      // 斜着走时用斜着往画面里延伸的那段（prop_fence_v），方向不对就左右翻过来。图不旋转，旋转了透视就不对了
+      const side = { x: -gate.inward.y, y: gate.inward.x };
+      const flat = Math.abs(side.y) < Math.abs(side.x) * 0.45;
+      const art = flat
+        ? placeMapArt(scene, 'prop_fence_h', gate.at.x, gate.at.y, half * 2 + 40)
+        : placeMapArt(scene, 'prop_fence_v', gate.at.x, gate.at.y + half * 0.35, half * 1.3);
+      if (!art) break;
+      if (!flat && side.x * side.y > 0) art.img.setFlipX(true);
+      art.img.setVisible(false);
+      this.fenceArt.push({ img: art.img, scaleY: art.img.scaleY });
+    }
+
   }
 
   /** 主角是不是已经走进空地够深了（该开打了） */
@@ -106,6 +123,10 @@ export class Encounter {
     const step = delta / FENCE_MS;
     this.raise = this.raise < this.raiseTarget ? Math.min(this.raiseTarget, this.raise + step) : Math.max(this.raiseTarget, this.raise - step);
     const k = Phaser.Math.Easing.Back.Out(this.raise);
+    if (this.fenceArt.length) {
+      for (const f of this.fenceArt) f.img.setVisible(this.raise > 0).setScale(f.img.scaleX, f.scaleY * k);
+      return;
+    }
     this.gates.forEach((gate, gi) => {
       const g = this.g[gi];
       g.clear();

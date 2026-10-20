@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
-import type { ArtSlot } from '../art/slots';
+import { hasArt, type ArtSlot } from '../art/slots';
 import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
 import { sfx } from '../audio/sfx';
@@ -24,7 +24,7 @@ import { MapFighter } from '../map/combat/MapFighter';
 import { MapPangHu } from '../map/combat/MapPangHu';
 import { MapProjectile } from '../map/combat/MapProjectile';
 import { RingWave } from '../map/combat/RingWave';
-import { ChargeAura, DustPuff, InkVortex, SlashFx, type Overlay } from '../map/combat/fx';
+import { ArtPop, ChargeAura, DustPuff, InkVortex, SlashFx, type Overlay } from '../map/combat/fx';
 import { Encounter } from '../map/Encounter';
 import { LOOKS, type MapLook } from '../map/looks';
 import {
@@ -36,12 +36,16 @@ import {
   ROCK_VARIANTS,
   bakeMapTextures,
   drawStonePath,
+  placeMapArt,
 } from '../map/mapArt';
 import { MapSprite, poseOf } from '../map/MapSprite';
 import { WALK_MARGIN, distToPath, type WalkableMap } from '../map/walkable';
 import { DamageNumbers } from '../ui/DamageNumbers';
 import type { ScreenPoint, UIScene } from './UIScene';
 
+/** 第三批地面图平铺开一块多大（设计像素）；青石板铺得密一点，一块块石板和人的比例才对 */
+const GROUND_ART_TILE = 640;
+const GROUND_STONE_TILE = 360;
 /** 主角在地图上画多高（设计像素） */
 const HERO_HEIGHT = 170;
 /** 挡在主角前面的竹子淡到多透明；淡入淡出要多久（毫秒） */
@@ -148,20 +152,11 @@ export class MapScene extends Phaser.Scene {
 
     bakeMapTextures(this, M.seed);
 
-    // 地面：平铺的纹理 → 大片淡墨晕 → 空地稍亮 → 石板路
-    const ground = this.add.tileSprite(0, 0, M.width, M.height, 'gen:ground').setOrigin(0).setDepth(-3000);
-    ground.setTileScale(GROUND_TILE / ground.frame.width);
-    const wash = this.add.tileSprite(0, 0, M.width, M.height, 'gen:groundWash').setOrigin(0).setDepth(-3000);
-    wash.setTileScale(GROUND_WASH_TILE / wash.frame.width);
-    const floor = this.add.graphics().setDepth(-2999);
-    for (const a of M.areas) {
-      floor.fillStyle(COLORS.paper, 0.35);
-      floor.fillEllipse(a.center.x, a.center.y, a.radius * 2.1, a.radius * 1.5);
-    }
-    drawStonePath(floor, M.path, M.pathWidth, M.seed);
+    this.drawGround();
 
     this.scatterProps();
-    this.walk = { path: M.path, pathWidth: M.pathWidth, areas: M.areas, lock: null };
+    this.walk = { path: M.path, pathWidth: M.pathWidth, areas: M.areas, lock: null, solids: [] };
+    this.placeDecor();
     this.coins = [];
     this.pauses = new Set();
     this.talking = null;
@@ -386,7 +381,10 @@ export class MapScene extends Phaser.Scene {
     if (e.type === 'sfx') {
       sfx.play(e.name);
       // 闪避起步：脚下扬起一团墨尘
-      if (e.name === 'dodge') this.overlays.push(new DustPuff(this, { ...p.pos }, { x: -p.facing.x, y: -p.facing.y }));
+      if (e.name === 'dodge') {
+        this.overlays.push(new DustPuff(this, { ...p.pos }, { x: -p.facing.x, y: -p.facing.y }));
+        this.overlays.push(new ArtPop(this, 'fx_dash_trail', p.pos.x, p.pos.y - 10, 240, p.pos.y - 2, groundAngle(p.facing), true, 420));
+      }
     }
     if (e.type === 'spawn') {
       this.heroEntry.spawnOnMap({ scene: this, player: p, addProjectile: (pr) => this.projectiles.push(pr) }, e.name);
@@ -400,6 +398,7 @@ export class MapScene extends Phaser.Scene {
       const { x, y } = target.pos;
       this.numbers.show(x, y - target.height - 10, hit.damage, target === this.player, heavy);
       this.overlays.push(new InkSplat(this, x, y - target.height / 2, heavy ? 120 : 70, heavy ? 0.9 : 0.7, y + 2));
+      this.overlays.push(new ArtPop(this, 'fx_hit', x, y - target.height / 2, heavy ? 170 : 110, y + 3));
       sfx.play(target === this.player ? 'hurt' : heavy ? 'hit-heavy' : 'hit');
       if (heavy) this.cameras.main.shake(120, 0.006);
     }
@@ -596,7 +595,7 @@ export class MapScene extends Phaser.Scene {
 
   private spawnBoss() {
     const at = CHAPTER1_MAP.boss;
-    const boss = new MapPangHu(at.x, at.y, this.player, CHAPTER1_MAP);
+    const boss = new MapPangHu(at.x, at.y, this.player, this.walk);
     this.boss = boss;
     this.bossSprite = new MapSprite(this, LOOKS.pangHu.mapName, LOOKS.pangHu.fallback, LOOKS.pangHu.height, LOOKS.pangHu.shadow);
     this.tigerSprite = new MapSprite(this, LOOKS.tiger.mapName, LOOKS.tiger.fallback, LOOKS.tiger.height, LOOKS.tiger.shadow);
@@ -714,7 +713,8 @@ export class MapScene extends Phaser.Scene {
     const m = boss.runner.move;
     if (e.type === 'sfx' && (e.name === 'chop' || e.name === 'claw') && m?.hit) {
       const area = areaOf(m.hit);
-      this.overlays.push(new SlashFx(this, { ...boss.pos }, boss.facing, { reach: area.reach, arc: area.arc, heavy: e.name === 'chop' }, 80));
+      const claw = e.name === 'claw';
+      this.overlays.push(new SlashFx(this, { ...boss.pos }, boss.facing, { reach: area.reach, arc: area.arc, heavy: !claw, art: claw ? 'fx_claw' : undefined }, 80));
     }
   }
 
@@ -1025,6 +1025,77 @@ export class MapScene extends Phaser.Scene {
     this.ui.showAreaCard(area.name, area.art);
   }
 
+  /** 摆地图上的大件：路牌、茶摊、山寨（寨门、聚义厅、火盆……）、寨墙；脚下挡路的圆记进能走的范围 */
+  private placeDecor() {
+    const M = CHAPTER1_MAP;
+    for (const d of M.decor) {
+      const art = placeMapArt(this, d.slot, d.at.x, d.at.y, d.width);
+      if (!art) continue;
+      if (d.flat) art.img.setDepth(-2990);
+      else this.props.push(art);
+      if (d.r) this.walk.solids!.push({ at: d.solidAt ?? d.at, r: d.r });
+      for (const sd of d.solids ?? []) this.walk.solids!.push({ at: sd, r: sd.r });
+    }
+    const wall = M.campWall;
+    const camp = M.areas.find((a) => a.id === 'camp')!;
+    const step = Phaser.Math.RadToDeg((wall.width * 0.85) / wall.radius);
+    for (let deg = wall.from; deg <= wall.to; deg += step) {
+      if (deg > wall.gap[0] && deg < wall.gap[1]) continue;
+      const a = Phaser.Math.DegToRad(deg);
+      const x = camp.center.x + Math.cos(a) * wall.radius;
+      const y = camp.center.y + Math.sin(a) * wall.radius * 0.8;
+      const art = placeMapArt(this, 'prop_camp_wall', x, y, wall.width);
+      if (art) this.props.push(art);
+    }
+  }
+
+  /**
+   * 地面：竹林泥地平铺 → 一层大墨晕打散重复 → 空地稍亮 → 石板路 → 山寨里换成黄土地。
+   * 有第三批的地面图（ground_*）就用图：泥地整张铺，石板路和黄土地用遮罩只露出路和山寨那一块；
+   * 没有就用代码画的占位
+   */
+  private drawGround() {
+    const M = CHAPTER1_MAP;
+    const tiled = (slot: ArtSlot, tile: number, depth: number) => {
+      const t = this.add.tileSprite(0, 0, M.width, M.height, `art:${slot}`).setOrigin(0).setDepth(depth);
+      t.setTileScale(tile / t.frame.width);
+      return t;
+    };
+    if (hasArt(this, 'ground_forest')) tiled('ground_forest', GROUND_ART_TILE, -3000);
+    else {
+      const g = this.add.tileSprite(0, 0, M.width, M.height, 'gen:ground').setOrigin(0).setDepth(-3000);
+      g.setTileScale(GROUND_TILE / g.frame.width);
+    }
+    const wash = this.add.tileSprite(0, 0, M.width, M.height, 'gen:groundWash').setOrigin(0).setDepth(-3000);
+    wash.setTileScale(GROUND_WASH_TILE / wash.frame.width);
+
+    const floor = this.add.graphics().setDepth(-2999);
+    for (const a of M.areas) {
+      floor.fillStyle(COLORS.paper, 0.35);
+      floor.fillEllipse(a.center.x, a.center.y, a.radius * 2.1, a.radius * 1.5);
+    }
+    const camp = M.areas.find((a) => a.id === 'camp')!;
+    if (hasArt(this, 'ground_camp')) {
+      const shape = this.make.graphics({}, false);
+      shape.fillStyle(0xffffff);
+      shape.fillEllipse(camp.center.x, camp.center.y, camp.radius * 2.2, camp.radius * 1.9);
+      tiled('ground_camp', GROUND_ART_TILE, -2998).setMask(shape.createGeometryMask()).setAlpha(0.85);
+    }
+    if (hasArt(this, 'ground_stone')) {
+      // 路边先晕一圈淡墨，再铺青石板（只露出路那一条）
+      floor.lineStyle(M.pathWidth + 70, COLORS.inkLight, 0.08);
+      floor.strokePoints(M.path);
+      const shape = this.make.graphics({}, false);
+      shape.lineStyle(M.pathWidth, 0xffffff);
+      shape.strokePoints(M.path);
+      shape.fillStyle(0xffffff);
+      for (const p of M.path) shape.fillCircle(p.x, p.y, M.pathWidth / 2);
+      tiled('ground_stone', GROUND_STONE_TILE, -2997).setMask(shape.createGeometryMask());
+    } else {
+      drawStonePath(floor, M.path, M.pathWidth, M.seed);
+    }
+  }
+
   /**
    * 种竹子：先沿着能走的边界（石板路两边、每片空地一圈）密密种一排，像一堵墙；
    * 再往外按网格撒满，格子里随机挪一挪，偶尔夹一块山石。竹子只是画面，挡人靠 walkable.ts
@@ -1077,7 +1148,21 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * 种一丛竹子 / 摆一块石头。有第三批的竹丛、山石图就用图（大中小随机挑，偶尔夹灌木、竹桩），
+   * 没有就用代码画的占位
+   */
   private placeProp(rng: Phaser.Math.RandomDataGenerator, x: number, y: number, rock: boolean) {
+    const choices: [ArtSlot, number][] = rock
+      ? [['prop_rock_big', 230], ['prop_rock_small', 150], ['prop_bush', 170], ['prop_stump', 140], ['prop_pine', 300]]
+      : [['prop_bamboo_big', 250], ['prop_bamboo_big', 250], ['prop_bamboo_mid', 220], ['prop_bamboo_mid', 220], ['prop_bamboo_small', 150]];
+    const [slot, width] = rng.pick(choices);
+    const art = placeMapArt(this, slot, x, y, width * rng.realInRange(0.85, 1.12));
+    if (art) {
+      if (rng.frac() < 0.5) art.img.setFlipX(true);
+      this.props.push(art);
+      return;
+    }
     const size = rock ? ROCK_SIZE : BAMBOO_SIZE;
     const key = rock ? `gen:rock${rng.between(0, ROCK_VARIANTS - 1)}` : `gen:bamboo${rng.between(0, BAMBOO_VARIANTS - 1)}`;
     const img = this.add.image(x, y, key).setOrigin(0.5, size.footY / size.h).setDepth(y);
@@ -1087,6 +1172,7 @@ export class MapScene extends Phaser.Scene {
     const w = img.displayWidth * (rock ? 0.8 : 0.6);
     this.props.push({ img, rect: new Phaser.Geom.Rectangle(x - w / 2, y - img.displayHeight * (size.footY / size.h), w, img.displayHeight * (size.footY / size.h)) });
   }
+
 }
 
 /** 在地上画一个压扁的扇形（判定范围、红色预警） */
