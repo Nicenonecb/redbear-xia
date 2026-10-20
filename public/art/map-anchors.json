@@ -1,0 +1,639 @@
+{
+ "说明": "由 tools/map-anchors.py 生成：每张地图人物图的脚底位置（画布像素），每个人物站姿\"脚底到头顶\"的高度",
+ "images": {
+  "map_bandit_e": {
+   "footX": 627,
+   "footY": 1184
+  },
+  "map_bandit_n": {
+   "footX": 627,
+   "footY": 1071
+  },
+  "map_bandit_ne": {
+   "footX": 627,
+   "footY": 1102
+  },
+  "map_bandit_s": {
+   "footX": 627,
+   "footY": 1154
+  },
+  "map_bandit_se": {
+   "footX": 627,
+   "footY": 1172
+  },
+  "map_bandit_strike_e": {
+   "footX": 627,
+   "footY": 1184
+  },
+  "map_bandit_strike_n": {
+   "footX": 627,
+   "footY": 1071
+  },
+  "map_bandit_strike_ne": {
+   "footX": 627,
+   "footY": 1102
+  },
+  "map_bandit_strike_s": {
+   "footX": 627,
+   "footY": 1154
+  },
+  "map_bandit_strike_se": {
+   "footX": 627,
+   "footY": 1172
+  },
+  "map_chief_e": {
+   "footX": 627,
+   "footY": 1170
+  },
+  "map_chief_n": {
+   "footX": 627,
+   "footY": 1205
+  },
+  "map_chief_ne": {
+   "footX": 627,
+   "footY": 1125
+  },
+  "map_chief_raise_e": {
+   "footX": 627,
+   "footY": 1170
+  },
+  "map_chief_raise_n": {
+   "footX": 627,
+   "footY": 1205
+  },
+  "map_chief_raise_ne": {
+   "footX": 627,
+   "footY": 1125
+  },
+  "map_chief_raise_s": {
+   "footX": 627,
+   "footY": 1193
+  },
+  "map_chief_raise_se": {
+   "footX": 627,
+   "footY": 1187
+  },
+  "map_chief_s": {
+   "footX": 627,
+   "footY": 1193
+  },
+  "map_chief_se": {
+   "footX": 627,
+   "footY": 1187
+  },
+  "map_chief_smash_e": {
+   "footX": 627,
+   "footY": 1170
+  },
+  "map_chief_smash_n": {
+   "footX": 627,
+   "footY": 1205
+  },
+  "map_chief_smash_ne": {
+   "footX": 627,
+   "footY": 1125
+  },
+  "map_chief_smash_s": {
+   "footX": 627,
+   "footY": 1193
+  },
+  "map_chief_smash_se": {
+   "footX": 627,
+   "footY": 1187
+  },
+  "map_pangHu_chop_e": {
+   "footX": 627,
+   "footY": 1205
+  },
+  "map_pangHu_chop_n": {
+   "footX": 627,
+   "footY": 1156
+  },
+  "map_pangHu_chop_ne": {
+   "footX": 627,
+   "footY": 1148
+  },
+  "map_pangHu_chop_s": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_pangHu_chop_se": {
+   "footX": 627,
+   "footY": 1173
+  },
+  "map_pangHu_drag_e": {
+   "footX": 627,
+   "footY": 1205
+  },
+  "map_pangHu_drag_n": {
+   "footX": 627,
+   "footY": 1156
+  },
+  "map_pangHu_drag_ne": {
+   "footX": 627,
+   "footY": 1148
+  },
+  "map_pangHu_drag_s": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_pangHu_drag_se": {
+   "footX": 627,
+   "footY": 1173
+  },
+  "map_pangHu_e": {
+   "footX": 627,
+   "footY": 1205
+  },
+  "map_pangHu_n": {
+   "footX": 627,
+   "footY": 1156
+  },
+  "map_pangHu_ne": {
+   "footX": 627,
+   "footY": 1148
+  },
+  "map_pangHu_raise_e": {
+   "footX": 627,
+   "footY": 1205
+  },
+  "map_pangHu_raise_n": {
+   "footX": 627,
+   "footY": 1156
+  },
+  "map_pangHu_raise_ne": {
+   "footX": 627,
+   "footY": 1148
+  },
+  "map_pangHu_raise_s": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_pangHu_raise_se": {
+   "footX": 627,
+   "footY": 1173
+  },
+  "map_pangHu_s": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_pangHu_se": {
+   "footX": 627,
+   "footY": 1173
+  },
+  "map_pangHu_transform_1": {
+   "footX": 627,
+   "footY": 1188
+  },
+  "map_pangHu_transform_2": {
+   "footX": 627,
+   "footY": 1223
+  },
+  "map_redBear_s": {
+   "footX": 627,
+   "footY": 1198
+  },
+  "map_renXinye_s": {
+   "footX": 627,
+   "footY": 1208
+  },
+  "map_renXinye_se": {
+   "footX": 627,
+   "footY": 1153
+  },
+  "map_thrower_e": {
+   "footX": 627,
+   "footY": 1169
+  },
+  "map_thrower_n": {
+   "footX": 627,
+   "footY": 1157
+  },
+  "map_thrower_ne": {
+   "footX": 627,
+   "footY": 1133
+  },
+  "map_thrower_s": {
+   "footX": 627,
+   "footY": 1157
+  },
+  "map_thrower_se": {
+   "footX": 627,
+   "footY": 1162
+  },
+  "map_thrower_throw_e": {
+   "footX": 627,
+   "footY": 1169
+  },
+  "map_thrower_throw_n": {
+   "footX": 627,
+   "footY": 1157
+  },
+  "map_thrower_throw_ne": {
+   "footX": 627,
+   "footY": 1133
+  },
+  "map_thrower_throw_s": {
+   "footX": 627,
+   "footY": 1157
+  },
+  "map_thrower_throw_se": {
+   "footX": 627,
+   "footY": 1162
+  },
+  "map_tiger_claw_e": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_tiger_claw_n": {
+   "footX": 627,
+   "footY": 1155
+  },
+  "map_tiger_claw_ne": {
+   "footX": 627,
+   "footY": 1185
+  },
+  "map_tiger_claw_s": {
+   "footX": 627,
+   "footY": 1226
+  },
+  "map_tiger_claw_se": {
+   "footX": 627,
+   "footY": 1224
+  },
+  "map_tiger_crouch_e": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_tiger_crouch_n": {
+   "footX": 627,
+   "footY": 1155
+  },
+  "map_tiger_crouch_ne": {
+   "footX": 627,
+   "footY": 1185
+  },
+  "map_tiger_crouch_s": {
+   "footX": 627,
+   "footY": 1226
+  },
+  "map_tiger_crouch_se": {
+   "footX": 627,
+   "footY": 1224
+  },
+  "map_tiger_e": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_tiger_leap_e": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_tiger_leap_n": {
+   "footX": 627,
+   "footY": 1155
+  },
+  "map_tiger_leap_ne": {
+   "footX": 627,
+   "footY": 1185
+  },
+  "map_tiger_leap_s": {
+   "footX": 627,
+   "footY": 1226
+  },
+  "map_tiger_leap_se": {
+   "footX": 627,
+   "footY": 1224
+  },
+  "map_tiger_n": {
+   "footX": 627,
+   "footY": 1155
+  },
+  "map_tiger_ne": {
+   "footX": 627,
+   "footY": 1185
+  },
+  "map_tiger_roar_e": {
+   "footX": 627,
+   "footY": 1202
+  },
+  "map_tiger_roar_n": {
+   "footX": 627,
+   "footY": 1155
+  },
+  "map_tiger_roar_ne": {
+   "footX": 627,
+   "footY": 1185
+  },
+  "map_tiger_roar_s": {
+   "footX": 627,
+   "footY": 1226
+  },
+  "map_tiger_roar_se": {
+   "footX": 627,
+   "footY": 1224
+  },
+  "map_tiger_s": {
+   "footX": 627,
+   "footY": 1226
+  },
+  "map_tiger_se": {
+   "footX": 627,
+   "footY": 1224
+  },
+  "map_wenShaohua_e": {
+   "footX": 627,
+   "footY": 1183
+  },
+  "map_wenShaohua_n": {
+   "footX": 627,
+   "footY": 1151
+  },
+  "map_wenShaohua_ne": {
+   "footX": 627,
+   "footY": 1159
+  },
+  "map_wenShaohua_ready_e": {
+   "footX": 627,
+   "footY": 1183
+  },
+  "map_wenShaohua_ready_n": {
+   "footX": 627,
+   "footY": 1151
+  },
+  "map_wenShaohua_ready_ne": {
+   "footX": 627,
+   "footY": 1159
+  },
+  "map_wenShaohua_ready_s": {
+   "footX": 627,
+   "footY": 1178
+  },
+  "map_wenShaohua_ready_se": {
+   "footX": 627,
+   "footY": 1176
+  },
+  "map_wenShaohua_s": {
+   "footX": 627,
+   "footY": 1178
+  },
+  "map_wenShaohua_se": {
+   "footX": 627,
+   "footY": 1176
+  },
+  "map_wenShaohua_strike_e": {
+   "footX": 627,
+   "footY": 1183
+  },
+  "map_wenShaohua_strike_n": {
+   "footX": 627,
+   "footY": 1151
+  },
+  "map_wenShaohua_strike_ne": {
+   "footX": 627,
+   "footY": 1159
+  },
+  "map_wenShaohua_strike_s": {
+   "footX": 627,
+   "footY": 1178
+  },
+  "map_wenShaohua_strike_se": {
+   "footX": 627,
+   "footY": 1176
+  },
+  "map_yuWuxia_e": {
+   "footX": 627,
+   "footY": 1189
+  },
+  "map_yuWuxia_n": {
+   "footX": 627,
+   "footY": 1147
+  },
+  "map_yuWuxia_ne": {
+   "footX": 627,
+   "footY": 1160
+  },
+  "map_yuWuxia_ready_e": {
+   "footX": 627,
+   "footY": 1189
+  },
+  "map_yuWuxia_ready_n": {
+   "footX": 627,
+   "footY": 1147
+  },
+  "map_yuWuxia_ready_ne": {
+   "footX": 627,
+   "footY": 1160
+  },
+  "map_yuWuxia_ready_s": {
+   "footX": 627,
+   "footY": 1192
+  },
+  "map_yuWuxia_ready_se": {
+   "footX": 627,
+   "footY": 1179
+  },
+  "map_yuWuxia_s": {
+   "footX": 627,
+   "footY": 1192
+  },
+  "map_yuWuxia_se": {
+   "footX": 627,
+   "footY": 1179
+  },
+  "map_yuWuxia_strike_e": {
+   "footX": 627,
+   "footY": 1189
+  },
+  "map_yuWuxia_strike_n": {
+   "footX": 627,
+   "footY": 1147
+  },
+  "map_yuWuxia_strike_ne": {
+   "footX": 627,
+   "footY": 1160
+  },
+  "map_yuWuxia_strike_s": {
+   "footX": 627,
+   "footY": 1192
+  },
+  "map_yuWuxia_strike_se": {
+   "footX": 627,
+   "footY": 1179
+  }
+ },
+ "props": {
+  "prop_bamboo_big": {
+   "footX": 525,
+   "footY": 1507,
+   "left": 14,
+   "right": 1018,
+   "top": 2
+  },
+  "prop_bamboo_mid": {
+   "footX": 502,
+   "footY": 1570,
+   "left": 21,
+   "right": 959,
+   "top": 13
+  },
+  "prop_bamboo_small": {
+   "footX": 471,
+   "footY": 1554,
+   "left": 44,
+   "right": 858,
+   "top": 200
+  },
+  "prop_banner": {
+   "footX": 305,
+   "footY": 1741,
+   "left": 102,
+   "right": 864,
+   "top": 17
+  },
+  "prop_brazier": {
+   "footX": 612,
+   "footY": 1412,
+   "left": 90,
+   "right": 935,
+   "top": 71
+  },
+  "prop_bridge": {
+   "footX": 1192,
+   "footY": 1003,
+   "left": 32,
+   "right": 1508,
+   "top": 20
+  },
+  "prop_bush": {
+   "footX": 795,
+   "footY": 994,
+   "left": 77,
+   "right": 1389,
+   "top": 156
+  },
+  "prop_camp_gate": {
+   "footX": 1043,
+   "footY": 1225,
+   "left": 20,
+   "right": 1232,
+   "top": 18
+  },
+  "prop_camp_hall": {
+   "footX": 847,
+   "footY": 1196,
+   "left": 27,
+   "right": 1241,
+   "top": 39
+  },
+  "prop_camp_wall": {
+   "footX": 894,
+   "footY": 719,
+   "left": 19,
+   "right": 1755,
+   "top": 177
+  },
+  "prop_dummy": {
+   "footX": 485,
+   "footY": 1668,
+   "left": 77,
+   "right": 818,
+   "top": 78
+  },
+  "prop_fence_h": {
+   "footX": 1523,
+   "footY": 741,
+   "left": 26,
+   "right": 1757,
+   "top": 184
+  },
+  "prop_fence_v": {
+   "footX": 257,
+   "footY": 1649,
+   "left": 58,
+   "right": 866,
+   "top": 66
+  },
+  "prop_pine": {
+   "footX": 453,
+   "footY": 1478,
+   "left": 36,
+   "right": 1004,
+   "top": 70
+  },
+  "prop_rock_big": {
+   "footX": 782,
+   "footY": 1048,
+   "left": 37,
+   "right": 1416,
+   "top": 79
+  },
+  "prop_rock_small": {
+   "footX": 719,
+   "footY": 999,
+   "left": 110,
+   "right": 1336,
+   "top": 90
+  },
+  "prop_signpost": {
+   "footX": 462,
+   "footY": 1645,
+   "left": 30,
+   "right": 857,
+   "top": 130
+  },
+  "prop_stream": {
+   "footX": 889,
+   "footY": 721,
+   "left": 0,
+   "right": 1535,
+   "top": 243
+  },
+  "prop_stump": {
+   "footX": 799,
+   "footY": 1035,
+   "left": 139,
+   "right": 1294,
+   "top": 25
+  },
+  "prop_teastall": {
+   "footX": 777,
+   "footY": 1228,
+   "left": 38,
+   "right": 1239,
+   "top": 25
+  },
+  "prop_tiger_rug": {
+   "footX": 1019,
+   "footY": 1038,
+   "left": 16,
+   "right": 1432,
+   "top": 33
+  },
+  "prop_watchtower": {
+   "footX": 655,
+   "footY": 1501,
+   "left": 134,
+   "right": 918,
+   "top": 17
+  },
+  "prop_weapon_rack": {
+   "footX": 914,
+   "footY": 1243,
+   "left": 154,
+   "right": 1112,
+   "top": 9
+  }
+ },
+ "bodyHeight": {
+  "bandit": 1006,
+  "chief": 1139,
+  "pangHu": 994,
+  "redBear": 1145,
+  "renXinye": 1044,
+  "thrower": 1000,
+  "tiger": 1141,
+  "wenShaohua": 982,
+  "yuWuxia": 906
+ }
+}
