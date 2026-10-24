@@ -7,21 +7,40 @@ import { fillSector,type MapScene } from '../../scenes/MapScene';
 import { areaOf,dirTo } from '../combat/ground';
 import { hasArt, type ArtSlot } from '../../art/slots';
 import { sfx } from '../../audio/sfx';
+import { InkSplat } from '../../art/inkSplat';
 import { renderScale } from '../../render/sharp';
 export class ZhangBoss implements BossController {
  readonly events=new Phaser.Events.EventEmitter(); actor!:MountainBoss;
  private human!:MapSprite;private awake!:MapSprite;private introduced=false;
- private glow!:Phaser.GameObjects.Graphics; private transforming=false;
+ private glow!:Phaser.GameObjects.Graphics; private transforming=false; private escaping=false;
  constructor(private host:MapScene){}
  spawn(){const at=this.host.stage.map.boss;this.actor=new MountainBoss(at.x,at.y,structuredClone(ZHANG),this.host.player,this.host.walk);
  this.human=new MapSprite(this.host,'zhangHuatian',hasArt(this.host,'portrait_zhangHuatian')?'portrait_zhangHuatian':'portrait_pangHu',230,100);
  this.awake=new MapSprite(this.host,'zhangHuatianAwake',hasArt(this.host,'portrait_zhangHuatian_awaken')?'portrait_zhangHuatian_awaken':'portrait_chief',245,100);this.awake.img.setTint(0xffe7ad);this.awake.setVisible(false);
  this.glow=this.host.add.graphics().setDepth(at.y+1);
  this.actor.events.once('half',()=>this.transform());
- this.actor.events.once('defeated',()=>{this.host.clearBossAdds();this.host.talk(['今日之败……记下了。'],()=>this.events.emit('defeated'),()=>this.host.headOf(this.actor.pos,245));});
+ this.actor.events.once('defeated',()=>{this.host.clearBossAdds();this.host.talk(['今日之败……记下了。'],()=>this.escape(),()=>this.host.headOf(this.actor.pos,245));});
  }
  checkIntro(){if(this.introduced||this.host.run.step<4||Phaser.Math.Distance.BetweenPoints(this.actor.pos,this.host.player.pos)>560)return;this.introduced=true;
  this.host.talk(['老三贪，老二蠢，可都好用。红熊的徒弟……你毁了我两年的心血。'],()=>{this.host.ui.bossCard('彰化天','金鞭 · 前朝皇子');this.actor.startFight();},()=>this.host.headOf(this.actor.pos,230));}
+ private escape() {
+  this.escaping=true; this.host.pauses.add('ending');this.host.cinematic=true;
+  const a=this.actor;this.awake.forceArt('map_zhangHuatian_kneel' as ArtSlot);
+  this.host.cameras.main.zoomTo(renderScale()*.8,700);
+  const brothers=[new MapSprite(this.host,'pangHu','portrait_pangHu',215,90),new MapSprite(this.host,'baoJinliang','portrait_chief',225,90)];
+  const positions=[{x:a.pos.x-650,y:a.pos.y+140},{x:a.pos.x+650,y:a.pos.y+140}];
+  brothers.forEach((s,i)=>this.host.tweens.add({targets:positions[i],x:a.pos.x+(i===0?-70:70),y:a.pos.y,duration:1000,onUpdate:()=>s.update({...positions[i],facing:{x:i===0?1:-1,y:0},moving:true},16)}));
+  this.host.time.delayedCall(1100,()=>this.host.talk(['胖虎：大哥快走！','鲍金梁：我挡着！'],()=>{
+   const p={x:a.pos.x,y:a.pos.y};
+   this.host.tweens.add({targets:p,x:p.x+320,y:p.y-170,duration:1600,onUpdate:()=>{
+    this.awake.update({...p,facing:{x:1,y:-1},moving:true},16);brothers.forEach((s,i)=>s.update({x:p.x+(i===0?-60:60),y:p.y,facing:{x:1,y:-1},moving:true},16));
+   },onComplete:()=>{
+    for(let i=0;i<7;i++)this.host.overlays.push(new InkSplat(this.host,p.x+(i-3)*35,p.y-70,260,.9,p.y+300));
+    this.awake.setVisible(false);this.human.setVisible(false);brothers.forEach(s=>s.destroy());sfx.play('ink');
+    this.host.talk(['杭州城里见。'],()=>this.events.emit('defeated'),()=>this.host.headOf(p,230));
+   }});
+  },()=>this.host.headOf(a.pos,230)));
+ }
  private transform(){
   const a=this.actor;this.transforming=true;a.stage='transform';a.runner.stop();a.vel={x:0,y:0};this.host.pauses.add('transform');this.host.cinematic=true;
   this.host.cameras.main.zoomTo(renderScale()*1.3,700);this.host.ui.say('本想留你全尸。',1200,()=>this.host.headOf(a.pos,230));
@@ -35,7 +54,7 @@ export class ZhangBoss implements BossController {
   this.host.time.delayedCall(4200,()=>{this.transforming=false;this.glow.clear();this.host.cameras.main.zoomTo(renderScale(),600);this.host.cinematic=false;this.host.pauses.delete('transform');a.startFight();});
  }
  tick(){this.actor.tick();}
- render(delta:number){const a=this.actor;const sp=a.phase===1?this.human:this.awake;sp.update({...a.pos,z:a.z,facing:a.facing,moving:Math.hypot(a.vel.x,a.vel.y)>10,pose:poseOf(a.runner),flash:a.flash>0,shaking:a.frozen},delta);this.host.ui.setBoss(a.stage==='intro'?null:a.hp/a.maxHp,ZHANG.name+(a.phase===2?' · 白发觉醒':''));
+ render(delta:number){if(this.escaping)return;const a=this.actor;const sp=a.phase===1?this.human:this.awake;sp.update({...a.pos,z:a.z,facing:a.facing,moving:Math.hypot(a.vel.x,a.vel.y)>10,pose:poseOf(a.runner),flash:a.flash>0,shaking:a.frozen},delta);this.host.ui.setBoss(a.stage==='intro'?null:a.hp/a.maxHp,ZHANG.name+(a.phase===2?' · 白发觉醒':''));
  if(this.transforming){this.glow.clear();this.glow.lineStyle(10,0xe4b342,.65);const r=90+Math.sin(this.host.time.now/100)*25;this.glow.strokeEllipse(a.pos.x,a.pos.y-90,r*2,280);}}
  hitTargets(){return this.actor&&!this.actor.dead?[this.actor]:[];}
  drawWarnings(g:Phaser.GameObjects.Graphics,_gl:Phaser.GameObjects.Graphics){const a=this.actor,m=a.runner.move;if(!m?.hit||a.runner.phase!=='startup')return;g.fillStyle(0xc75729,.18+.3*a.runner.frame/m.startup);if(m.id==='snare')g.fillEllipse(a.aim.x,a.aim.y,140,90);else {fillSector(g,a.pos,a.facing,areaOf(m.hit));if(m.hit.area?.from){g.lineStyle(4,0xffd36a,.9);g.strokeEllipse(a.pos.x,a.pos.y,m.hit.area.from*2,m.hit.area.from*1.3);}}}

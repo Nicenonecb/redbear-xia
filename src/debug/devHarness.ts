@@ -23,8 +23,14 @@ export function installDevHarness(game: Phaser.Game) {
   /** fast 为 true 时只跑逻辑不画画面，跑整章模拟时快很多 */
   const step = () => {
     time += 1000 / 60;
-    if (harness.fast) game.headlessStep(time, 1000 / 60);
-    else game.step(time, 1000 / 60);
+    // Phaser's tweens use wall time; frame driving must advance them by the same fixed delta.
+    const managers = game.scene.getScenes(true).map(s => s.tweens as unknown as { getDelta: (tick: boolean) => number });
+    const originals = managers.map(m => m.getDelta);
+    managers.forEach(m => m.getDelta = () => 1000 / 60);
+    try {
+      if (harness.fast) game.headlessStep(time, 1000 / 60);
+      else game.step(time, 1000 / 60);
+    } finally { managers.forEach((m, i) => m.getDelta = originals[i]); }
   };
 
   const scene = () => (game.scene.getScenes(true).find(s => s.scene.key !== 'UI') ?? game.scene.getScene(current)) as Phaser.Scene & Record<string, any>;

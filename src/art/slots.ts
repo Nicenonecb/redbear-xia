@@ -10,6 +10,7 @@ export const ART_SLOTS = {
   title: '标题画面背景',
   portrait_zhangHuatian: '彰化天', portrait_zhangHuatian_awaken: '彰化天白发觉醒',
   portrait_baoJinliang: '鲍金梁立绘',
+  ending_final: '红熊山巅通关插画',
   intro_wen: '温少华出师', intro_yu: '于无瑕出师',
   portrait_wenShaohua: '温少华立绘（选角界面）',
   portrait_yuWuxia: '于无瑕立绘（选角界面）',

@@ -56,9 +56,16 @@ export function mapAutoPlayer(skill: number, seed: string) {
       if (d < 140) return f % 8 < 2 ? ['attack'] : [];
     }
     const path = [...map.path, map.boss];
-    let i = 0;
-    for (let j = 1; j < path.length; j++) if (Phaser.Math.Distance.BetweenPoints(p.pos, path[j]) < Phaser.Math.Distance.BetweenPoints(p.pos, path[i])) i = j;
-    const at = path[Math.min(i + 1, path.length - 1)];
-    return dirs(at.x - p.pos.x, at.y - p.pos.y);
+    let best=Infinity, segment=0, projected={x:0,y:0};
+    for(let i=0;i<path.length-1;i++){
+      const a=path[i],b=path[i+1],dx=b.x-a.x,dy=b.y-a.y;
+      const t=Math.max(0,Math.min(1,((p.pos.x-a.x)*dx+(p.pos.y-a.y)*dy)/(dx*dx+dy*dy)));
+      const q={x:a.x+t*dx,y:a.y+t*dy},d=Math.hypot(p.pos.x-q.x,p.pos.y-q.y);
+      if(d<best){best=d;segment=i;projected=q;}
+    }
+    let at=best>75?projected:path[segment+1];
+    if(Math.hypot(at.x-p.pos.x,at.y-p.pos.y)<45 && segment+2<path.length)at=path[segment+2];
+    const dx=at.x-p.pos.x,dy=at.y-p.pos.y,max=Math.max(Math.abs(dx),Math.abs(dy),1);
+    return dirs(Math.abs(dx)/max>(f%10)/10?dx:0,Math.abs(dy)/max>(f%10)/10?dy:0);
   };
 }
