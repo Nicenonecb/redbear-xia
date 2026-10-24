@@ -16,6 +16,13 @@ const MIRROR: Partial<Record<Dir8, Dir8>> = { w: 'e', sw: 'se', nw: 'ne' };
 export type Pose = string;
 const STRIKE_POSES = new Set(['strike', 'chop', 'smash', 'throw', 'leap', 'claw']);
 
+/**
+ * 走路循环：一步多少毫秒，一个循环四步「左步 → 站姿 → 右步 → 站姿」。
+ * 有走路帧（map_<名字>_walk1_<朝向>、walk2）就按这个换图；没有就一直用站姿图，只靠代码起伏
+ */
+const STEP_MS = 150;
+const WALK_CYCLE = [1, 0, 2, 0] as const;
+
 /** 地图精图里脚底离图片底边留了 6% 的空白（见出图清单），立绘顶着时脚就在底边 */
 const MAP_ART_FOOT = 0.94;
 
@@ -64,8 +71,8 @@ export interface SpriteState {
 /**
  * 地图上一个人物的样子：脚下的影子 + 一张按朝向、姿势换的贴图。
  * 贴图优先用第三批的地图精图，没有就用立绘顶着（只有正面，左右翻转）。
- * 走路时上下轻轻起伏、身子往前倾一点；站着时有呼吸感；蓄势往后收、出招往前冲；闪避留残影。
- * 这些动作都是代码做的，贴图本身不动。
+ * 走路时有走路帧就迈腿（左步、站、右步、站），再加上一步一起伏、左右轻晃、落脚微微一沉；
+ * 站着时有呼吸感；蓄势往后收、出招往前冲；闪避留残影。
  */
 export class MapSprite {
   readonly shadow: Phaser.GameObjects.Ellipse;
@@ -81,6 +88,12 @@ export class MapSprite {
   /** 现在是不是拿立绘顶着 */
   private usingFallback = false;
   private ghostTimer = 0;
+  /** 走了多久（停下归零，下次起步总从同一只脚迈） */
+  private walkClock = 0;
+  /** 当前是走路循环里的哪一帧：0 站姿，1、2 左右步 */
+  private walkFrame = 0;
+  /** 这个朝向有没有走路帧（左右两步都有才算） */
+  private walkArt = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -102,16 +115,26 @@ export class MapSprite {
     this.time += delta;
     const pose = s.pose ?? 'idle';
     const dir = dirOf(s.facing.x, s.facing.y);
-    if (dir !== this.dir || pose !== this.pose) this.applyTexture(dir, pose);
+    const walking = s.moving && pose === 'idle';
+    this.walkClock = walking ? this.walkClock + delta : 0;
+    const frame = walking ? WALK_CYCLE[Math.floor(this.walkClock / STEP_MS) % 4] : 0;
+    if (dir !== this.dir || pose !== this.pose || frame !== this.walkFrame) this.applyTexture(dir, pose, frame);
 
     const z = s.z ?? 0;
-    const step = s.moving ? Math.abs(Math.sin(this.time * 0.013)) : 0;
+    // 一步一起伏：迈步时身子提起来、落脚时沉下去，一步一个来回
+    const t = (this.walkClock / STEP_MS) * Math.PI;
+    const step = walking ? Math.abs(Math.sin(t)) : 0;
+    // 迈哪只脚身子就往哪边轻轻晃（两步一个来回），落脚那一下压扁一点点
+    const sway = walking ? Math.sin(t / 2) : 0;
+    const land = walking ? Math.pow(1 - step, 4) : 0;
     const breathe = s.moving || pose !== 'idle' ? 0 : Math.sin(this.time * 0.003) * 0.01;
+    // 有走路帧时腿已经在动了，代码做的晃动收一半，免得过头
+    const k = this.walkArt ? 0.5 : 1;
     // 没有姿势图时：蓄势往后收一点、身子后仰，出招往前冲、前倾
-    let ox = 0;
+    let ox = sway * 3 * k;
     let oy = 0;
-    let lean = s.moving ? s.facing.x * 0.05 * (0.6 + step * 0.4) : 0;
-    let squash = 1;
+    let lean = s.moving ? s.facing.x * 0.05 + sway * 0.035 * k : 0;
+    let squash = 1 - land * 0.035 * k;
     const striking = STRIKE_POSES.has(pose);
     if (!this.poseArt && pose !== 'idle' && !striking) {
       ox = -s.facing.x * 10;
@@ -125,7 +148,7 @@ export class MapSprite {
       squash = 1.04;
     }
     const shake = s.shaking ? Phaser.Math.Between(-2, 2) : 0;
-    this.img.setPosition(s.x + ox + shake, s.y + oy - z - step * 6);
+    this.img.setPosition(s.x + ox + shake, s.y + oy - z - step * 6 * k);
     const sx = this.baseScale * (this.mirrored ? -1 : 1) * (1 - breathe * 0.5);
     this.img.setScale(sx, this.baseScale * (1 + breathe) * squash);
     this.img.setRotation(lean);
@@ -209,18 +232,21 @@ export class MapSprite {
    * 换成一张地图精图：脚底对准 map-anchors.json 里记的那个像素；
    * 按这个人物站着时的身高缩放，同一个人的各张图一样大（举刀、扑起来的图不会忽大忽小）
    */
-  private useMapArt(slot: ArtSlot) {
+  private useMapArt(slot: ArtSlot, sameDirIdle?: ArtSlot) {
     this.img.setTexture(`art:${slot}`);
-    const a = mapAnchor(this.scene, slot, this.mapName);
+    // 新到的图还没跑 tools/map-anchors.py 时没有脚底记录：借同一朝向站姿图的（画布一样大、脚在同一处）
+    const a = mapAnchor(this.scene, slot, this.mapName) ?? (sameDirIdle ? mapAnchor(this.scene, sameDirIdle, this.mapName) : null);
     const w = this.img.width;
     const h = this.img.height;
     this.img.setOrigin(a ? a.footX / w : 0.5, a ? a.footY / h : MAP_ART_FOOT);
     this.baseScale = this.height / (a?.bodyHeight ?? h * 0.75);
   }
 
-  private applyTexture(dir: Dir8, pose: Pose) {
+  private applyTexture(dir: Dir8, pose: Pose, walkFrame = this.walkFrame) {
     this.dir = dir;
     this.pose = pose;
+    this.walkFrame = walkFrame;
+    this.walkArt = false;
     if (this.forced && hasArt(this.scene, this.forced)) {
       this.poseArt = true;
       this.usingFallback = false;
@@ -231,10 +257,13 @@ export class MapSprite {
     const poseSlot = this.artSlot(pose, own);
     const idleSlot = this.artSlot('idle', own);
     this.poseArt = pose !== 'idle' && hasArt(this.scene, poseSlot);
-    const slot = this.poseArt ? poseSlot : hasArt(this.scene, idleSlot) ? idleSlot : null;
+    // 走路帧：两只脚的图都到了才用，只到一张的话走起来一瘸一拐
+    this.walkArt = hasArt(this.scene, this.artSlot('walk1', own)) && hasArt(this.scene, this.artSlot('walk2', own));
+    const walkSlot = this.walkArt && walkFrame ? this.artSlot(`walk${walkFrame}`, own) : null;
+    const slot = this.poseArt ? poseSlot : walkSlot ?? (hasArt(this.scene, idleSlot) ? idleSlot : null);
     this.usingFallback = !slot;
     if (slot) {
-      this.useMapArt(slot);
+      this.useMapArt(slot, idleSlot);
     } else {
       this.img.setTexture(hasArt(this.scene, this.fallback) ? `art:${this.fallback}` : '__WHITE').setOrigin(0.5, 1);
       this.baseScale = this.height / this.img.height;

@@ -67,7 +67,7 @@ for f, name in zip(files, names):
         w, h, top, foot = idle[name]
     else:
         w, h, top, foot = measure(f)
-        m = re.fullmatch(r'map_([A-Za-z]+)_([a-z]+)_(s|se|e|ne|n)', name)
+        m = re.fullmatch(r'map_([A-Za-z]+)_([a-z0-9]+)_(s|se|e|ne|n)', name)
         if m and f'map_{m.group(1)}_{m.group(3)}' in idle:
             foot = idle[f'map_{m.group(1)}_{m.group(3)}'][3]
     images[name] = {'footX': round(w / 2), 'footY': foot, 'trim': trim_box(f)}
