@@ -82,6 +82,12 @@ export class MapPangHu extends MapActor {
   tick() {
     if (!this.beginTick()) return;
     this.stageFrame++;
+    // 还在山寨里等着：一步也不挪。不然路上打遭遇战时竹篱合上的那一圈会把他也"推回圈里"，
+    // 胖虎就被一路拖进每一场遭遇战、站在那儿不走了
+    if (this.stage === 'intro') {
+      this.vel = { x: 0, y: 0 };
+      return;
+    }
     if (this.stage === 'fight' || this.stage === 'tiger') this.fight();
     else if (this.stage === 'transform') this.transform();
     else this.vel = { x: 0, y: 0 };

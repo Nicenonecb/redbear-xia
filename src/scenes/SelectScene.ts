@@ -11,7 +11,8 @@ import type { HeroId } from '../game/progression';
 import { startRun } from '../game/run';
 
 const ORDER: HeroId[] = ['wenShaohua', 'yuWuxia'];
-const CARD = { w: 460, h: 470, y: 150 };
+/** 卡片尺寸：上下给标题、按键提示留足空，四周露出背景山水 */
+const CARD = { w: 420, h: 420, y: 160, gap: 48 };
 /** 立绘放大倍数 */
 const SCALE = 2.4;
 
@@ -49,19 +50,19 @@ export class SelectScene extends Phaser.Scene {
 
     ORDER.forEach((id, i) => {
       const hero = HEROES[id];
-      const rect = new Phaser.Geom.Rectangle(GAME_WIDTH / 2 - CARD.w - 20 + i * (CARD.w + 40), CARD.y, CARD.w, CARD.h);
+      const rect = new Phaser.Geom.Rectangle(GAME_WIDTH / 2 - CARD.w - CARD.gap / 2 + i * (CARD.w + CARD.gap), CARD.y, CARD.w, CARD.h);
       this.cards.push(rect);
-      const left = rect.x + 34;
-      this.add.text(left, rect.y + 28, hero.def.name, { fontFamily: FONT_BRUSH, fontSize: '48px', color: CSS_COLORS.ink }).setDepth(12);
+      const left = rect.x + 28;
+      this.add.text(left, rect.y + 24, hero.def.name, { fontFamily: FONT_BRUSH, fontSize: '44px', color: CSS_COLORS.ink }).setDepth(12);
       this.add
-        .text(left, rect.y + 90, `${hero.region} · ${hero.weapon}`, { fontFamily: FONT_BRUSH, fontSize: '24px', color: CSS_COLORS.red })
+        .text(left, rect.y + 80, `${hero.region} · ${hero.weapon}`, { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.red })
         .setDepth(12);
       this.add
-        .text(left, rect.bottom - 120, hero.blurb, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.ink, lineSpacing: 6 })
+        .text(left, rect.bottom - 106, hero.blurb, { fontFamily: FONT_BRUSH, fontSize: '19px', color: CSS_COLORS.ink, lineSpacing: 5 })
         .setDepth(12);
 
       // 立绘：有图用图，没图就用战斗里同一套画法放大画在卡片右侧
-      const art = placeArt(this, id === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia', rect.right - 125, rect.bottom - 116, 240, 350);
+      const art = placeArt(this, id === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia', rect.right - 110, rect.bottom - 104, 210, 300);
       if (art) {
         art.setDepth(11);
         this.arts.push({ img: art, card: i, scale: art.scaleX });
@@ -69,7 +70,7 @@ export class SelectScene extends Phaser.Scene {
       }
       const view = hero.createView(this);
       view.setScale(SCALE);
-      const stand = standIn(rect.right - 110, rect.y + 330, i === 0 ? 1 : -1, hero.def.ammo?.max ?? 0);
+      const stand = standIn(rect.right - 100, rect.y + 300, i === 0 ? 1 : -1, hero.def.ammo?.max ?? 0);
       this.views.push({ view, stand, card: i });
     });
 
