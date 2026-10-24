@@ -6,25 +6,25 @@ import { drawThrowingKnife } from '../art/projectiles';
 import { sfx } from '../audio/sfx';
 import { ENEMIES, ENEMY_INTROS, type EnemyId } from '../characters/bandits';
 import { HEROES, type HeroEntry } from '../characters/heroes';
-import { PANGHU } from '../characters/pangHu';
 import type { GroundArea, MoveEvent } from '../combat/moveTable';
-import { BOSS_STEP, CHAPTER1_ROOMS, CHAPTER1_SHOP_LINES, SHOP_STEP, roomStep, type SpawnDef } from '../game/chapter1';
+import type { SpawnDef } from '../game/chapter1';
 import { advanceRun } from '../game/flow';
 import { PROGRESSION, RESCUE_LINES, type StatId } from '../game/progression';
 import { applyLevelUp, endRun, gainExp, getRun, runStats, startRun, type RunState } from '../game/run';
 import { saveRun } from '../game/save';
-import { renderScale } from '../render/sharp';
 import { Controls } from '../input/Controls';
-import { CHAPTER1_MAP, type MapArea, type Pt } from '../map/chapter1Map';
-import { GROUND_SQUASH, areaOf, dirTo, groundAngle, type Vec } from '../map/combat/ground';
+import { type MapArea, type Pt } from '../map/chapter1Map';
+import { GROUND_SQUASH, areaOf, groundAngle, type Vec } from '../map/combat/ground';
 import type { MapActor, MapHitResult, MapHurtable } from '../map/combat/MapActor';
 import { MapCoin } from '../map/combat/MapCoin';
 import { MapEnemy } from '../map/combat/MapEnemy';
 import { MapFighter } from '../map/combat/MapFighter';
-import { MapPangHu } from '../map/combat/MapPangHu';
+import { PangHuBoss } from '../map/bosses/PangHuBoss';
+import type { BossController } from '../map/bosses/BossController';
+import { stageFor, stepOf, roomStepOf } from '../game/stages';
 import { MapProjectile } from '../map/combat/MapProjectile';
 import { RingWave } from '../map/combat/RingWave';
-import { ArtPop, ChargeAura, DustPuff, InkVortex, SlashFx, type Overlay } from '../map/combat/fx';
+import { ArtPop, ChargeAura, DustPuff, SlashFx, type Overlay } from '../map/combat/fx';
 import { Encounter } from '../map/Encounter';
 import { LOOKS, type MapLook } from '../map/looks';
 import {
@@ -68,7 +68,7 @@ const TALK_RANGE = 150;
 const RESCUE_MS = 2800;
 const RESCUE_LINE_AT = 0.42;
 /** 胖虎走到这么近（地面距离）就开口念开场白 */
-const BOSS_INTRO_RANGE = 560;
+
 /** 走到离茶摊这么近，任新野就招呼一声 */
 const GREET_RANGE = 450;
 
@@ -80,26 +80,26 @@ const GREET_RANGE = 450;
  * 濒死时红熊救场一次。战斗的招式表和横版一样，判定是脚下朝面向张开的扇形。
  */
 export class MapScene extends Phaser.Scene {
-  private run!: RunState;
+  run!: RunState;
   private controls!: Controls;
   private heroEntry!: HeroEntry;
-  private player!: MapFighter;
+  player!: MapFighter;
   /** 镜头跟着的点（主角脚下） */
   private camTarget!: Phaser.GameObjects.Zone;
   private sprite!: MapSprite;
-  private ui!: UIScene;
+  ui!: UIScene;
   private area: MapArea | null = null;
   private seenAreas = new Set<string>();
   /** 地图上的竹子和山石，连同它在地图上占的范围（判断挡没挡住主角用） */
   private props: { img: Phaser.GameObjects.Image; rect: Phaser.Geom.Rectangle }[] = [];
   /** 能走的范围：地图本身加上遭遇战时竹篱圈住的那一块 */
-  private walk!: WalkableMap;
+  walk!: WalkableMap;
   private encounters: Encounter[] = [];
   private coins: MapCoin[] = [];
   /** 暂停的原因（念台词、选升级、救场演出）；有任何一个逻辑帧都不推进 */
-  private pauses = new Set<string>();
+  pauses = new Set<string>();
   /** 正在念的一串台词，念完做 then */
-  private talking: { lines: string[]; then: () => void; where: () => ScreenPoint; portrait?: { slot: ArtSlot; side: 'left' | 'right' } } | null = null;
+  talking: { lines: string[]; then: () => void; where: () => ScreenPoint; portrait?: { slot: ArtSlot; side: 'left' | 'right' } } | null = null;
   private renSprite!: MapSprite;
   /** 铺满屏幕、跟着镜头走的那几层地面 */
   private groundLayers: Phaser.GameObjects.TileSprite[] = [];
@@ -107,10 +107,9 @@ export class MapScene extends Phaser.Scene {
   private renGreeted = false;
   private rescueShow: { t: number; startHp: number; targetHp: number; said: boolean } | null = null;
   /** 胖虎名牌只在第一次拔剑时亮 */
-  private bossIntroduced = false;
   private leaving = false;
-  private projectiles: MapProjectile[] = [];
-  private overlays: Overlay[] = [];
+  projectiles: MapProjectile[] = [];
+  overlays: Overlay[] = [];
   private numbers!: DamageNumbers;
   private accumulator = 0;
   private aura: ChargeAura | null = null;
@@ -120,20 +119,18 @@ export class MapScene extends Phaser.Scene {
   private debug!: Phaser.GameObjects.Graphics;
   private showDebug = false;
   private enemies: { enemy: MapEnemy; sprite: MapSprite; look: MapLook }[] = [];
-  private boss: MapPangHu | null = null;
-  private bossSprite!: MapSprite;
-  private tigerSprite!: MapSprite;
-  private bossIntro = false;
-  private rings: RingWave[] = [];
+  rings: RingWave[] = [];
   /** 地上的红色预警（扇形、红线、红圈），每帧重画 */
   private warn!: Phaser.GameObjects.Graphics;
   /** 出招前武器上的一下闪光 */
-  private glints!: Phaser.GameObjects.Graphics;
+  glints!: Phaser.GameObjects.Graphics;
   /** 变身演出中：主角不能动，逻辑放慢 */
-  private cinematic = false;
-  private timeScale = 1;
-  private vortex: InkVortex | null = null;
+  cinematic = false;
+  timeScale = 1;
   private over = false;
+  controller!: BossController;
+  get boss() { return this.controller?.actor; }
+  get stage() { return stageFor(this.run); }
 
   constructor() {
     super('Map');
@@ -178,7 +175,7 @@ export class MapScene extends Phaser.Scene {
     this.accumulator = 0;
     this.aura = null;
     this.lastPhase = null;
-    const M = CHAPTER1_MAP;
+    const M = this.stage.map;
 
     bakeMapTextures(this, M.seed);
 
@@ -191,7 +188,6 @@ export class MapScene extends Phaser.Scene {
     this.pauses = new Set();
     this.talking = null;
     this.rescueShow = null;
-    this.bossIntroduced = false;
     this.leaving = false;
     this.renGreeted = false;
     this.warn = this.add.graphics().setDepth(-2900);
@@ -199,9 +195,7 @@ export class MapScene extends Phaser.Scene {
     this.rings = [];
     this.cinematic = false;
     this.timeScale = 1;
-    this.vortex = null;
     this.over = false;
-    this.bossIntro = false;
 
     // 主角：逻辑在 MapFighter 里，画面在 MapSprite 里
     this.heroEntry = HEROES[this.run.hero];
@@ -221,9 +215,12 @@ export class MapScene extends Phaser.Scene {
     this.enemies = [];
     this.encounters = M.areas
       .filter((a) => a.room !== undefined)
-      .map((a) => new Encounter(this, a, CHAPTER1_ROOMS[a.room!], this.walk, M.path, this.run.step > roomStep(a.room!)));
+      .map((a) => new Encounter(this, a, this.stage.rooms[a.room!], this.walk, M.path, this.run.step > roomStepOf(this.stage, a.room!)));
     this.spawnRen();
-    this.spawnBoss();
+    this.controller = new PangHuBoss(this);
+    this.controller.spawn();
+    this.controller.events.on('yield', () => this.win(`${this.stage.name} · 放行`));
+    this.controller.events.on('defeated', () => this.win(`${this.stage.name} · 过关`));
 
     this.camTarget = this.add.zone(at.x, at.y - 60, 1, 1);
     const cam = this.cameras.main;
@@ -246,6 +243,7 @@ export class MapScene extends Phaser.Scene {
     });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scene.stop('UI');
+      this.controller.dispose();
       sfx.stopAmbient();
     });
     sfx.startAmbient();
@@ -285,7 +283,7 @@ export class MapScene extends Phaser.Scene {
     const boss = this.boss;
     if (!p.evading) {
       for (const e of enemies) if (e.def.superArmor && !e.dead) p.pushOutOf(e);
-      if (boss && !boss.dead && boss.stage !== 'yield') p.pushOutOf(boss);
+      if (boss && !boss.dead && !boss.invulnerable) p.pushOutOf(boss);
     }
     this.watchPlayerMove();
 
@@ -297,13 +295,13 @@ export class MapScene extends Phaser.Scene {
     for (const entry of this.enemies) if (entry.enemy.gone) entry.sprite.destroy();
     this.enemies = this.enemies.filter((e) => !e.enemy.gone);
     if (boss) {
-      this.checkBossIntro(boss);
-      boss.tick();
+      this.controller.checkIntro();
+      this.controller.tick();
       this.reportHits(boss.resolveHits([p]));
     }
 
     const foes: MapHurtable[] = this.enemies.map((e) => e.enemy).filter((e) => !e.dead);
-    if (boss && !boss.dead) foes.push(boss);
+    foes.push(...this.controller.hitTargets());
     this.reportHits(p.resolveHits(foes));
     for (const pr of this.projectiles) this.reportHits(pr.tick(pr.team === 'player' ? foes : [p]));
     this.projectiles = this.projectiles.filter((pr) => pr.alive);
@@ -342,7 +340,7 @@ export class MapScene extends Phaser.Scene {
       delta,
     );
     for (const e of this.encounters) e.draw(delta);
-    this.renSprite.update({ x: CHAPTER1_MAP.renXinye.x, y: CHAPTER1_MAP.renXinye.y, facing: { x: 0, y: 1 }, moving: false }, delta);
+    this.renSprite.update({ x: this.stage.map.renXinye.x, y: this.stage.map.renXinye.y, facing: { x: 0, y: 1 }, moving: false }, delta);
     this.renPrompt.setVisible(this.canVisitShop() && !this.pauses.size);
     for (const { enemy: e, sprite, look } of this.enemies) {
       sprite.inkOver = e.dissolve;
@@ -362,7 +360,7 @@ export class MapScene extends Phaser.Scene {
       sprite.img.setAlpha(1 - e.dissolve);
       sprite.shadow.setAlpha(1 - e.dissolve);
     }
-    this.renderBoss(delta);
+    this.controller.render(delta);
     for (const r of this.rings) r.draw();
     this.drawWarnings();
     this.aura?.follow(p.pos, p.chargeRatio);
@@ -481,7 +479,7 @@ export class MapScene extends Phaser.Scene {
     }
     this.greet();
     // 没进茶摊直接往山寨走：算是路过了
-    if (this.run.step === SHOP_STEP && this.area?.id === 'campFront') this.passCheckpoint();
+    if (this.run.step === stepOf(this.stage, 'shop') && this.area?.id === 'campFront') this.passCheckpoint();
   }
 
   private finishEncounter(enc: Encounter) {
@@ -548,7 +546,7 @@ export class MapScene extends Phaser.Scene {
   // ---------------- 任新野的茶摊 ----------------
 
   private spawnRen() {
-    const at = CHAPTER1_MAP.renXinye;
+    const at = this.stage.map.renXinye;
     this.renSprite = new MapSprite(this, 'renXinye', 'portrait_renXinye', 190, 80);
     this.renPrompt = this.add
       .text(at.x, at.y - 230, 'J · 和任新野说话', {
@@ -565,18 +563,18 @@ export class MapScene extends Phaser.Scene {
 
   /** 走近茶摊，任新野招呼一声（还没进过就招呼进来，进过了就送一句） */
   private greet() {
-    if (this.renGreeted || this.talking || this.run.step < SHOP_STEP) return;
-    const at = CHAPTER1_MAP.renXinye;
+    if (this.renGreeted || this.talking || this.run.step < stepOf(this.stage, 'shop')) return;
+    const at = this.stage.map.renXinye;
     if (Math.hypot(this.player.pos.x - at.x, this.player.pos.y - at.y) > GREET_RANGE) return;
     this.renGreeted = true;
-    const line = this.run.step === SHOP_STEP ? CHAPTER1_SHOP_LINES.greeting : CHAPTER1_SHOP_LINES.farewell;
+    const line = this.run.step === stepOf(this.stage, 'shop') ? this.stage.shopLines.greeting : this.stage.shopLines.farewell;
     this.ui.say(line, 1800, () => this.headOf(at, 190));
   }
 
   /** 走到茶摊跟前（还没进过茶摊、附近也没在打架）才能进去 */
   private canVisitShop() {
-    if (this.run.step !== SHOP_STEP || this.walk.lock) return false;
-    const at = CHAPTER1_MAP.renXinye;
+    if (this.run.step !== stepOf(this.stage, 'shop') || this.walk.lock) return false;
+    const at = this.stage.map.renXinye;
     return Math.hypot(this.player.pos.x - at.x, this.player.pos.y - at.y) < TALK_RANGE;
   }
 
@@ -624,235 +622,8 @@ export class MapScene extends Phaser.Scene {
 
   // ---------------- 胖虎 ----------------
 
-  private spawnBoss() {
-    const at = CHAPTER1_MAP.boss;
-    const boss = new MapPangHu(at.x, at.y, this.player, this.walk);
-    this.boss = boss;
-    this.bossSprite = new MapSprite(this, LOOKS.pangHu.mapName, LOOKS.pangHu.fallback, LOOKS.pangHu.height, LOOKS.pangHu.shadow);
-    this.tigerSprite = new MapSprite(this, LOOKS.tiger.mapName, LOOKS.tiger.fallback, LOOKS.tiger.height, LOOKS.tiger.shadow);
-    this.tigerSprite.setVisible(false);
-    boss.events.on('move', (e: MoveEvent) => this.onBossMove(e));
-    boss.events.on('transform', () => this.onTransform());
-    boss.events.on('roar', () => this.onTransformRoar());
-    boss.events.on('wrap', () => this.onTransformWrap());
-    boss.events.on('burst', () => this.onTransformBurst());
-    boss.events.on('land', () => {
-      this.cameras.main.shake(200, 0.01);
-      this.overlays.push(new DustPuff(this, { ...boss.pos }, { x: 0, y: 1 }, 500));
-    });
-    boss.events.once('defeated', () => this.onBossDefeated());
-  }
-
-  /** 过了山寨前那一关、走近胖虎：念开场白，然后【拔剑 / 给钱】 */
-  private checkBossIntro(boss: MapPangHu) {
-    if (this.bossIntro || boss.stage !== 'intro' || this.run.step < BOSS_STEP) return;
-    if (boss.distToTarget > BOSS_INTRO_RANGE) return;
-    this.bossIntro = true;
-    boss.facing = dirTo(boss.pos, this.player.pos, boss.facing);
-    this.player.vel = { x: 0, y: 0 };
-    sfx.play('growl');
-    this.bossTalk([PANGHU.lines.intro], () => this.offerBribe());
-  }
-
-  /** 胖虎说话：右下角亮立绘（变身后是猛虎），气泡从立绘嘴边冒出来 */
-  private bossTalk(lines: string[], then: () => void, slot?: ArtSlot) {
-    const boss = this.boss!;
-    const tiger = boss.form === 'tiger';
-    this.talk(lines, then, () => this.headOf(boss.pos, tiger ? LOOKS.tiger.height : LOOKS.pangHu.height), {
-      slot: slot ?? (tiger ? 'portrait_pangHuTiger' : 'portrait_pangHu'),
-      side: 'right',
-    });
-  }
-
-  /** 【拔剑 / 给钱】 */
-  private offerBribe() {
-    this.pauses.add('bribe');
-    const coins = this.run.coins;
-    this.ui.choice({
-      title: '拔剑，还是给钱？',
-      subtitle: `身上有 ${coins} 文`,
-      options: [
-        { label: '拔剑', detail: '和他过两招' },
-        { label: '给钱', detail: coins > 0 ? '破财消灾' : '囊中羞涩', disabled: coins <= 0 },
-      ],
-      onPick: (i) => (i === 0 ? this.drawSword() : this.chooseAmount()),
-    });
-  }
-
-  private chooseAmount() {
-    const { small, enough } = PROGRESSION.bribe;
-    const coins = this.run.coins;
-    const amounts = [small, enough, coins];
-    this.ui.choice({
-      title: '给多少？',
-      subtitle: `身上有 ${coins} 文`,
-      layout: 'column',
-      options: [
-        { label: `给 ${small} 文`, disabled: coins < small },
-        { label: `给 ${enough} 文`, disabled: coins < enough },
-        { label: '倾囊相助', detail: `${coins} 文` },
-        { label: '算了，拔剑' },
-      ],
-      onPick: (i) => (i === 3 ? this.drawSword() : this.pay(amounts[i])),
-      onCancel: () => {
-        this.pauses.delete('bribe');
-        this.offerBribe();
-      },
-    });
-  }
-
-  private pay(amount: number) {
-    this.pauses.delete('bribe');
-    this.run.coins -= amount;
-    sfx.play('coin');
-    const { enough, generous } = PROGRESSION.bribe;
-    if (amount < enough) {
-      // 钱照收，照样开打
-      this.bossTalk([Phaser.Utils.Array.GetRandom(PANGHU.lines.bribePoor)], () => this.drawSword(), 'portrait_pangHu_taunt');
-      return;
-    }
-    const boss = this.boss!;
-    boss.yieldPath();
-    for (const pr of this.projectiles) if (pr.team === 'enemy') pr.destroy();
-    for (const r of this.rings) if (r.team === 'enemy') r.destroy();
-    const lines = amount >= generous ? [PANGHU.lines.bribePass, PANGHU.lines.bribeGenerous] : [PANGHU.lines.bribePass];
-    this.bossTalk(lines, () => this.win('竹林 · 放行'), 'portrait_pangHu_greedy');
-  }
-
-  private drawSword() {
-    this.pauses.delete('bribe');
-    if (!this.bossIntroduced) {
-      this.bossIntroduced = true;
-      this.ui.bossCard();
-    }
-    this.boss!.startFight();
-  }
-
-  private onBossMove(e: MoveEvent) {
-    const boss = this.boss!;
-    if (e.type === 'sfx') sfx.play(e.name);
-    if (e.type === 'vfx' && e.name === 'shake') this.cameras.main.shake(200, 0.01);
-    if (e.type === 'spawn' && e.name === 'shockwave') {
-      const w = PANGHU.shockwave;
-      this.rings.push(new RingWave(this, { ...boss.pos }, w.speed, w.life, 44, w.hit, 'enemy', 'fx_shock_ring'));
-    }
-    if (e.type === 'spawn' && e.name === 'roarRing') {
-      const w = PANGHU.roarRing;
-      this.rings.push(new RingWave(this, { ...boss.pos }, w.speed, w.life, 56, w.hit, 'enemy', 'fx_roar_ring', true));
-    }
-    // 重刀落下、猛虎挥爪：甩出一道刀光 / 爪痕
-    const m = boss.runner.move;
-    if (e.type === 'sfx' && (e.name === 'chop' || e.name === 'claw') && m?.hit) {
-      const area = areaOf(m.hit);
-      const claw = e.name === 'claw';
-      this.overlays.push(new SlashFx(this, { ...boss.pos }, boss.facing, { reach: area.reach, arc: area.arc, heavy: !claw, art: claw ? 'fx_claw' : undefined }, 80));
-    }
-  }
-
-  private renderBoss(delta: number) {
-    const boss = this.boss;
-    if (!boss) return;
-    const tiger = boss.form === 'tiger';
-    const sprite = tiger ? this.tigerSprite : this.bossSprite;
-    const look = tiger ? LOOKS.tiger : LOOKS.pangHu;
-    const state = {
-      x: boss.pos.x,
-      y: boss.pos.y,
-      z: boss.z,
-      facing: boss.facing,
-      moving: !boss.runner.move && Math.hypot(boss.vel.x, boss.vel.y) > 10,
-      pose: poseOf(boss.runner, look.poses),
-      flash: boss.flash > 0,
-      shaking: boss.frozen || (boss.stage === 'transform' && boss.stageFrame < PANGHU.transform.burstAt),
-    };
-    sprite.update(state, delta);
-    if (boss.stage === 'transform' && !tiger) {
-      // 墨气裹住以后，人形和猛虎一闪一闪地交替，越闪越快
-      const t = PANGHU.transform;
-      const f = boss.stageFrame;
-      const k = Phaser.Math.Clamp((f - t.wrapAt) / (t.burstAt - t.wrapAt), 0, 1);
-      this.bossSprite.inkOver = k * 0.75;
-      const period = Math.max(3, Math.round(12 - k * 9));
-      const showTiger = f > t.wrapAt + 15 && Math.floor(f / period) % 2 === 1;
-      this.tigerSprite.setVisible(showTiger);
-      this.bossSprite.img.setVisible(!showTiger);
-      if (showTiger) {
-        this.tigerSprite.inkOver = 0.6;
-        this.tigerSprite.update({ ...state, shaking: true }, delta);
-      }
-      if (this.vortex) this.vortex.power = k;
-    }
-    const ratio = boss.hp / boss.maxHp;
-    const showBar = boss.stage !== 'intro' && boss.stage !== 'yield';
-    this.ui.setBoss(showBar ? (boss.dead ? 0 : ratio) : null);
-  }
-
-  /** 变身开始：时间放慢、镜头推近、主角定住，胖虎放狠话 */
-  private onTransform() {
-    const boss = this.boss!;
-    this.cinematic = true;
-    this.timeScale = 0.4;
-    this.player.vel = { x: 0, y: 0 };
-    this.cameras.main.zoomTo(renderScale() * 1.35, 600, 'Sine.easeInOut');
-    this.ui.say(PANGHU.lines.transform, 1200, () => this.headOf(boss.pos, LOOKS.pangHu.height));
-    this.bossSprite.forceArt('map_pangHu_transform_1');
-    for (const pr of this.projectiles) if (pr.team === 'enemy') pr.destroy();
-  }
-
-  /** 仰天怒吼：怒吼横幅扫过，时间恢复 */
-  private onTransformRoar() {
-    this.timeScale = 1;
-    this.ui.cutIn('cutin_pangHu_roar');
-    sfx.play('roar');
-    this.cameras.main.shake(400, 0.012);
-  }
-
-  /** 墨气从地上卷起来裹住胖虎 */
-  private onTransformWrap() {
-    this.vortex = new InkVortex(this, { ...this.boss!.pos });
-    this.overlays.push(this.vortex);
-    this.tigerSprite.forceArt('map_pangHu_transform_2');
-  }
-
-  /** 墨气炸开、满屏一白，猛虎显形，气浪把主角推开 */
-  private onTransformBurst() {
-    const boss = this.boss!;
-    this.vortex?.stop();
-    this.vortex = null;
-    this.cameras.main.flash(380, 255, 252, 245);
-    this.cameras.main.shake(500, 0.02);
-    this.ui.cutIn('cutin_tiger_reveal');
-    sfx.play('roar');
-    sfx.play('slam');
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * Math.PI * 2;
-      const at = { x: boss.pos.x + Math.cos(a) * 90, y: boss.pos.y + Math.sin(a) * 90 * GROUND_SQUASH };
-      this.overlays.push(new InkSplat(this, at.x, at.y - 60, 170, 0.9, at.y + 2));
-    }
-    this.bossSprite.setVisible(false);
-    this.bossSprite.img.setVisible(false);
-    this.tigerSprite.forceArt(null);
-    this.tigerSprite.inkOver = 0;
-    this.tigerSprite.setVisible(true);
-    // 一圈只吓人不伤人的气浪
-    this.rings.push(new RingWave(this, { ...boss.pos }, 900, 30, 60, { ...PANGHU.roarRing.hit, damage: 0 }, 'player', 'fx_shock_ring'));
-    this.player.shove(dirTo(boss.pos, this.player.pos, { x: 0, y: 1 }), 620);
-    this.cinematic = false;
-    this.time.delayedCall(700, () => this.cameras.main.zoomTo(renderScale(), 600, 'Sine.easeInOut'));
-  }
-
-  /** 打赢了：墨炸开，他变回人形一屁股坐在地上认怂，然后过关 */
-  private onBossDefeated() {
-    const boss = this.boss!;
-    sfx.play('ink');
-    for (const pr of this.projectiles) if (pr.team === 'enemy') pr.destroy();
-    for (const r of this.rings) if (r.team === 'enemy') r.destroy();
-    this.overlays.push(new InkSplat(this, boss.pos.x, boss.pos.y - 80, 260, 0.9, boss.pos.y + 2));
-    this.bossTalk([PANGHU.lines.defeated], () => this.win('竹林 · 过关'), 'portrait_pangHu_beaten');
-  }
-
   /** 过关大字，过一会儿去看红熊的信 */
-  private win(title: string) {
+  win(title: string) {
     if (this.leaving) return;
     this.leaving = true;
     this.ui.setBoss(null);
@@ -867,7 +638,7 @@ export class MapScene extends Phaser.Scene {
   // ---------------- 台词、救场 ----------------
 
   /** 依次念几句台词（念的时候整个地图暂停），念完再做 then */
-  private talk(lines: string[], then: () => void, where: () => ScreenPoint, portrait?: { slot: ArtSlot; side: 'left' | 'right' }) {
+  talk(lines: string[], then: () => void, where: () => ScreenPoint, portrait?: { slot: ArtSlot; side: 'left' | 'right' }) {
     this.pauses.add('talk');
     const [first, ...rest] = lines;
     this.ui.say(first, 1200, where, portrait);
@@ -918,8 +689,7 @@ export class MapScene extends Phaser.Scene {
     this.rescueShow = null;
     this.ui.endTalk();
     this.pauses.delete('rescue');
-    const boss = this.boss;
-    if (boss && (boss.stage === 'fight' || boss.stage === 'tiger') && this.run.coins > 0) this.offerBribe();
+    this.controller.afterRescue();
   }
 
   private onPlayerDead() {
@@ -961,51 +731,11 @@ export class MapScene extends Phaser.Scene {
         this.glint(gl, e.pos, e.facing, look.height, 1 - (m.startup - e.runner.frame) / 10);
       }
     }
-    const boss = this.boss;
-    const m = boss?.runner.move;
-    if (!boss || !m) return;
-    const f = boss.runner.frame;
-    const k = Math.min(1, f / m.startup);
-    const startup = f < m.startup;
-    if (m.id === 'chargeChop' && f < m.startup + 18) {
-      // 冲过来的路线：冲刺距离 + 刀够得着的距离
-      const len = 300 + 130;
-      const p0 = boss.pos;
-      const p1 = { x: p0.x + boss.facing.x * len, y: p0.y + boss.facing.y * len };
-      g.lineStyle(110, COLORS.red, startup ? 0.1 + k * 0.28 : 0.15);
-      g.lineBetween(p0.x, p0.y, p1.x, p1.y);
-      g.lineStyle(3, COLORS.red, 0.6);
-      g.lineBetween(p0.x, p0.y, p1.x, p1.y);
-    }
-    if (m.id === 'slam' && startup) {
-      g.fillStyle(COLORS.red, 0.12 + k * 0.3);
-      fillSector(g, boss.pos, boss.facing, areaOf(m.hit!));
-      // 冲击波会扩到多远：淡淡一圈
-      const R = (PANGHU.shockwave.speed * PANGHU.shockwave.life) / 60;
-      g.lineStyle(2, COLORS.red, 0.15 + k * 0.25);
-      g.strokeEllipse(boss.pos.x, boss.pos.y, R * 2, R * 2 * GROUND_SQUASH);
-    }
-    if (m.id === 'pounce' && boss.activeArea() === null && f < m.startup + m.active) {
-      g.fillStyle(COLORS.red, 0.15 + k * 0.3);
-      fillSector(g, boss.aim, { x: 0, y: 1 }, areaOf(m.hit!));
-      g.lineStyle(3, COLORS.red, 0.7);
-      const r = areaOf(m.hit!).reach;
-      g.strokeEllipse(boss.aim.x, boss.aim.y, r * 2, r * 2 * GROUND_SQUASH);
-    }
-    if (m.id === 'roar' && startup) {
-      for (let i = 0; i < 3; i++) {
-        const r = 60 + ((f * 3 + i * 40) % 120);
-        g.lineStyle(3, COLORS.red, (0.15 + k * 0.4) * (1 - (r - 60) / 120));
-        g.strokeEllipse(boss.pos.x, boss.pos.y, r * 2, r * 2 * GROUND_SQUASH);
-      }
-    }
-    if ((m.id === 'claw1' || m.id === 'claw2') && startup && m.startup - f <= 10) {
-      this.glint(gl, boss.pos, boss.facing, LOOKS.tiger.height, 1 - (m.startup - f) / 10);
-    }
+    this.controller.drawWarnings(g, gl);
   }
 
   /** 武器上的一下闪光：一个朱红十字星，闪出来再缩回去 */
-  private glint(g: Phaser.GameObjects.Graphics, at: Vec, facing: Vec, height: number, t: number) {
+  glint(g: Phaser.GameObjects.Graphics, at: Vec, facing: Vec, height: number, t: number) {
     const x = at.x + facing.x * 26;
     const y = at.y - height * 0.6 + facing.y * 10;
     const s = Math.sin(t * Math.PI) * 18;
@@ -1017,7 +747,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   /** 地图上一点的头顶在画面（设计坐标）上的哪儿：台词气泡用 */
-  private headOf(at: Vec, height: number): ScreenPoint {
+  headOf(at: Vec, height: number): ScreenPoint {
     const v = this.cameras.main.worldView;
     const k = GAME_WIDTH / v.width;
     return { x: (at.x - v.x) * k, y: (at.y - height - v.y) * k };
@@ -1047,7 +777,7 @@ export class MapScene extends Phaser.Scene {
 
   /** 走进哪片区域：换左上角的名字，第一次进来还亮一下题卡 */
   private checkArea(p: Pt) {
-    const area = CHAPTER1_MAP.areas.find((a) => Phaser.Math.Distance.Between(p.x, p.y, a.center.x, a.center.y) < a.radius) ?? null;
+    const area = this.stage.map.areas.find((a) => Phaser.Math.Distance.Between(p.x, p.y, a.center.x, a.center.y) < a.radius) ?? null;
     if (!area || area === this.area) return;
     this.area = area;
     this.ui.setArea(area.name);
@@ -1058,7 +788,7 @@ export class MapScene extends Phaser.Scene {
 
   /** 摆地图上的大件：路牌、茶摊、山寨（寨门、聚义厅、火盆……）、寨墙；脚下挡路的圆记进能走的范围 */
   private placeDecor() {
-    const M = CHAPTER1_MAP;
+    const M = this.stage.map;
     for (const d of M.decor) {
       const art = placeMapArt(this, d.slot, d.at.x, d.at.y, d.width);
       if (!art) continue;
@@ -1086,7 +816,7 @@ export class MapScene extends Phaser.Scene {
    * 没有就用代码画的占位
    */
   private drawGround() {
-    const M = CHAPTER1_MAP;
+    const M = this.stage.map;
     // 平铺的地面不铺满整张地图（那样每层都要一张 6400×4400 的大贴图，几百兆显存），
     // 只铺一块屏幕大小的，钉在镜头上；镜头走到哪，纹理就跟着挪到哪，看起来就是铺满的
     const layers: { t: Phaser.GameObjects.TileSprite; region?: Phaser.Geom.Rectangle }[] = [];
@@ -1165,7 +895,7 @@ export class MapScene extends Phaser.Scene {
    * 再往外按网格撒满，格子里随机挪一挪，偶尔夹一块山石。竹子只是画面，挡人靠 walkable.ts
    */
   private scatterProps() {
-    const M = CHAPTER1_MAP;
+    const M = this.stage.map;
     const rng = new Phaser.Math.RandomDataGenerator([M.seed]);
     const clearOfPath = M.pathWidth / 2 + WALK_MARGIN + BAMBOO_GAP;
     const clear = (x: number, y: number, slack = 0) =>
@@ -1240,7 +970,7 @@ export class MapScene extends Phaser.Scene {
 }
 
 /** 在地上画一个压扁的扇形（判定范围、红色预警） */
-function fillSector(g: Phaser.GameObjects.Graphics, at: Vec, facing: Vec, area: GroundArea) {
+export function fillSector(g: Phaser.GameObjects.Graphics, at: Vec, facing: Vec, area: GroundArea) {
   const base = groundAngle(facing);
   const half = Phaser.Math.DegToRad(Math.min(area.arc, 360)) / 2;
   const pts: Vec[] = area.arc >= 360 ? [] : [{ ...at }];

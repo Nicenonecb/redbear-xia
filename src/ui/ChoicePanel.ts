@@ -62,6 +62,7 @@ export class ChoicePanel {
   ) {
     this.container = scene.add.container(0, 0).setDepth(70);
     this.build();
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.close());
     scene.input.keyboard!.on('keydown', this.onKey);
     scene.input.on('pointerdown', this.onPointer);
   }

@@ -3,8 +3,9 @@ import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../conf
 import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
 import { addPaperGrain, coverArt, hasArt, placeArt } from '../art/slots';
-import { CHAPTER1_LETTERS } from '../game/chapter1';
-import { endRun, getRun } from '../game/run';
+import { stageFor } from '../game/stages';
+import { advanceRun } from '../game/flow';
+import { getRun } from '../game/run';
 
 /** 每个字打出来的间隔（毫秒） */
 const CHAR_MS = 70;
@@ -27,7 +28,7 @@ export class LetterScene extends Phaser.Scene {
 
   create() {
     const run = getRun();
-    this.letter = CHAPTER1_LETTERS[run?.hero ?? 'wenShaohua'];
+    this.letter = run ? stageFor(run).letters[run.hero] : '';
     this.elapsed = 0;
     this.finished = false;
     this.ending = false;
@@ -82,10 +83,7 @@ export class LetterScene extends Phaser.Scene {
       this.showEnding();
       return;
     }
-    endRun();
-    const cam = this.cameras.main;
-    cam.fadeOut(600, 239, 231, 214);
-    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Title'));
+    advanceRun(this);
   }
 
   private showEnd() {
@@ -103,11 +101,11 @@ export class LetterScene extends Phaser.Scene {
       return;
     }
     const end = this.add
-      .text(520, 590, '第一章 · 竹林 · 完', { fontFamily: FONT_BRUSH, fontSize: '40px', color: CSS_COLORS.paper })
+      .text(520, 590, `${stageFor(getRun()!).name} · 完`, { fontFamily: FONT_BRUSH, fontSize: '40px', color: CSS_COLORS.paper })
       .setOrigin(0.5)
       .setAlpha(0);
     const hint = this.add
-      .text(520, 640, '第二章 敬请期待　　按任意键回到标题', { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.paper })
+      .text(520, 640, '按任意键继续旅程', { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.paper })
       .setOrigin(0.5)
       .setAlpha(0);
     this.tweens.add({ targets: [end, hint], alpha: 1, duration: 900, delay: 400 });
@@ -121,9 +119,9 @@ export class LetterScene extends Phaser.Scene {
     if (img) page.add(img);
     const style = { fontFamily: FONT_BRUSH, color: CSS_COLORS.ink, stroke: CSS_COLORS.paper, strokeThickness: 6 };
     page.add([
-      this.add.text(GAME_WIDTH - 90, 110, '第一章 · 竹林 · 完', { ...style, fontSize: '52px' }).setOrigin(1, 0),
-      this.add.text(GAME_WIDTH - 92, 186, '第二章 敬请期待', { ...style, fontSize: '26px' }).setOrigin(1, 0),
-      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, '按任意键回到标题', { ...style, fontSize: '22px' }).setOrigin(0.5).setAlpha(0.8),
+      this.add.text(GAME_WIDTH - 90, 110, `${stageFor(getRun()!).name} · 完`, { ...style, fontSize: '52px' }).setOrigin(1, 0),
+      this.add.text(GAME_WIDTH - 92, 186, '继续登山', { ...style, fontSize: '26px' }).setOrigin(1, 0),
+      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, '按任意键继续', { ...style, fontSize: '22px' }).setOrigin(0.5).setAlpha(0.8),
     ]);
     this.tweens.add({ targets: page, alpha: 1, duration: 900 });
   }

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { Actor } from '../entities/Actor';
+import { mapAutoPlayer } from './mapAutoPlayer';
 import type { Action } from '../input/Controls';
 
 /**
@@ -16,6 +17,7 @@ type S = Phaser.Scene & Record<string, any>;
 const DODGE_THROUGH = new Set(['chargeChop']);
 
 export function autoPlayer(skill = 0.75, seed = 'bot') {
+  const mapBot = mapAutoPlayer(skill, seed);
   const rng = new Phaser.Math.RandomDataGenerator([seed]);
   /** 每个敌人当前这一招躲不躲；敌人两招之间会清掉，所以连出两次同一招也会各掷一次 */
   const decided = new Map<Actor, { move: string; react: boolean }>();
@@ -38,6 +40,7 @@ export function autoPlayer(skill = 0.75, seed = 'bot') {
   };
 
   return (s: S, f: number): Action[] => {
+    if (['Map', 'Letter', 'Shop', 'Intro', 'Ending'].includes(s.scene.key)) return mapBot(s, f);
     const p = s.player;
     if (s.isPaused || p.dead) return [];
     const foes = foesOf(s);

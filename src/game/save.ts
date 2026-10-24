@@ -1,4 +1,4 @@
-import { CHAPTER1_ROOMS, CHAPTER1_STEPS } from './chapter1';
+import { STAGES, stageFor } from './stages';
 import type { RunState } from './run';
 
 /**
@@ -38,7 +38,7 @@ const browserStore: SaveStore = {
 
 const KEY = 'redbear.run';
 /** 存档格式变了就加一，旧存档会被忽略，不会读出错乱的数据 */
-const VERSION = 1;
+const VERSION = 2;
 
 let store: SaveStore = browserStore;
 
@@ -56,7 +56,10 @@ export function loadRun(): RunState | null {
   if (!raw) return null;
   try {
     const data = JSON.parse(raw);
-    if (data?.version !== VERSION || !CHAPTER1_STEPS[data.run?.step]) return null;
+    if (data?.version !== VERSION) return null;
+    const r = data.run;
+    if (!r || !Number.isInteger(r.stage) || !STAGES[r.stage] || !Number.isInteger(r.step) || r.step < 0 || r.step > STAGES[r.stage].steps.length) return null;
+    if (!['wenShaohua', 'yuWuxia'].includes(r.hero) || !Number.isFinite(r.hp) || r.hp <= 0) return null;
     return data.run as RunState;
   } catch {
     return null;
@@ -69,9 +72,10 @@ export function clearSave() {
 
 /** 标题画面上【继续】后面那一小行：走到哪了、用的谁 */
 export function describeSave(run: RunState) {
-  const step = CHAPTER1_STEPS[run.step];
+  const stage = stageFor(run);
+  const step = stage.steps[run.step] ?? { kind: 'letter' };
   const where =
-    step.kind === 'room' ? CHAPTER1_ROOMS[step.room].name : step.kind === 'shop' ? '任新野的茶摊' : step.kind === 'boss' ? '胖虎山寨' : '红熊的信';
+    step.kind === 'room' ? stage.rooms[step.room].name : step.kind === 'shop' ? '任新野的茶摊' : step.kind === 'boss' ? '胖虎山寨' : '红熊的信';
   const who = run.hero === 'wenShaohua' ? '温少华' : '于无瑕';
-  return `${who} · ${where} · 第 ${run.level} 重 · ${run.coins} 文`;
+  return `${who} · ${stage.name} · ${where} · 第 ${run.level} 重 · ${run.coins} 文`;
 }

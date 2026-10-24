@@ -27,7 +27,7 @@ export function installDevHarness(game: Phaser.Game) {
     else game.step(time, 1000 / 60);
   };
 
-  const scene = () => game.scene.getScene(current) as Phaser.Scene & Record<string, any>;
+  const scene = () => (game.scene.getScenes(true).find(s => s.scene.key !== 'UI') ?? game.scene.getScene(current)) as Phaser.Scene & Record<string, any>;
 
   const harness = {
     fast: false,
@@ -74,18 +74,20 @@ export function installDevHarness(game: Phaser.Game) {
       until: (s: ReturnType<typeof scene>) => boolean = () => false,
       probe: (s: ReturnType<typeof scene>) => T = () => undefined as T,
     ) {
-      const s = scene();
-      const keys = s.controls.keys as Record<Action, Phaser.Input.Keyboard.Key[]>;
       const out: T[] = [];
-      for (let f = 0; f < maxFrames && !until(s); f++) {
+      let keys: Record<string, Phaser.Input.Keyboard.Key[]> = {};
+      for (let f = 0; f < maxFrames; f++) {
+        const s = scene();
+        if (until(s)) break;
+        Object.values(keys).flat().forEach(k => k.isDown = false);
+        keys = s.controls?.keys ?? {};
         const held = decide(s, f);
-        // 一个键可能绑在几个动作上（W 既是上又是跳），先全松开再按下要按的，免得互相覆盖
-        for (const a of Object.keys(keys) as Action[]) keys[a].forEach((k) => (k.isDown = false));
-        for (const a of held) keys[a].forEach((k) => (k.isDown = true));
+        Object.values(keys).flat().forEach(k => k.isDown = false);
+        for (const a of held) keys[a]?.forEach(k => k.isDown = true);
         step();
-        out.push(probe(s));
+        out.push(probe(scene()));
       }
-      for (const a of Object.keys(keys) as Action[]) keys[a].forEach((k) => (k.isDown = false));
+      Object.values(keys).flat().forEach(k => k.isDown = false);
       return out;
     },
     /** 把逐帧结果压缩成"有变化的那几帧" */

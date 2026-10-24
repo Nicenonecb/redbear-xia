@@ -4,7 +4,7 @@ import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
 import { addPaperGrain, coverArt, placeArt, type ArtSlot } from '../art/slots';
 import { drawTeaStall } from '../art/teaStall';
-import { CHAPTER1_SHOP_LINES } from '../game/chapter1';
+import { stageFor } from '../game/stages';
 import { advanceRun } from '../game/flow';
 import { PROGRESSION, WEAPONS } from '../game/progression';
 import { getRun, runStats, startRun, type RunState } from '../game/run';
@@ -54,7 +54,7 @@ export class ShopScene extends Phaser.Scene {
     this.add.text(24, 20, '竹林 · 任新野的茶摊', { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink }).setDepth(50);
 
     this.bubble = new SpeechBubble(this);
-    this.lines = [CHAPTER1_SHOP_LINES.greeting, CHAPTER1_SHOP_LINES.intel];
+    this.lines = [stageFor(getRun()!).shopLines.greeting, stageFor(getRun()!).shopLines.intel];
     this.say(this.lines.shift()!);
 
     this.panel = new ChoicePanel(this, {
@@ -131,7 +131,7 @@ export class ShopScene extends Phaser.Scene {
     }
     sfx.play('coin');
     this.lines = [];
-    this.say(Phaser.Utils.Array.GetRandom(CHAPTER1_SHOP_LINES.bought));
+    this.say(Phaser.Utils.Array.GetRandom(stageFor(getRun()!).shopLines.bought));
     this.panel.update(this.options(), this.status());
   }
 
@@ -139,7 +139,7 @@ export class ShopScene extends Phaser.Scene {
     this.leaving = true;
     this.panel.close();
     this.lines = [];
-    this.say(CHAPTER1_SHOP_LINES.farewell);
+    this.say(stageFor(getRun()!).shopLines.farewell);
     this.time.delayedCall(1400, () => advanceRun(this));
   }
 }

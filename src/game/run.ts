@@ -8,6 +8,7 @@ import { clearSave, saveRun } from './save';
 export interface RunState {
   hero: HeroId;
   /** 第一章流程走到第几步，见 chapter1.ts 的 CHAPTER1_STEPS */
+  stage: number;
   step: number;
   hp: number;
   level: number;
@@ -34,6 +35,7 @@ let current: RunState | null = null;
 export function startRun(hero: HeroId, persist = true): RunState {
   current = {
     hero,
+    stage: 0,
     step: 0,
     hp: BASE_HP,
     level: 1,

@@ -5,7 +5,7 @@ import { FallingLeaves, drawBambooForest } from '../art/bamboo';
 import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
 import { addPaperGrain, placeArt } from '../art/slots';
-import { CHAPTER1_STEPS } from '../game/chapter1';
+import { STAGES } from '../game/stages';
 import { sceneForStep } from '../game/flow';
 import { setRun, startRun } from '../game/run';
 import { describeSave, loadRun } from '../game/save';
@@ -105,7 +105,7 @@ export class TitleScene extends Phaser.Scene {
     }
     this.tweens.add({ targets: prompt, alpha: 0.25, duration: 900, yoyo: true, repeat: -1 });
     this.add
-      .text(cx, GAME_HEIGHT - 48, 'P · 练功场　　B · 直接打胖虎　　M · 静音　　- / = · 音量', { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
+      .text(cx, GAME_HEIGHT - 48, `P · 练功场　　${import.meta.env.DEV ? '1 / 2 / 3 · 关底（B = 1）　　' : ''}M · 静音　　- / = · 音量`, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
       .setOrigin(0.5)
       .setAlpha(0.6);
 
@@ -115,9 +115,10 @@ export class TitleScene extends Phaser.Scene {
     this.entering = false;
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
       if (e.code === 'KeyP') return this.enterGame('Game');
-      if (e.code === 'KeyB') {
+      if (import.meta.env.DEV && ['KeyB', 'Digit1', 'Digit2', 'Digit3'].includes(e.code)) {
         const run = startRun('wenShaohua', false);
-        run.step = CHAPTER1_STEPS.findIndex((s) => s.kind === 'boss');
+        run.stage = e.code === 'KeyB' ? 0 : Number(e.code.at(-1)) - 1;
+        run.step = STAGES[run.stage].steps.findIndex((s) => s.kind === 'boss');
         return this.enterGame('Map');
       }
       if (!saved) return this.enterGame('Select');

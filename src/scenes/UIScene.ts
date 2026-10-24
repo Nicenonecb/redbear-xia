@@ -144,8 +144,10 @@ export class UIScene extends Phaser.Scene {
   }
 
   /** 选项面板（升级三选一、拔剑还是给钱） */
+  activeChoice?: ChoicePanel;
   choice(config: ChoiceConfig) {
-    return new ChoicePanel(this, config);
+    this.activeChoice?.close();
+    return this.activeChoice = new ChoicePanel(this, config);
   }
 
   /** 这一局第一次见到的敌人：右下角弹一张登场提示 */
