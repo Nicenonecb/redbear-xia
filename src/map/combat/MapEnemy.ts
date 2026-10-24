@@ -18,6 +18,9 @@ const AGGRO_RANGE = 460;
  * 事件：'move' 招式事件、'dead' 被打倒、'aggro' 发现主角。
  */
 export class MapEnemy extends MapActor {
+  attackSpeed = 1;
+  private hasteFrame = 0;
+  private evadeCooldown = 0;
   hurtFrames = 0;
   deathFrames = 0;
   /** 发现主角了没有 */
@@ -95,9 +98,16 @@ export class MapEnemy extends MapActor {
       return this.integrate();
     }
 
+    if (this.evadeCooldown > 0) this.evadeCooldown--;
+    if (this.def.id === 'swordsman' && !this.runner.move && this.target.runner.phase === 'startup' && !this.evadeCooldown && this.distToTarget < 180) {
+      this.evadeCooldown = 100;
+      if(this.rng.frac() < .35) { this.vel = {x:-this.facing.x*500,y:-this.facing.y*500};this.hurtFrames=12;return this.integrate(); }
+    }
     const current = this.runner.move;
     if (current) {
       this.advanceMove();
+      this.hasteFrame += this.attackSpeed - 1;
+      if (this.hasteFrame >= 1) { this.hasteFrame--; this.advanceMove(); }
       if (this.runner.move) {
         this.applyMoveMotion();
         return this.integrate();
@@ -111,7 +121,7 @@ export class MapEnemy extends MapActor {
 
     this.faceTarget();
     const dist = this.distToTarget;
-    if (--this.cooldown <= 0 && !this.target.dead) {
+    if ((this.cooldown -= this.attackSpeed) <= 0 && !this.target.dead) {
       const next = this.choose(dist);
       if (next) {
         this.begin(next);

@@ -51,7 +51,7 @@ export class ShopScene extends Phaser.Scene {
     const backdrop = this.add.graphics().setDepth(49);
     backdrop.fillGradientStyle(COLORS.paper, COLORS.paper, COLORS.paper, COLORS.paper, 0.85, 0, 0.85, 0);
     backdrop.fillRect(0, 0, 420, 70);
-    this.add.text(24, 20, '竹林 · 任新野的茶摊', { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink }).setDepth(50);
+    this.add.text(24, 20, stageFor(this.run).name + " · 任新野", { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink }).setDepth(50);
 
     this.bubble = new SpeechBubble(this);
     this.lines = [stageFor(getRun()!).shopLines.greeting, stageFor(getRun()!).shopLines.intel];
@@ -108,7 +108,8 @@ export class ShopScene extends Phaser.Scene {
       run.hp >= maxHp
         ? { label: `${potion.name}（回复一半气血）`, detail: '气血是满的', disabled: true, icon: 'icon_potion' }
         : { label: `${potion.name}（回复一半气血）`, detail: price(potion.price), disabled: run.coins < potion.price, icon: 'icon_potion' },
-      { label: '告辞', detail: '前面就是山寨' },
+      ...(run.stage === 2 ? [{label:'护心符',detail:run.charmBought?'本局已购':'150 文 · 挡一次致命伤',disabled:run.charmBought || run.coins<150}] : []),
+      { label: '告辞', detail: '继续上山' },
     ];
   }
 
@@ -116,7 +117,9 @@ export class ShopScene extends Phaser.Scene {
     if (this.leaving) return;
     const run = this.run;
     const { refine, potion } = PROGRESSION.shop;
-    if (i === 3) return this.leave();
+    if (this.options()[i]?.disabled) return;
+    if (i === this.options().length-1) return this.leave();
+    if (i === 3 && run.stage===2) {run.coins-=150;run.heartCharm=true;run.charmBought=true;}
     if (i === 0) {
       run.coins -= refine.prices[run.weapon.refine];
       run.weapon.refine++;

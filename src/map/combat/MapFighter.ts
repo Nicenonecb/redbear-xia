@@ -29,6 +29,7 @@ export class MapFighter extends MapActor {
   rescueBelow = 0;
   /** 剩余弹药（于无瑕的飞镖） */
   ammo = 0;
+  onLethal?: () => boolean;
   /** 正在走路（不在出招、不在硬直），给画面用 */
   walking = false;
   private readonly locked = new Set<Action>();
@@ -92,14 +93,16 @@ export class MapFighter extends MapActor {
   takeHit(hit: HitSpec, dir: Vec) {
     if (this.invulnerable) return;
     this.hp = Math.max(0, this.hp - hit.damage);
-    if (this.rescueBelow > 0 && this.hp < this.maxHp * this.rescueBelow) {
+    const protectedByCharm = this.hp === 0 && this.onLethal?.();
+    if (protectedByCharm) { this.hp=1; this.mercyFrames=120; }
+    if (!protectedByCharm && this.rescueBelow > 0 && this.hp < this.maxHp * this.rescueBelow) {
       this.hp = Math.max(1, this.hp);
       this.rescueBelow = 0;
       this.events.emit('rescue', this);
     }
     this.runner.stop();
     this.hurtFrames = hit.hitstun;
-    this.mercyFrames = hit.hitstun + MERCY_FRAMES;
+    this.mercyFrames = Math.max(this.mercyFrames, hit.hitstun + MERCY_FRAMES);
     this.flash = hit.hitstop + 4;
     this.knockBack(hit, dir);
     this.freeze(hit.hitstop);

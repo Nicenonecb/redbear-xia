@@ -12,7 +12,7 @@ export class MountainBoss extends MapActor {
  constructor(x:number,y:number,readonly def:MountainBossDef,private target:MapFighter,walk:WalkableMap){super(x,y,35,210,def.hp,walk);}
  override get invulnerable(){return this.stage!=='fight';}
  takeHit(hit:HitSpec){
-  if(this.invulnerable)return; this.hp=Math.max(0,this.hp-hit.damage);this.flash=hit.hitstop+3;this.freeze(hit.hitstop);
+  if(this.invulnerable)return; this.hp=Math.max(this.def.id==='zhangHuatian' && this.phase===1 ? 1 : 0,this.hp-hit.damage);this.flash=hit.hitstop+3;this.freeze(hit.hitstop);
   if(!this.half && this.hp<=this.maxHp/2){this.half=true;this.events.emit('half');}
   if(this.dead){this.runner.stop();this.stage='defeated';this.events.emit('defeated');}
  }
@@ -41,8 +41,14 @@ export class MountainBoss extends MapActor {
  private begin(id:string){this.current=this.def.moves[id];this.aim={...this.target.pos};this.facing=dirTo(this.pos,this.target.pos,this.facing);this.startMove(this.current);}
  override activeArea(){if(this.runner.move?.id==='vault' && this.z>12)return null;return super.activeArea();}
  override resolveHits(targets:MapHurtable[]){
-  const hits=super.resolveHits(targets);
-  if(this.runner.move?.id==='snare' && hits.length){this.target.pos.x=this.pos.x+this.facing.x*65;this.target.pos.y=this.pos.y+this.facing.y*65;this.target.hurtFrames=28;this.target.mercyFrames=20;}
+  if (this.runner.move?.id !== 'snare') return super.resolveHits(targets);
+  if (this.runner.phase !== 'active') return [];
+  const hit = this.runner.move.hit!; const hits = [];
+  for (const t of targets) {
+   if(t.invulnerable || this.runner.hitTargets.has(t) || groundDist(t.pos.x-this.aim.x,t.pos.y-this.aim.y)>70+t.radius) continue;
+   this.runner.hitTargets.add(t);t.takeHit(hit,this.facing);hits.push({target:t,hit});
+   this.target.pos.x=this.pos.x+this.facing.x*65;this.target.pos.y=this.pos.y+this.facing.y*65;this.target.hurtFrames=28;this.target.mercyFrames=20;
+  }
   return hits;
  }
 }

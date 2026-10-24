@@ -17,6 +17,9 @@ export interface MapLook {
 }
 
 export const LOOKS: Record<string, MapLook> = {
+  swordsman:{mapName:"swordsman",fallback:"portrait_bandit",height:170,shadow:65},
+  bannerman:{mapName:"bannerman",fallback:"portrait_bandit",height:180,shadow:65},
+  captain:{mapName:"captain",fallback:"portrait_chief",height:210,shadow:95},
   spearman: {mapName:"spearman",fallback:"portrait_bandit",height:170,shadow:65,poses:{slash:["ready","thrust"]}},
   archer:{mapName:"archer",fallback:"portrait_thrower",height:165,shadow:60},
   drillmaster:{mapName:"drillmaster",fallback:"portrait_chief",height:205,shadow:90},

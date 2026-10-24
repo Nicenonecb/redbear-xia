@@ -20,6 +20,7 @@ import type { MapActor, MapHitResult, MapHurtable } from '../map/combat/MapActor
 import { MapCoin } from '../map/combat/MapCoin';
 import { MapEnemy } from '../map/combat/MapEnemy';
 import { MapFighter } from '../map/combat/MapFighter';
+import { ZhangBoss } from '../map/bosses/ZhangBoss';
 import { BaoBoss } from '../map/bosses/BaoBoss';
 import { PangHuBoss } from '../map/bosses/PangHuBoss';
 import type { BossController } from '../map/bosses/BossController';
@@ -213,6 +214,7 @@ export class MapScene extends Phaser.Scene {
     this.player.rescueBelow = this.run.rescueUsed ? 0 : PROGRESSION.rescue.below;
     this.player.events.on('move', (e: MoveEvent) => this.onPlayerMove(e));
     this.player.events.on('rescue', () => this.rescue());
+    this.player.onLethal = () => { if (!this.run.heartCharm) return false; this.run.heartCharm=false; this.run.hp=1; saveRun(this.run); this.cameras.main.flash(220,255,235,120);sfx.play('ink');this.toast('护心符 · 碎',this.player.pos.x,this.player.pos.y-170);return true; };
     this.player.events.once('dead', () => this.onPlayerDead());
     const fallback = (this.run.hero === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia') as ArtSlot;
     this.sprite = new MapSprite(this, this.run.hero, fallback, HERO_HEIGHT, 70);
@@ -222,8 +224,11 @@ export class MapScene extends Phaser.Scene {
       .filter((a) => a.room !== undefined)
       .map((a) => new Encounter(this, a, this.stage.rooms[a.room!], this.walk, M.path, this.run.step > roomStepOf(this.stage, a.room!)));
     this.spawnRen();
-    this.controller = this.stage.boss === 'baoJinliang' ? new BaoBoss(this) : new PangHuBoss(this);
+    this.controller = this.stage.boss === 'zhangHuatian' ? new ZhangBoss(this) : this.stage.boss === 'baoJinliang' ? new BaoBoss(this) : new PangHuBoss(this);
     this.controller.spawn();
+    if (this.stage.boss !== 'pangHu') this.boss?.events.on('move', (e: MoveEvent) => {
+      if(e.type === 'sfx') { sfx.play(e.name);const b=this.boss!;const hit=b.runner.move?.hit;if(hit)this.overlays.push(new SlashFx(this,{...b.pos},b.facing,{...areaOf(hit),heavy:true})); }
+    });
     this.controller.events.on('yield', () => this.win(`${this.stage.name} · 放行`));
     this.controller.events.on('defeated', () => this.win(`${this.stage.name} · 过关`));
 
@@ -292,7 +297,9 @@ export class MapScene extends Phaser.Scene {
     }
     this.watchPlayerMove();
 
+    const flags = enemies.filter(e => e.def.id === 'bannerman' && !e.dead && e.hurtFrames === 0);
     for (const e of enemies) {
+      e.attackSpeed = flags.some(f => f !== e && Math.hypot(f.pos.x-e.pos.x,f.pos.y-e.pos.y)<400) ? 1.2 : 1;
       e.tick();
       this.reportHits(e.resolveHits([p]));
       e.separateFrom(enemies);
@@ -728,6 +735,7 @@ export class MapScene extends Phaser.Scene {
     const gl = this.glints;
     g.clear();
     gl.clear();
+    for (const {enemy:e} of this.enemies) if(e.def.id==='bannerman'&&!e.dead){g.lineStyle(3,0xd1ab40,.7);g.strokeEllipse(e.pos.x,e.pos.y,800,520);g.lineBetween(e.pos.x,e.pos.y-20,e.pos.x,e.pos.y-200);g.fillStyle(0xd1ab40,.8);g.fillTriangle(e.pos.x,e.pos.y-200,e.pos.x+65,e.pos.y-170,e.pos.x,e.pos.y-145);}
     for (const { enemy: e, look } of this.enemies) {
       const m = e.runner.move;
       if (!m || e.dead || e.runner.phase !== 'startup') continue;
@@ -989,11 +997,12 @@ export class MapScene extends Phaser.Scene {
 export function fillSector(g: Phaser.GameObjects.Graphics, at: Vec, facing: Vec, area: GroundArea) {
   const base = groundAngle(facing);
   const half = Phaser.Math.DegToRad(Math.min(area.arc, 360)) / 2;
-  const pts: Vec[] = area.arc >= 360 ? [] : [{ ...at }];
+  const pts: Vec[] = area.arc >= 360 || area.from ? [] : [{ ...at }];
   const steps = area.arc >= 360 ? 32 : 20;
   for (let i = 0; i <= steps; i++) {
     const a = base - half + (2 * half * i) / steps;
     pts.push({ x: at.x + Math.cos(a) * area.reach, y: at.y + Math.sin(a) * area.reach * GROUND_SQUASH });
   }
+  if (area.from) for(let i=steps;i>=0;i--){ const a=base-half+(2*half*i)/steps;pts.push({x:at.x+Math.cos(a)*area.from,y:at.y+Math.sin(a)*area.from*GROUND_SQUASH}); }
   g.fillPoints(pts, true);
 }

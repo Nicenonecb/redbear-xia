@@ -8,6 +8,8 @@ import { clearSave, saveRun } from './save';
 export interface RunState {
   hero: HeroId;
   /** 第一章流程走到第几步，见 chapter1.ts 的 CHAPTER1_STEPS */
+  heartCharm?: boolean;
+  charmBought?: boolean;
   paidOff?: boolean;
   stage: number;
   step: number;
