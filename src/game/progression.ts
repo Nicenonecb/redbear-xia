@@ -35,17 +35,19 @@ export const PROGRESSION = {
   rescue: { below: 0.15, healTo: 0.5 },
 };
 
-/** 每位主角的三档武器，damage 是伤害倍率 */
+/** 每位主角的四档武器，damage 是伤害倍率 */
 export const WEAPONS: Record<HeroId, { name: string; damage: number; price: number }[]> = {
   wenShaohua: [
     { name: '铁剑', damage: 1, price: 0 },
     { name: '青锋', damage: 1.35, price: 110 },
     { name: '龙泉', damage: 1.75, price: 220 },
+    { name: '照胆', damage: 2.15, price: 320 },
   ],
   yuWuxia: [
     { name: '竹扇', damage: 1, price: 0 },
     { name: '铁骨扇', damage: 1.35, price: 110 },
     { name: '玄羽扇', damage: 1.75, price: 220 },
+    { name: '流霞扇', damage: 2.15, price: 320 },
   ],
 };
 

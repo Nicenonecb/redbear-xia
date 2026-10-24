@@ -7,10 +7,12 @@ import { clearSave, saveRun } from './save';
  */
 export interface RunState {
   hero: HeroId;
-  /** 第一章流程走到第几步，见 chapter1.ts 的 CHAPTER1_STEPS */
+  /** 自动验收可固定随机序列；正常游玩省略 */
+  seed?: string;
   heartCharm?: boolean;
   charmBought?: boolean;
   paidOff?: boolean;
+  /** 第几关，以及本关内的关口（均从 0 开始） */
   stage: number;
   step: number;
   hp: number;

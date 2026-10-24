@@ -1,0 +1,987 @@
+{
+  "date": "2026-10-25",
+  "mode": "final-boss-fixed-loadout",
+  "results": [
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-0",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-1",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-2",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-3",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-4",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-5",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-6",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 58,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-7",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-8",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-9",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-0",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-1",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-2",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-3",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-4",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 2060,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-5",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 2198,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-6",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-7",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-8",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.75,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-9",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-0",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1709,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-1",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-2",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1802,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-3",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1904,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-4",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1812,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-5",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1799,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-6",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1717,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-7",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-8",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1983,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "wenShaohua",
+      "seed": "acceptance-wenShaohua-9",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-0",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1931,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-1",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-2",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-3",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1784,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-4",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1759,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-5",
+      "cleared": false,
+      "stage": 2,
+      "step": 4,
+      "phase": 2,
+      "frames": 1867,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-6",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-7",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-8",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 32,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    },
+    {
+      "scene": "Title",
+      "skill": 0.5,
+      "hero": "yuWuxia",
+      "seed": "acceptance-yuWuxia-9",
+      "cleared": true,
+      "stage": 2,
+      "step": 5,
+      "phase": 2,
+      "frames": 3601,
+      "checkpoints": [
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 0
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 0
+        }
+      ],
+      "stalled": false
+    }
+  ],
+  "errors": [],
+  "summary": [
+    {
+      "skill": 0.75,
+      "total": 20,
+      "cleared": 18,
+      "reachedWaistBoss": 20,
+      "stalled": 0,
+      "defeatedInFinalPhase": 2
+    },
+    {
+      "skill": 0.5,
+      "total": 20,
+      "cleared": 9,
+      "reachedWaistBoss": 20,
+      "stalled": 0,
+      "defeatedInFinalPhase": 11
+    }
+  ]
+}

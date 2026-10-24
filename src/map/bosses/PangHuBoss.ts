@@ -1,7 +1,7 @@
 import { Captives } from '../Captives';
 import Phaser from 'phaser';
 import { COLORS } from '../../config';
-import type { ArtSlot } from '../../art/slots';
+import { placeArt, type ArtSlot } from '../../art/slots';
 import { InkSplat } from '../../art/inkSplat';
 import { sfx } from '../../audio/sfx';
 import { PANGHU } from '../../characters/pangHu';
@@ -28,11 +28,25 @@ export class PangHuBoss implements BossController {
   private bossIntroduced = false;
   private vortex: InkVortex | null = null;
   constructor(private readonly host: MapScene) {}
-  get actor() { return this.boss; }
-  tick() { this.boss?.tick(); }
-  hitTargets() { return this.boss && !this.boss.dead ? [this.boss] : []; }
-  afterRescue() { if (this.boss && ['fight', 'tiger'].includes(this.boss.stage) && this.host.run.coins > 0) this.offerBribe(); }
-  dispose() { this.boss?.events.removeAllListeners(); this.events.removeAllListeners(); this.vortex?.stop(); this.bossSprite?.destroy(); this.tigerSprite?.destroy(); }
+  get actor() {
+    return this.boss;
+  }
+  tick() {
+    this.boss?.tick();
+  }
+  hitTargets() {
+    return this.boss && !this.boss.dead ? [this.boss] : [];
+  }
+  afterRescue() {
+    if (this.boss && ['fight', 'tiger'].includes(this.boss.stage) && this.host.run.coins > 0) this.offerBribe();
+  }
+  dispose() {
+    this.boss?.events.removeAllListeners();
+    this.events.removeAllListeners();
+    this.vortex?.stop();
+    this.bossSprite?.destroy();
+    this.tigerSprite?.destroy();
+  }
   spawn() {
     if (this.host.run.stage === 0) this.captives = new Captives(this.host);
     const at = stageFor(this.host.run).map.boss;
@@ -48,7 +62,7 @@ export class PangHuBoss implements BossController {
     boss.events.on('burst', () => this.onTransformBurst());
     boss.events.on('land', () => {
       this.host.cameras.main.shake(200, 0.01);
-      this.host.overlays.push(new DustPuff(this.host, { ...boss.pos }, { x: 0, y: 1 }, 500));
+      this.events.emit('overlay', new DustPuff(this.host, { ...boss.pos }, { x: 0, y: 1 }, 500));
     });
     boss.events.once('defeated', () => this.onBossDefeated());
   }
@@ -58,10 +72,14 @@ export class PangHuBoss implements BossController {
     if (this.bossIntro || boss.stage !== 'intro' || this.host.run.step < stepOf(stageFor(this.host.run), 'boss')) return;
     if (boss.distToTarget > BOSS_INTRO_RANGE) return;
     this.bossIntro = true;
+    this.events.emit('intro');
     boss.facing = dirTo(boss.pos, this.host.player.pos, boss.facing);
     this.host.player.vel = { x: 0, y: 0 };
     sfx.play('growl');
-    this.bossTalk([...(this.host.run.stage === 0 ? ['嘿嘿，又来一个想救美人的？我这后院的姑娘，可都是给我大哥备下的！'] : []), PANGHU.lines.intro], () => this.offerBribe());
+    this.bossTalk(
+      [...(this.host.run.stage === 0 ? ['嘿嘿，又来一个想救美人的？我这后院的姑娘，可都是给我大哥备下的！'] : []), PANGHU.lines.intro],
+      () => this.offerBribe(),
+    );
   }
 
   /** 胖虎说话：右下角亮立绘（变身后是猛虎），气泡从立绘嘴边冒出来 */
@@ -145,18 +163,27 @@ export class PangHuBoss implements BossController {
     if (e.type === 'vfx' && e.name === 'shake') this.host.cameras.main.shake(200, 0.01);
     if (e.type === 'spawn' && e.name === 'shockwave') {
       const w = PANGHU.shockwave;
-      this.host.rings.push(new RingWave(this.host, { ...boss.pos }, w.speed, w.life, 44, w.hit, 'enemy', 'fx_shock_ring'));
+      this.events.emit('ring', new RingWave(this.host, { ...boss.pos }, w.speed, w.life, 44, w.hit, 'enemy', 'fx_shock_ring'));
     }
     if (e.type === 'spawn' && e.name === 'roarRing') {
       const w = PANGHU.roarRing;
-      this.host.rings.push(new RingWave(this.host, { ...boss.pos }, w.speed, w.life, 56, w.hit, 'enemy', 'fx_roar_ring', true));
+      this.events.emit('ring', new RingWave(this.host, { ...boss.pos }, w.speed, w.life, 56, w.hit, 'enemy', 'fx_roar_ring', true));
     }
     // 重刀落下、猛虎挥爪：甩出一道刀光 / 爪痕
     const m = boss.runner.move;
     if (e.type === 'sfx' && (e.name === 'chop' || e.name === 'claw') && m?.hit) {
       const area = areaOf(m.hit);
       const claw = e.name === 'claw';
-      this.host.overlays.push(new SlashFx(this.host, { ...boss.pos }, boss.facing, { reach: area.reach, arc: area.arc, heavy: !claw, art: claw ? 'fx_claw' : undefined }, 80));
+      this.events.emit(
+        'overlay',
+        new SlashFx(
+          this.host,
+          { ...boss.pos },
+          boss.facing,
+          { reach: area.reach, arc: area.arc, heavy: !claw, art: claw ? 'fx_claw' : undefined },
+          80,
+        ),
+      );
     }
   }
 
@@ -221,7 +248,7 @@ export class PangHuBoss implements BossController {
   /** 墨气从地上卷起来裹住胖虎 */
   private onTransformWrap() {
     this.vortex = new InkVortex(this.host, { ...this.boss!.pos });
-    this.host.overlays.push(this.vortex);
+    this.events.emit('overlay', this.vortex);
     this.tigerSprite.forceArt('map_pangHu_transform_2');
   }
 
@@ -238,7 +265,7 @@ export class PangHuBoss implements BossController {
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2;
       const at = { x: boss.pos.x + Math.cos(a) * 90, y: boss.pos.y + Math.sin(a) * 90 * GROUND_SQUASH };
-      this.host.overlays.push(new InkSplat(this.host, at.x, at.y - 60, 170, 0.9, at.y + 2));
+      this.events.emit('overlay', new InkSplat(this.host, at.x, at.y - 60, 170, 0.9, at.y + 2));
     }
     this.bossSprite.setVisible(false);
     this.bossSprite.img.setVisible(false);
@@ -246,7 +273,10 @@ export class PangHuBoss implements BossController {
     this.tigerSprite.inkOver = 0;
     this.tigerSprite.setVisible(true);
     // 一圈只吓人不伤人的气浪
-    this.host.rings.push(new RingWave(this.host, { ...boss.pos }, 900, 30, 60, { ...PANGHU.roarRing.hit, damage: 0 }, 'player', 'fx_shock_ring'));
+    this.events.emit(
+      'ring',
+      new RingWave(this.host, { ...boss.pos }, 900, 30, 60, { ...PANGHU.roarRing.hit, damage: 0 }, 'player', 'fx_shock_ring'),
+    );
     this.host.player.shove(dirTo(boss.pos, this.host.player.pos, { x: 0, y: 1 }), 620);
     this.host.cinematic = false;
     this.host.time.delayedCall(700, () => this.host.cameras.main.zoomTo(renderScale(), 600, 'Sine.easeInOut'));
@@ -254,16 +284,28 @@ export class PangHuBoss implements BossController {
 
   /** 打赢了：墨炸开，他变回人形一屁股坐在地上认怂，然后过关 */
   private onBossDefeated() {
+    const peak = this.host.stage.map.boss;
+    const watcher =
+      placeArt(this.host, 'portrait_zhangHuatian', peak.x + 280, peak.y - 280, 60, 95) ??
+      placeArt(this.host, 'portrait_wenShaohua', peak.x + 280, peak.y - 280, 60, 95);
+    watcher
+      ?.setTintFill(COLORS.ink)
+      .setAlpha(0.75)
+      .setDepth(peak.y - 280);
     const boss = this.boss!;
     sfx.play('ink');
     for (const pr of this.host.projectiles) if (pr.team === 'enemy') pr.destroy();
     for (const r of this.host.rings) if (r.team === 'enemy') r.destroy();
-    this.host.overlays.push(new InkSplat(this.host, boss.pos.x, boss.pos.y - 80, 260, 0.9, boss.pos.y + 2));
-    this.bossTalk([this.host.run.stage === 0 ? '少侠饶命！人你带走，带走！……我二哥不会放过你的！' : PANGHU.lines.defeated], () => {
-      this.host.pauses.add('release');
-      if (this.captives) this.captives.release(() => this.events.emit('defeated'));
-      else this.events.emit('defeated');
-    }, 'portrait_pangHu_beaten');
+    this.events.emit('overlay', new InkSplat(this.host, boss.pos.x, boss.pos.y - 80, 260, 0.9, boss.pos.y + 2));
+    this.bossTalk(
+      [this.host.run.stage === 0 ? '少侠饶命！人你带走，带走！……我二哥不会放过你的！' : PANGHU.lines.defeated],
+      () => {
+        this.host.pauses.add('release');
+        if (this.captives) this.captives.release(() => this.events.emit('defeated'));
+        else this.events.emit('defeated');
+      },
+      'portrait_pangHu_beaten',
+    );
   }
 
   drawWarnings(g: Phaser.GameObjects.Graphics, gl: Phaser.GameObjects.Graphics) {
@@ -309,5 +351,4 @@ export class PangHuBoss implements BossController {
       this.host.glint(gl, boss.pos, boss.facing, LOOKS.tiger.height, 1 - (m.startup - f) / 10);
     }
   }
-
 }

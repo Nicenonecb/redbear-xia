@@ -8,10 +8,22 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../config';
  */
 export const ART_SLOTS = {
   title: '标题画面背景',
-  portrait_zhangHuatian: '彰化天', portrait_zhangHuatian_awaken: '彰化天白发觉醒',
+  portrait_zhangHuatian: '彰化天',
+  portrait_zhangHuatian_awaken: '彰化天白发觉醒',
+  portrait_spearman: '矛手',
+  portrait_archer: '弓手',
+  portrait_drillmaster: '教头',
+  portrait_swordsman: '死士',
+  portrait_bannerman: '旗手',
+  portrait_captain: '护卫统领',
   portrait_baoJinliang: '鲍金梁立绘',
   ending_final: '红熊山巅通关插画',
-  intro_wen: '温少华出师', intro_yu: '于无瑕出师',
+  intro_wen: '温少华出师',
+  intro_yu: '于无瑕出师',
+  intro_wenShaohua: '温少华出师（出图清单命名）',
+  intro_yuWuxia: '于无瑕出师（出图清单命名）',
+  card_boss_baoJinliang: '鲍金梁名牌',
+  card_boss_zhangHuatian: '彰化天名牌',
   portrait_wenShaohua: '温少华立绘（选角界面）',
   portrait_yuWuxia: '于无瑕立绘（选角界面）',
   portrait_pangHu: '胖虎立绘（说话时出现在右下角）',
@@ -117,8 +129,7 @@ export function queueMapArt(scene: Phaser.Scene, hero: string) {
  */
 export function trimArtTextures(scene: Phaser.Scene) {
   const data = scene.cache.json.get('mapAnchors') as
-    | { images?: Record<string, { trim?: number[] }>; props?: Record<string, { trim?: number[] }> }
-    | undefined;
+    { images?: Record<string, { trim?: number[] }>; props?: Record<string, { trim?: number[] }> } | undefined;
   const all = { ...data?.images, ...data?.props };
   for (const [slot, info] of Object.entries(all)) {
     const key = textureKey(slot as ArtSlot);
@@ -163,8 +174,7 @@ export function registerArtFrames(scene: Phaser.Scene) {
  */
 export function mapAnchor(scene: Phaser.Scene, slot: ArtSlot, mapName: string) {
   const data = scene.cache.json.get('mapAnchors') as
-    | { images: Record<string, { footX: number; footY: number }>; bodyHeight: Record<string, number> }
-    | undefined;
+    { images: Record<string, { footX: number; footY: number }>; bodyHeight: Record<string, number> } | undefined;
   const foot = data?.images[slot];
   return foot ? { ...foot, bodyHeight: data!.bodyHeight[mapName] as number | undefined } : null;
 }
@@ -204,16 +214,7 @@ export function addPaperGrain(scene: Phaser.Scene) {
 }
 
 /** 把一张图等比缩放塞进 maxW × maxH 的框里；没有这张图就返回 null */
-export function placeArt(
-  scene: Phaser.Scene,
-  slot: ArtSlot,
-  x: number,
-  y: number,
-  maxW: number,
-  maxH: number,
-  originX = 0.5,
-  originY = 1,
-) {
+export function placeArt(scene: Phaser.Scene, slot: ArtSlot, x: number, y: number, maxW: number, maxH: number, originX = 0.5, originY = 1) {
   if (!hasArt(scene, slot)) return null;
   const img = scene.add.image(x, y, textureKey(slot)).setOrigin(originX, originY);
   img.setScale(Math.min(maxW / img.width, maxH / img.height));

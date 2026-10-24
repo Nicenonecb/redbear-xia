@@ -113,8 +113,8 @@ export class UIScene extends Phaser.Scene {
   }
 
   /** Boss 名牌 */
-  bossCard(name = '胖虎', title = '山大王') {
-    this.overlays.push(new BossCard(this, 'card_boss_pangHu', title, name));
+  bossCard(name = '胖虎', title = '山大王', art: ArtSlot = 'card_boss_pangHu') {
+    this.overlays.push(new BossCard(this, art, title, name));
   }
 
   /**

@@ -1,4 +1,5 @@
 import { STAGES, stageFor } from './stages';
+import { WEAPONS } from './progression';
 import type { RunState } from './run';
 
 /**
@@ -58,8 +59,32 @@ export function loadRun(): RunState | null {
     const data = JSON.parse(raw);
     if (data?.version !== VERSION) return null;
     const r = data.run;
-    if (!r || !Number.isInteger(r.stage) || !STAGES[r.stage] || !Number.isInteger(r.step) || r.step < 0 || r.step > STAGES[r.stage].steps.length) return null;
+    if (
+      !r ||
+      !Number.isInteger(r.stage) ||
+      !STAGES[r.stage] ||
+      !Number.isInteger(r.step) ||
+      r.step < 0 ||
+      r.step > STAGES[r.stage].steps.length
+    )
+      return null;
     if (!['wenShaohua', 'yuWuxia'].includes(r.hero) || !Number.isFinite(r.hp) || r.hp <= 0) return null;
+    if (!['level', 'exp', 'pendingLevelUps', 'coins'].every((k) => Number.isInteger(r[k]) && r[k] >= 0) || r.level < 1) return null;
+    if (!r.stats || !['attack', 'vitality', 'agility'].every((k) => Number.isInteger(r.stats[k]) && r.stats[k] >= 0)) return null;
+    if (
+      !r.weapon ||
+      !Number.isInteger(r.weapon.tier) ||
+      !WEAPONS[r.hero as keyof typeof WEAPONS][r.weapon.tier] ||
+      !Number.isInteger(r.weapon.refine) ||
+      r.weapon.refine < 0 ||
+      r.weapon.refine > 3
+    )
+      return null;
+    if (
+      typeof r.rescueUsed !== 'boolean' ||
+      (r.seenEnemies && (!Array.isArray(r.seenEnemies) || !r.seenEnemies.every((id: unknown) => typeof id === 'string')))
+    )
+      return null;
     return data.run as RunState;
   } catch {
     return null;
@@ -75,7 +100,15 @@ export function describeSave(run: RunState) {
   const stage = stageFor(run);
   const step = stage.steps[run.step] ?? { kind: 'letter' };
   const where =
-    step.kind === 'room' ? stage.rooms[step.room].name : step.kind === 'shop' ? '任新野的茶摊' : step.kind === 'boss' ? '胖虎山寨' : '红熊的信';
+    step.kind === 'room'
+      ? stage.rooms[step.room].name
+      : step.kind === 'shop'
+        ? '任新野的茶摊'
+        : step.kind === 'boss'
+          ? ['胖虎山寨', '鲍金梁擂台', '彰化天行宫'][run.stage]
+          : run.stage === 2
+            ? '山巅通关'
+            : '红熊的信';
   const who = run.hero === 'wenShaohua' ? '温少华' : '于无瑕';
   return `${who} · ${stage.name} · ${where} · 第 ${run.level} 重 · ${run.coins} 文`;
 }

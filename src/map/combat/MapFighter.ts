@@ -94,7 +94,10 @@ export class MapFighter extends MapActor {
     if (this.invulnerable) return;
     this.hp = Math.max(0, this.hp - hit.damage);
     const protectedByCharm = this.hp === 0 && this.onLethal?.();
-    if (protectedByCharm) { this.hp=1; this.mercyFrames=120; }
+    if (protectedByCharm) {
+      this.hp = 1;
+      this.mercyFrames = 120;
+    }
     if (!protectedByCharm && this.rescueBelow > 0 && this.hp < this.maxHp * this.rescueBelow) {
       this.hp = Math.max(1, this.hp);
       this.rescueBelow = 0;

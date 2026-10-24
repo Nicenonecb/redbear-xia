@@ -9,6 +9,7 @@ import { ENEMIES, ENEMY_INTROS, type EnemyId } from '../characters/enemies';
 import { HEROES, type HeroEntry } from '../characters/heroes';
 import type { GroundArea, MoveEvent } from '../combat/moveTable';
 import type { SpawnDef } from '../game/chapter1';
+import { STAGE_BALANCE } from '../game/difficulty';
 import { advanceRun } from '../game/flow';
 import { PROGRESSION, RESCUE_LINES, type StatId } from '../game/progression';
 import { applyLevelUp, endRun, gainExp, getRun, runStats, startRun, type RunState } from '../game/run';
@@ -102,7 +103,8 @@ export class MapScene extends Phaser.Scene {
   /** 暂停的原因（念台词、选升级、救场演出）；有任何一个逻辑帧都不推进 */
   pauses = new Set<string>();
   /** 正在念的一串台词，念完做 then */
-  talking: { lines: string[]; then: () => void; where: () => ScreenPoint; portrait?: { slot: ArtSlot; side: 'left' | 'right' } } | null = null;
+  talking: { lines: string[]; then: () => void; where: () => ScreenPoint; portrait?: { slot: ArtSlot; side: 'left' | 'right' } } | null =
+    null;
   private renSprite!: MapSprite;
   /** 铺满屏幕、跟着镜头走的那几层地面 */
   private groundLayers: Phaser.GameObjects.TileSprite[] = [];
@@ -133,8 +135,12 @@ export class MapScene extends Phaser.Scene {
   private over = false;
   private voice!: VoicePlayer;
   controller!: BossController;
-  get boss() { return this.controller?.actor; }
-  get stage() { return stageFor(this.run); }
+  get boss() {
+    return this.controller?.actor;
+  }
+  get stage() {
+    return stageFor(this.run);
+  }
 
   constructor() {
     super('Map');
@@ -149,7 +155,9 @@ export class MapScene extends Phaser.Scene {
     if (!queueMapArt(this, hero)) return;
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
-    const label = this.add.text(cx, cy - 40, '研墨中……', { fontFamily: FONT_BRUSH, fontSize: '30px', color: CSS_COLORS.ink }).setOrigin(0.5);
+    const label = this.add
+      .text(cx, cy - 40, '研墨中……', { fontFamily: FONT_BRUSH, fontSize: '30px', color: CSS_COLORS.ink })
+      .setOrigin(0.5);
     const bar = this.add.graphics();
     const draw = (p: number) => {
       bar.clear();
@@ -188,6 +196,11 @@ export class MapScene extends Phaser.Scene {
     this.drawGround();
 
     this.scatterProps();
+    if (this.run.stage === 2)
+      for (let i = 0; i < 9; i++) {
+        const cloud = this.add.ellipse(1100 + i * 530, 2200 - i * 155, 800, 180, 0xf6f2e9, 0.16).setDepth(8000);
+        this.tweens.add({ targets: cloud, x: cloud.x + 170, alpha: 0.3, duration: 7500 + i * 170, yoyo: true, repeat: -1 });
+      }
     this.walk = { path: M.path, pathWidth: M.pathWidth, areas: M.areas, lock: null, solids: [] };
     this.placeDecor();
     this.coins = [];
@@ -214,7 +227,28 @@ export class MapScene extends Phaser.Scene {
     this.player.rescueBelow = this.run.rescueUsed ? 0 : PROGRESSION.rescue.below;
     this.player.events.on('move', (e: MoveEvent) => this.onPlayerMove(e));
     this.player.events.on('rescue', () => this.rescue());
-    this.player.onLethal = () => { if (!this.run.heartCharm) return false; this.run.heartCharm=false; this.run.hp=1; saveRun(this.run); this.cameras.main.flash(220,255,235,120);sfx.play('ink');this.toast('护心符 · 碎',this.player.pos.x,this.player.pos.y-170);return true; };
+    this.player.onLethal = () => {
+      if (!this.run.heartCharm) return false;
+      this.run.heartCharm = false;
+      this.run.hp = 1;
+      saveRun(this.run);
+      this.cameras.main.flash(220, 255, 235, 120);
+      for (let i = 0; i < 8; i++) {
+        const shard = this.add.rectangle(this.player.pos.x, this.player.pos.y - 100, 6, 13, 0xe6bc55).setDepth(TOP_DEPTH);
+        this.tweens.add({
+          targets: shard,
+          x: shard.x + Math.cos((i * Math.PI) / 4) * 80,
+          y: shard.y + Math.sin((i * Math.PI) / 4) * 65,
+          angle: i * 80,
+          alpha: 0,
+          duration: 500,
+          onComplete: () => shard.destroy(),
+        });
+      }
+      sfx.play('ink');
+      this.toast('护心符 · 碎', this.player.pos.x, this.player.pos.y - 170);
+      return true;
+    };
     this.player.events.once('dead', () => this.onPlayerDead());
     const fallback = (this.run.hero === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia') as ArtSlot;
     this.sprite = new MapSprite(this, this.run.hero, fallback, HERO_HEIGHT, 70);
@@ -224,11 +258,24 @@ export class MapScene extends Phaser.Scene {
       .filter((a) => a.room !== undefined)
       .map((a) => new Encounter(this, a, this.stage.rooms[a.room!], this.walk, M.path, this.run.step > roomStepOf(this.stage, a.room!)));
     this.spawnRen();
-    this.controller = this.stage.boss === 'zhangHuatian' ? new ZhangBoss(this) : this.stage.boss === 'baoJinliang' ? new BaoBoss(this) : new PangHuBoss(this);
+    this.controller =
+      this.stage.boss === 'zhangHuatian'
+        ? new ZhangBoss(this)
+        : this.stage.boss === 'baoJinliang'
+          ? new BaoBoss(this)
+          : new PangHuBoss(this);
+    this.controller.events.on('overlay', (effect: Overlay) => this.overlays.push(effect));
+    this.controller.events.on('ring', (ring: RingWave) => this.rings.push(ring));
     this.controller.spawn();
-    if (this.stage.boss !== 'pangHu') this.boss?.events.on('move', (e: MoveEvent) => {
-      if(e.type === 'sfx') { sfx.play(e.name);const b=this.boss!;const hit=b.runner.move?.hit;if(hit)this.overlays.push(new SlashFx(this,{...b.pos},b.facing,{...areaOf(hit),heavy:true})); }
-    });
+    if (this.stage.boss !== 'pangHu')
+      this.boss?.events.on('move', (e: MoveEvent) => {
+        if (e.type === 'sfx') {
+          sfx.play(e.name);
+          const b = this.boss!;
+          const hit = b.runner.move?.hit;
+          if (hit) this.overlays.push(new SlashFx(this, { ...b.pos }, b.facing, { ...areaOf(hit), heavy: true }));
+        }
+      });
     this.controller.events.on('yield', () => this.win(`${this.stage.name} · 放行`));
     this.controller.events.on('defeated', () => this.win(`${this.stage.name} · 过关`));
 
@@ -297,9 +344,9 @@ export class MapScene extends Phaser.Scene {
     }
     this.watchPlayerMove();
 
-    const flags = enemies.filter(e => e.def.id === 'bannerman' && !e.dead && e.hurtFrames === 0);
+    const flags = enemies.filter((e) => e.def.id === 'bannerman' && !e.dead && e.hurtFrames === 0);
     for (const e of enemies) {
-      e.attackSpeed = flags.some(f => f !== e && Math.hypot(f.pos.x-e.pos.x,f.pos.y-e.pos.y)<400) ? 1.2 : 1;
+      e.attackSpeed = flags.some((f) => f !== e && Math.hypot(f.pos.x - e.pos.x, f.pos.y - e.pos.y) < 400) ? 1.2 : 1;
       e.tick();
       this.reportHits(e.resolveHits([p]));
       e.separateFrom(enemies);
@@ -535,9 +582,26 @@ export class MapScene extends Phaser.Scene {
 
   /** 遭遇战刷出一个山贼：一刷出来就盯上主角；这一局第一次见到的还弹登场提示 */
   spawnEnemy(sp: SpawnDef, at: Pt) {
-    const def = ENEMIES[sp.enemy];
-    const enemy = new MapEnemy(at.x, at.y, def, this.player, this.walk, `${this.run.step}-${this.enemies.length}-${this.time.now}`);
-    const look: MapLook = LOOKS[def.id] ?? LOOKS[def.look];
+    const base = ENEMIES[sp.enemy];
+    const balance = STAGE_BALANCE[this.run.stage];
+    const def = {
+      ...base,
+      hp: Math.round(base.hp * balance.hp),
+      exp: Math.round(base.exp * balance.exp),
+      coins: base.coins.map((c) => Math.round(c * balance.coins)) as [number, number],
+    };
+    const enemy = new MapEnemy(
+      at.x,
+      at.y,
+      def,
+      this.player,
+      this.walk,
+      `${this.run.stage}-${this.run.step}-${this.enemies.length}-${this.run.seed ?? this.time.now}`,
+    );
+    enemy.damageScale = balance.damage;
+    const baseLook: MapLook = LOOKS[def.id] ?? LOOKS[def.look];
+    const portrait = `portrait_${def.id}` as ArtSlot;
+    const look = { ...baseLook, fallback: hasArt(this, portrait) ? portrait : baseLook.fallback };
     const sprite = new MapSprite(this, look.mapName, look.fallback, look.height, look.shadow);
     enemy.events.on('move', (e: MoveEvent) => this.onEnemyMove(enemy, e));
     enemy.events.once('dead', () => this.onEnemyDead(enemy));
@@ -547,14 +611,27 @@ export class MapScene extends Phaser.Scene {
     this.introduce(sp.enemy);
   }
 
-  clearBossAdds() { for (const e of this.enemies) { e.enemy.hp = 0; e.sprite.destroy(); } this.enemies = []; for (const p of this.projectiles) if(p.team === 'enemy') p.destroy(); for(const r of this.rings) if(r.team === 'enemy') r.destroy(); }
+  clearBossAdds() {
+    for (const e of this.enemies) {
+      e.enemy.hp = 0;
+      e.sprite.destroy();
+    }
+    this.enemies = [];
+    for (const p of this.projectiles) if (p.team === 'enemy') p.destroy();
+    for (const r of this.rings) if (r.team === 'enemy') r.destroy();
+  }
 
   private introduce(id: EnemyId) {
     const seen = (this.run.seenEnemies ??= []);
     if (seen.includes(id)) return;
     seen.push(id);
     const intro = ENEMY_INTROS[id];
-    this.ui.introCard(intro.slot, ENEMIES[id].name, intro.tip, intro.tier);
+    this.ui.introCard(
+      hasArt(this, `portrait_${id}` as ArtSlot) ? (`portrait_${id}` as ArtSlot) : intro.slot,
+      ENEMIES[id].name,
+      intro.tip,
+      intro.tier,
+    );
   }
 
   // ---------------- 任新野的茶摊 ----------------
@@ -612,7 +689,18 @@ export class MapScene extends Phaser.Scene {
       const spec = enemy.def.projectile;
       const { x, y } = enemy.pos;
       const f = enemy.facing;
-      this.projectiles.push(new MapProjectile(this, x + f.x * 24, y + f.y * 24, { ...f }, spec, 'enemy', drawThrowingKnife(spec.hit.box.w), 1, 70));
+      const draw =
+        enemy.def.id === 'archer'
+          ? (g: Phaser.GameObjects.Graphics) => {
+              g.lineStyle(3, COLORS.ink);
+              g.lineBetween(-25, 0, 25, 0);
+              g.fillStyle(COLORS.ink);
+              g.fillTriangle(30, 0, 19, -5, 19, 5);
+              g.lineBetween(-18, 0, -25, -5);
+              g.lineBetween(-18, 0, -25, 5);
+            }
+          : drawThrowingKnife(spec.hit.box.w);
+      this.projectiles.push(new MapProjectile(this, x + f.x * 24, y + f.y * 24, { ...f }, spec, 'enemy', draw, enemy.damageScale, 70));
     }
   }
 
@@ -622,7 +710,12 @@ export class MapScene extends Phaser.Scene {
     const { x, y } = enemy.pos;
     sfx.play('ink');
     this.overlays.push(new InkSplat(this, x, y - enemy.height / 2, def.tier === 'brute' ? 220 : 140, 0.85, y + 2));
-    let total = Phaser.Math.Between(def.coins[0], def.coins[1]);
+    let total = this.run.seed
+      ? new Phaser.Math.RandomDataGenerator([`${this.run.seed}-${this.run.stage}-${this.run.step}-${def.id}-${x}-${y}`]).between(
+          def.coins[0],
+          def.coins[1],
+        )
+      : Phaser.Math.Between(def.coins[0], def.coins[1]);
     while (total > 0) {
       const value = Math.min(total, total >= 10 ? 5 : 1);
       total -= value;
@@ -691,7 +784,7 @@ export class MapScene extends Phaser.Scene {
     if (!r.said && r.t >= RESCUE_LINE_AT) {
       r.said = true;
       const line = Phaser.Math.Between(0, RESCUE_LINES.length - 1);
-      void this.voice.play(`redBear_rescue_${line+1}`, RESCUE_LINES[line]);
+      void this.voice.play(`redBear_rescue_${line + 1}`, RESCUE_LINES[line]);
       this.ui.say(RESCUE_LINES[line], 1100, () => this.headOf(this.player.pos, HERO_HEIGHT), {
         slot: 'portrait_redBear',
         side: 'left',
@@ -735,7 +828,14 @@ export class MapScene extends Phaser.Scene {
     const gl = this.glints;
     g.clear();
     gl.clear();
-    for (const {enemy:e} of this.enemies) if(e.def.id==='bannerman'&&!e.dead){g.lineStyle(3,0xd1ab40,.7);g.strokeEllipse(e.pos.x,e.pos.y,800,520);g.lineBetween(e.pos.x,e.pos.y-20,e.pos.x,e.pos.y-200);g.fillStyle(0xd1ab40,.8);g.fillTriangle(e.pos.x,e.pos.y-200,e.pos.x+65,e.pos.y-170,e.pos.x,e.pos.y-145);}
+    for (const { enemy: e } of this.enemies)
+      if (e.def.id === 'bannerman' && !e.dead) {
+        g.lineStyle(3, 0xd1ab40, 0.7);
+        g.strokeEllipse(e.pos.x, e.pos.y, 800, 520);
+        g.lineBetween(e.pos.x, e.pos.y - 20, e.pos.x, e.pos.y - 200);
+        g.fillStyle(0xd1ab40, 0.8);
+        g.fillTriangle(e.pos.x, e.pos.y - 200, e.pos.x + 65, e.pos.y - 170, e.pos.x, e.pos.y - 145);
+      }
     for (const { enemy: e, look } of this.enemies) {
       const m = e.runner.move;
       if (!m || e.dead || e.runner.phase !== 'startup') continue;
@@ -809,7 +909,20 @@ export class MapScene extends Phaser.Scene {
     for (const d of M.decor) {
       const art = placeMapArt(this, d.slot, d.at.x, d.at.y, d.width);
       if (!art) {
-        if (this.run.stage > 0) { const g=this.add.graphics().setDepth(d.at.y);g.lineStyle(4, COLORS.ink,.65);g.strokeRect(d.at.x-d.width/2,d.at.y-110,d.width,110);this.add.text(d.at.x,d.at.y-60, d.slot.includes('tent')?'军帐':d.slot.includes('banner')?'彰':d.slot.includes('gate')?'宫门':'遗迹',{fontFamily:FONT_BRUSH,fontSize:'26px',color:CSS_COLORS.ink}).setOrigin(.5).setDepth(d.at.y+1); }
+        if (this.run.stage > 0) {
+          const g = this.add.graphics().setDepth(d.at.y);
+          g.lineStyle(4, COLORS.ink, 0.65);
+          g.strokeRect(d.at.x - d.width / 2, d.at.y - 110, d.width, 110);
+          this.add
+            .text(
+              d.at.x,
+              d.at.y - 60,
+              d.slot.includes('tent') ? '军帐' : d.slot.includes('banner') ? '彰' : d.slot.includes('gate') ? '宫门' : '遗迹',
+              { fontFamily: FONT_BRUSH, fontSize: '26px', color: CSS_COLORS.ink },
+            )
+            .setOrigin(0.5)
+            .setDepth(d.at.y + 1);
+        }
         continue;
       }
       if (d.flat) art.img.setDepth(-2990);
@@ -837,17 +950,29 @@ export class MapScene extends Phaser.Scene {
    */
   private drawGround() {
     const M = this.stage.map;
-    const ground = (slot: string, fallback: ArtSlot): ArtSlot => hasArt(this, slot as ArtSlot) ? slot as ArtSlot : fallback;
-    const forest = ground(this.run.stage === 1 ? 'ground_pine_forest' : this.run.stage === 2 ? 'ground_snow_rock' : 'ground_forest', 'ground_forest');
-    const path = ground(this.run.stage === 1 ? 'ground_mountain_path' : this.run.stage === 2 ? 'ground_stone_stairs' : 'ground_stone', 'ground_stone');
-    const arena = ground(this.run.stage === 1 ? 'ground_drill_yard' : this.run.stage === 2 ? 'ground_palace' : 'ground_camp', 'ground_camp');
+    const ground = (slot: string, fallback: ArtSlot): ArtSlot => (hasArt(this, slot as ArtSlot) ? (slot as ArtSlot) : fallback);
+    const forest = ground(
+      this.run.stage === 1 ? 'ground_pine_forest' : this.run.stage === 2 ? 'ground_snow_rock' : 'ground_forest',
+      'ground_forest',
+    );
+    const path = ground(
+      this.run.stage === 1 ? 'ground_mountain_path' : this.run.stage === 2 ? 'ground_stone_stairs' : 'ground_stone',
+      'ground_stone',
+    );
+    const arena = ground(
+      this.run.stage === 1 ? 'ground_drill_yard' : this.run.stage === 2 ? 'ground_palace' : 'ground_camp',
+      'ground_camp',
+    );
     // 平铺的地面不铺满整张地图（那样每层都要一张 6400×4400 的大贴图，几百兆显存），
     // 只铺一块屏幕大小的，钉在镜头上；镜头走到哪，纹理就跟着挪到哪，看起来就是铺满的
     const layers: { t: Phaser.GameObjects.TileSprite; region?: Phaser.Geom.Rectangle }[] = [];
     const tiled = (key: string, tile: number, depth: number, region?: Phaser.Geom.Rectangle) => {
       const w = region?.width ?? GAME_WIDTH + 64;
       const h = region?.height ?? GAME_HEIGHT + 64;
-      const t = this.add.tileSprite(region?.x ?? 0, region?.y ?? 0, w, h, key).setOrigin(0).setDepth(depth);
+      const t = this.add
+        .tileSprite(region?.x ?? 0, region?.y ?? 0, w, h, key)
+        .setOrigin(0)
+        .setDepth(depth);
       // 按"原图"的宽来算（t.frame 是这块平铺自己的画布，大小跟着平铺走，不能用）
       t.setTileScale(tile / this.textures.getFrame(key).width);
       if (!region) layers.push({ t });
@@ -884,7 +1009,12 @@ export class MapScene extends Phaser.Scene {
         const pad = M.pathWidth / 2 + 4;
         const x0 = Math.floor(Math.min(a.x, b.x) - pad);
         const y0 = Math.floor(Math.min(a.y, b.y) - pad);
-        const region = new Phaser.Geom.Rectangle(x0, y0, Math.ceil(Math.abs(a.x - b.x) + pad * 2), Math.ceil(Math.abs(a.y - b.y) + pad * 2));
+        const region = new Phaser.Geom.Rectangle(
+          x0,
+          y0,
+          Math.ceil(Math.abs(a.x - b.x) + pad * 2),
+          Math.ceil(Math.abs(a.y - b.y) + pad * 2),
+        );
         const shape = this.make.graphics({}, false);
         shape.lineStyle(M.pathWidth, 0xffffff);
         shape.lineBetween(a.x, a.y, b.x, b.y);
@@ -913,7 +1043,6 @@ export class MapScene extends Phaser.Scene {
     }
   }
 
-
   /**
    * 种竹子：先沿着能走的边界（石板路两边、每片空地一圈）密密种一排，像一堵墙；
    * 再往外按网格撒满，格子里随机挪一挪，偶尔夹一块山石。竹子只是画面，挡人靠 walkable.ts
@@ -923,7 +1052,10 @@ export class MapScene extends Phaser.Scene {
     const rng = new Phaser.Math.RandomDataGenerator([M.seed]);
     const clearOfPath = M.pathWidth / 2 + WALK_MARGIN + BAMBOO_GAP;
     const clear = (x: number, y: number, slack = 0) =>
-      x > 0 && y > 0 && x < M.width && y < M.height &&
+      x > 0 &&
+      y > 0 &&
+      x < M.width &&
+      y < M.height &&
       distToPath(x, y, M.path) >= clearOfPath - slack &&
       !M.areas.some((a) => Phaser.Math.Distance.Between(x, y, a.center.x, a.center.y) < a.radius + BAMBOO_GAP - 10 - slack);
 
@@ -971,9 +1103,27 @@ export class MapScene extends Phaser.Scene {
    * 没有就用代码画的占位
    */
   private placeProp(rng: Phaser.Math.RandomDataGenerator, x: number, y: number, rock: boolean) {
-    const choices: [ArtSlot, number][] = !rock && this.run.stage > 0 ? [['prop_pine', 300], ['prop_rock_big', 230]] : rock
-      ? [['prop_rock_big', 230], ['prop_rock_small', 150], ['prop_bush', 170], ['prop_stump', 140], ['prop_pine', 300]]
-      : [['prop_bamboo_big', 250], ['prop_bamboo_big', 250], ['prop_bamboo_mid', 220], ['prop_bamboo_mid', 220], ['prop_bamboo_small', 150]];
+    const choices: [ArtSlot, number][] =
+      !rock && this.run.stage > 0
+        ? [
+            ['prop_pine', 300],
+            ['prop_rock_big', 230],
+          ]
+        : rock
+          ? [
+              ['prop_rock_big', 230],
+              ['prop_rock_small', 150],
+              ['prop_bush', 170],
+              ['prop_stump', 140],
+              ['prop_pine', 300],
+            ]
+          : [
+              ['prop_bamboo_big', 250],
+              ['prop_bamboo_big', 250],
+              ['prop_bamboo_mid', 220],
+              ['prop_bamboo_mid', 220],
+              ['prop_bamboo_small', 150],
+            ];
     const [slot, width] = rng.pick(choices);
     const art = placeMapArt(this, slot, x, y, width * rng.realInRange(0.85, 1.12));
     if (art) {
@@ -983,14 +1133,24 @@ export class MapScene extends Phaser.Scene {
     }
     const size = rock ? ROCK_SIZE : BAMBOO_SIZE;
     const key = rock ? `gen:rock${rng.between(0, ROCK_VARIANTS - 1)}` : `gen:bamboo${rng.between(0, BAMBOO_VARIANTS - 1)}`;
-    const img = this.add.image(x, y, key).setOrigin(0.5, size.footY / size.h).setDepth(y);
+    const img = this.add
+      .image(x, y, key)
+      .setOrigin(0.5, size.footY / size.h)
+      .setDepth(y);
     img.setScale((size.w / img.width) * rng.realInRange(0.85, 1.1));
     if (rng.frac() < 0.5) img.setFlipX(true);
     // 竹子只算竿和叶子那一块（贴图两边留白不算），山石算整块
     const w = img.displayWidth * (rock ? 0.8 : 0.6);
-    this.props.push({ img, rect: new Phaser.Geom.Rectangle(x - w / 2, y - img.displayHeight * (size.footY / size.h), w, img.displayHeight * (size.footY / size.h)) });
+    this.props.push({
+      img,
+      rect: new Phaser.Geom.Rectangle(
+        x - w / 2,
+        y - img.displayHeight * (size.footY / size.h),
+        w,
+        img.displayHeight * (size.footY / size.h),
+      ),
+    });
   }
-
 }
 
 /** 在地上画一个压扁的扇形（判定范围、红色预警） */
@@ -1003,6 +1163,10 @@ export function fillSector(g: Phaser.GameObjects.Graphics, at: Vec, facing: Vec,
     const a = base - half + (2 * half * i) / steps;
     pts.push({ x: at.x + Math.cos(a) * area.reach, y: at.y + Math.sin(a) * area.reach * GROUND_SQUASH });
   }
-  if (area.from) for(let i=steps;i>=0;i--){ const a=base-half+(2*half*i)/steps;pts.push({x:at.x+Math.cos(a)*area.from,y:at.y+Math.sin(a)*area.from*GROUND_SQUASH}); }
+  if (area.from)
+    for (let i = steps; i >= 0; i--) {
+      const a = base - half + (2 * half * i) / steps;
+      pts.push({ x: at.x + Math.cos(a) * area.from, y: at.y + Math.sin(a) * area.from * GROUND_SQUASH });
+    }
   g.fillPoints(pts, true);
 }

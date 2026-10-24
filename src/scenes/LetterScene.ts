@@ -29,8 +29,15 @@ export class LetterScene extends Phaser.Scene {
   }
 
   private voice!: VoicePlayer;
-  private voiceId() { const r=getRun()!; return r.stage === 2 ? `redBear_ending_${r.hero === 'wenShaohua' ? 'wen' : 'yu'}` : `redBear_letter_${r.stage+1}_${r.hero === 'wenShaohua' ? 'wen' : 'yu'}${r.stage===0 ? r.paidOff ? '_bribe' : '_sword' : ''}`; }
-  preload() { queueVoice(this, [this.voiceId()]); }
+  private voiceId() {
+    const r = getRun()!;
+    return r.stage === 2
+      ? `redBear_ending_${r.hero === 'wenShaohua' ? 'wen' : 'yu'}`
+      : `redBear_letter_${r.stage + 1}_${r.hero === 'wenShaohua' ? 'wen' : 'yu'}${r.stage === 0 ? (r.paidOff ? '_bribe' : '_sword') : ''}`;
+  }
+  preload() {
+    queueVoice(this, [this.voiceId()]);
+  }
   create() {
     const run = getRun();
     this.letter = run ? stageFor(run).letters[run.hero][run.paidOff ? 'bribe' : 'sword'] : '';
@@ -38,7 +45,8 @@ export class LetterScene extends Phaser.Scene {
     void this.voice.play(this.voiceId(), this.letter);
     this.elapsed = 0;
     this.finished = false;
-    this.ending = false; this.leaving = false;
+    this.ending = false;
+    this.leaving = false;
 
     if (!coverArt(this, 'bg_letter')) {
       drawInkMountains(this, { width: GAME_WIDTH, horizon: 420, bottom: GAME_HEIGHT, layers: 3, seed: 'letter' });
@@ -64,7 +72,8 @@ export class LetterScene extends Phaser.Scene {
       fontFamily: FONT_BRUSH,
       fontSize: '30px',
       color: CSS_COLORS.ink,
-      lineSpacing: 16, wordWrap: { width: 690 },
+      lineSpacing: 16,
+      wordWrap: { width: 690 },
     });
 
     this.input.keyboard!.on('keydown', () => this.next());
@@ -86,11 +95,14 @@ export class LetterScene extends Phaser.Scene {
       this.elapsed = this.letter.length * CHAR_MS;
       return;
     }
-    if (!this.ending && hasArt(this, 'ending_chapter1')) {
+    if (!this.ending && getRun()?.stage === 0 && hasArt(this, 'ending_chapter1')) {
       this.showEnding();
       return;
     }
-    if (this.leaving) return; this.leaving = true; this.voice.stop(); advanceRun(this);
+    if (this.leaving) return;
+    this.leaving = true;
+    this.voice.stop();
+    advanceRun(this);
   }
 
   private showEnd() {
@@ -99,9 +111,15 @@ export class LetterScene extends Phaser.Scene {
     this.add.text(840, 470, '—— 红熊', { fontFamily: FONT_BRUSH, fontSize: '30px', color: CSS_COLORS.ink }).setOrigin(1, 0);
     placeArt(this, 'seal_signature', 880, 488, 58, 58, 0.5, 0.5)?.setAngle(-6);
     // 有结尾插画时"第一章 · 完"放到插画页上
-    if (hasArt(this, 'ending_chapter1')) {
+    if (getRun()?.stage === 0 && hasArt(this, 'ending_chapter1')) {
       const hint = this.add
-        .text(520, 600, '按任意键继续', { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.ink, stroke: CSS_COLORS.paper, strokeThickness: 5 })
+        .text(520, 600, '按任意键继续', {
+          fontFamily: FONT_BRUSH,
+          fontSize: '22px',
+          color: CSS_COLORS.ink,
+          stroke: CSS_COLORS.paper,
+          strokeThickness: 5,
+        })
         .setOrigin(0.5)
         .setAlpha(0);
       this.tweens.add({ targets: hint, alpha: 0.8, duration: 900, delay: 400 });
@@ -128,7 +146,10 @@ export class LetterScene extends Phaser.Scene {
     page.add([
       this.add.text(GAME_WIDTH - 90, 110, `${stageFor(getRun()!).name} · 完`, { ...style, fontSize: '52px' }).setOrigin(1, 0),
       this.add.text(GAME_WIDTH - 92, 186, '继续登山', { ...style, fontSize: '26px' }).setOrigin(1, 0),
-      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 40, '按任意键继续', { ...style, fontSize: '22px' }).setOrigin(0.5).setAlpha(0.8),
+      this.add
+        .text(GAME_WIDTH / 2, GAME_HEIGHT - 40, '按任意键继续', { ...style, fontSize: '22px' })
+        .setOrigin(0.5)
+        .setAlpha(0.8),
     ]);
     this.tweens.add({ targets: page, alpha: 1, duration: 900 });
   }

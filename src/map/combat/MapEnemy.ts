@@ -99,15 +99,28 @@ export class MapEnemy extends MapActor {
     }
 
     if (this.evadeCooldown > 0) this.evadeCooldown--;
-    if (this.def.id === 'swordsman' && !this.runner.move && this.target.runner.phase === 'startup' && !this.evadeCooldown && this.distToTarget < 180) {
+    if (
+      this.def.id === 'swordsman' &&
+      !this.runner.move &&
+      this.target.runner.phase === 'startup' &&
+      !this.evadeCooldown &&
+      this.distToTarget < 180
+    ) {
       this.evadeCooldown = 100;
-      if(this.rng.frac() < .35) { this.vel = {x:-this.facing.x*500,y:-this.facing.y*500};this.hurtFrames=12;return this.integrate(); }
+      if (this.rng.frac() < 0.35) {
+        this.vel = { x: -this.facing.x * 500, y: -this.facing.y * 500 };
+        this.hurtFrames = 12;
+        return this.integrate();
+      }
     }
     const current = this.runner.move;
     if (current) {
       this.advanceMove();
       this.hasteFrame += this.attackSpeed - 1;
-      if (this.hasteFrame >= 1) { this.hasteFrame--; this.advanceMove(); }
+      if (this.hasteFrame >= 1) {
+        this.hasteFrame--;
+        this.advanceMove();
+      }
       if (this.runner.move) {
         this.applyMoveMotion();
         return this.integrate();

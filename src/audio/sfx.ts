@@ -23,7 +23,10 @@ export class Sfx {
   muted = false;
   private duckers = 0;
   readonly listeners = new Set<() => void>();
-  duck(on: boolean) { this.duckers = Math.max(0, this.duckers + (on ? 1 : -1)); this.applyVolume(); }
+  duck(on: boolean) {
+    this.duckers = Math.max(0, this.duckers + (on ? 1 : -1));
+    this.applyVolume();
+  }
 
   constructor() {
     try {
@@ -109,10 +112,13 @@ export class Sfx {
     lfo2.start();
     let knock = 0;
     const scheduleKnock = () => {
-      knock = window.setTimeout(() => {
-        this.play('bamboo-knock');
-        scheduleKnock();
-      }, 4000 + Math.random() * 6000);
+      knock = window.setTimeout(
+        () => {
+          this.play('bamboo-knock');
+          scheduleKnock();
+        },
+        4000 + Math.random() * 6000,
+      );
     };
     scheduleKnock();
     this.ambient = {
@@ -136,7 +142,11 @@ export class Sfx {
   // ---- 合成用的小积木 ----
 
   /** 一段滤过的噪声：挥砍、风、撞击的"沙"声 */
-  noiseBurst(t: number, dur: number, opts: { type: BiquadFilterType; from: number; to?: number; q?: number; gain: number; attack?: number }) {
+  noiseBurst(
+    t: number,
+    dur: number,
+    opts: { type: BiquadFilterType; from: number; to?: number; q?: number; gain: number; attack?: number },
+  ) {
     const ctx = this.ctx!;
     const src = ctx.createBufferSource();
     src.buffer = this.noise;
@@ -179,7 +189,7 @@ export class Sfx {
 
   private save() {
     this.applyVolume();
-    this.listeners.forEach(fn => fn());
+    this.listeners.forEach((fn) => fn());
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({ volume: this.volume, muted: this.muted }));
     } catch {
