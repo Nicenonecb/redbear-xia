@@ -12,7 +12,7 @@ export function advanceRun(scene: Phaser.Scene) {
   let next = { key: 'Title' };
   if (run) {
     if (run.step === stageFor(run).steps.length) {
-      run.stage++; run.step = 0; run.rescueUsed = false;
+      run.stage++; run.step = 0; run.rescueUsed = false; run.paidOff = false;
       if (!STAGES[run.stage]) endRun();
     } else run.step++;
     next = sceneForStep(run.step, run.stage);

@@ -4,6 +4,7 @@ import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
 import { addPaperGrain, coverArt, hasArt, placeArt } from '../art/slots';
 import { stageFor } from '../game/stages';
+import { VoicePlayer, queueVoice } from '../audio/voice';
 import { advanceRun } from '../game/flow';
 import { getRun } from '../game/run';
 
@@ -21,17 +22,23 @@ export class LetterScene extends Phaser.Scene {
   private finished = false;
   /** 已经翻到结尾插画页 */
   private ending = false;
+  private leaving = false;
 
   constructor() {
     super('Letter');
   }
 
+  private voice!: VoicePlayer;
+  private voiceId() { const r=getRun()!; return r.stage === 2 ? `redBear_ending_${r.hero === 'wenShaohua' ? 'wen' : 'yu'}` : `redBear_letter_${r.stage+1}_${r.hero === 'wenShaohua' ? 'wen' : 'yu'}${r.stage===0 ? r.paidOff ? '_bribe' : '_sword' : ''}`; }
+  preload() { queueVoice(this, [this.voiceId()]); }
   create() {
     const run = getRun();
-    this.letter = run ? stageFor(run).letters[run.hero] : '';
+    this.letter = run ? stageFor(run).letters[run.hero][run.paidOff ? 'bribe' : 'sword'] : '';
+    this.voice = new VoicePlayer(this);
+    void this.voice.play(this.voiceId(), this.letter);
     this.elapsed = 0;
     this.finished = false;
-    this.ending = false;
+    this.ending = false; this.leaving = false;
 
     if (!coverArt(this, 'bg_letter')) {
       drawInkMountains(this, { width: GAME_WIDTH, horizon: 420, bottom: GAME_HEIGHT, layers: 3, seed: 'letter' });
@@ -57,7 +64,7 @@ export class LetterScene extends Phaser.Scene {
       fontFamily: FONT_BRUSH,
       fontSize: '30px',
       color: CSS_COLORS.ink,
-      lineSpacing: 16,
+      lineSpacing: 16, wordWrap: { width: 690 },
     });
 
     this.input.keyboard!.on('keydown', () => this.next());
@@ -83,7 +90,7 @@ export class LetterScene extends Phaser.Scene {
       this.showEnding();
       return;
     }
-    advanceRun(this);
+    if (this.leaving) return; this.leaving = true; this.voice.stop(); advanceRun(this);
   }
 
   private showEnd() {

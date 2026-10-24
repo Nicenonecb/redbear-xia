@@ -21,6 +21,9 @@ export class Sfx {
   private ambient: { stop(): void } | null = null;
   volume = 0.7;
   muted = false;
+  private duckers = 0;
+  readonly listeners = new Set<() => void>();
+  duck(on: boolean) { this.duckers = Math.max(0, this.duckers + (on ? 1 : -1)); this.applyVolume(); }
 
   constructor() {
     try {
@@ -171,11 +174,12 @@ export class Sfx {
   }
 
   private applyVolume() {
-    if (this.master) this.master.gain.value = this.muted ? 0 : this.volume;
+    if (this.master) this.master.gain.value = this.muted ? 0 : this.volume * (this.duckers ? 0.5 : 1);
   }
 
   private save() {
     this.applyVolume();
+    this.listeners.forEach(fn => fn());
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({ volume: this.volume, muted: this.muted }));
     } catch {

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { sfx } from './audio/sfx';
 import { canvasSize, installSharpRendering, sharpCameraPlugin } from './render/sharp';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from './config';
+import { IntroScene } from './scenes/IntroScene';
 import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { GameScene } from './scenes/GameScene';
@@ -31,7 +32,7 @@ const game = new Phaser.Game({
   },
   plugins: { scene: [sharpCameraPlugin] },
   // 顺序就是画的顺序：界面层 UI 要排在大地图 Map 后面，才压在地图上面
-  scene: [BootScene, TitleScene, SelectScene, MapScene, UIScene, GameScene, RoomScene, ShopScene, PangHuScene, LetterScene],
+  scene: [BootScene, TitleScene, SelectScene, IntroScene, MapScene, UIScene, GameScene, RoomScene, ShopScene, PangHuScene, LetterScene],
 });
 
 installSharpRendering(game);

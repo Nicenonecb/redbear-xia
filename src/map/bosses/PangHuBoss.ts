@@ -1,3 +1,4 @@
+import { Captives } from '../Captives';
 import Phaser from 'phaser';
 import { COLORS } from '../../config';
 import type { ArtSlot } from '../../art/slots';
@@ -20,6 +21,7 @@ const BOSS_INTRO_RANGE = 560;
 export class PangHuBoss implements BossController {
   readonly events = new Phaser.Events.EventEmitter();
   boss: MapPangHu | null = null;
+  private captives?: Captives;
   private bossSprite!: MapSprite;
   private tigerSprite!: MapSprite;
   private bossIntro = false;
@@ -32,6 +34,7 @@ export class PangHuBoss implements BossController {
   afterRescue() { if (this.boss && ['fight', 'tiger'].includes(this.boss.stage) && this.host.run.coins > 0) this.offerBribe(); }
   dispose() { this.boss?.events.removeAllListeners(); this.events.removeAllListeners(); this.vortex?.stop(); this.bossSprite?.destroy(); this.tigerSprite?.destroy(); }
   spawn() {
+    if (this.host.run.stage === 0) this.captives = new Captives(this.host);
     const at = stageFor(this.host.run).map.boss;
     const boss = new MapPangHu(at.x, at.y, this.host.player, this.host.walk);
     this.boss = boss;
@@ -58,7 +61,7 @@ export class PangHuBoss implements BossController {
     boss.facing = dirTo(boss.pos, this.host.player.pos, boss.facing);
     this.host.player.vel = { x: 0, y: 0 };
     sfx.play('growl');
-    this.bossTalk([PANGHU.lines.intro], () => this.offerBribe());
+    this.bossTalk([...(this.host.run.stage === 0 ? ['嘿嘿，又来一个想救美人的？我这后院的姑娘，可都是给我大哥备下的！'] : []), PANGHU.lines.intro], () => this.offerBribe());
   }
 
   /** 胖虎说话：右下角亮立绘（变身后是猛虎），气泡从立绘嘴边冒出来 */
@@ -119,6 +122,7 @@ export class PangHuBoss implements BossController {
       return;
     }
     const boss = this.boss!;
+    this.host.run.paidOff = true;
     boss.yieldPath();
     for (const pr of this.host.projectiles) if (pr.team === 'enemy') pr.destroy();
     for (const r of this.host.rings) if (r.team === 'enemy') r.destroy();
@@ -255,7 +259,11 @@ export class PangHuBoss implements BossController {
     for (const pr of this.host.projectiles) if (pr.team === 'enemy') pr.destroy();
     for (const r of this.host.rings) if (r.team === 'enemy') r.destroy();
     this.host.overlays.push(new InkSplat(this.host, boss.pos.x, boss.pos.y - 80, 260, 0.9, boss.pos.y + 2));
-    this.bossTalk([PANGHU.lines.defeated], () => this.events.emit('defeated'), 'portrait_pangHu_beaten');
+    this.bossTalk([this.host.run.stage === 0 ? '少侠饶命！人你带走，带走！……我二哥不会放过你的！' : PANGHU.lines.defeated], () => {
+      this.host.pauses.add('release');
+      if (this.captives) this.captives.release(() => this.events.emit('defeated'));
+      else this.events.emit('defeated');
+    }, 'portrait_pangHu_beaten');
   }
 
   drawWarnings(g: Phaser.GameObjects.Graphics, gl: Phaser.GameObjects.Graphics) {

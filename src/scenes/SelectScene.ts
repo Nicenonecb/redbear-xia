@@ -6,7 +6,7 @@ import { drawInkMountains } from '../art/inkMountains';
 import { addPaperGrain, coverArt, placeArt } from '../art/slots';
 import { HEROES } from '../characters/heroes';
 import type { Fighter } from '../entities/Fighter';
-import { sceneForStep } from '../game/flow';
+import { clearSave } from '../game/save';
 import type { HeroId } from '../game/progression';
 import { startRun } from '../game/run';
 
@@ -128,11 +128,11 @@ export class SelectScene extends Phaser.Scene {
     if (this.chosen) return;
     this.chosen = true;
     sfx.play('ui-confirm');
-    const run = startRun(ORDER[this.index]);
-    const { key, data } = sceneForStep(run.step);
+    const run = startRun(ORDER[this.index], false);
+    run.temporary = false; clearSave();
     const cam = this.cameras.main;
     cam.fadeOut(500, 239, 231, 214);
-    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start(key, data));
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Intro'));
   }
 }
 

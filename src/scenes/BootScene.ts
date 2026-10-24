@@ -14,6 +14,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
+    this.load.json('voiceManifest', 'voice/manifest.json');
     this.load.json('artManifest', 'art/manifest.json');
     // 地图人物图的脚底位置和身高，由 tools/map-anchors.py 生成
     this.load.json('mapAnchors', 'art/map-anchors.json');

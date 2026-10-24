@@ -3,6 +3,7 @@ import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../conf
 import { hasArt, queueMapArt, trimArtTextures, type ArtSlot } from '../art/slots';
 import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
+import { VoicePlayer, queueVoice } from '../audio/voice';
 import { sfx } from '../audio/sfx';
 import { ENEMIES, ENEMY_INTROS, type EnemyId } from '../characters/bandits';
 import { HEROES, type HeroEntry } from '../characters/heroes';
@@ -128,6 +129,7 @@ export class MapScene extends Phaser.Scene {
   cinematic = false;
   timeScale = 1;
   private over = false;
+  private voice!: VoicePlayer;
   controller!: BossController;
   get boss() { return this.controller?.actor; }
   get stage() { return stageFor(this.run); }
@@ -140,6 +142,7 @@ export class MapScene extends Phaser.Scene {
    * 进地图前加载这一局用得上的第三批图（第一次进来要等几秒，画一道墨条；之后再进就不用等了）
    */
   preload() {
+    queueVoice(this, ['redBear_rescue_1', 'redBear_rescue_2', 'redBear_rescue_3']);
     const hero = (getRun() ?? startRun('wenShaohua', false)).hero;
     if (!queueMapArt(this, hero)) return;
     const cx = GAME_WIDTH / 2;
@@ -165,6 +168,7 @@ export class MapScene extends Phaser.Scene {
 
   create() {
     trimArtTextures(this);
+    this.voice = new VoicePlayer(this);
     this.run = getRun() ?? startRun('wenShaohua', false);
     this.controls = new Controls(this, 'map');
     this.area = null;
@@ -676,7 +680,9 @@ export class MapScene extends Phaser.Scene {
     r.t = Math.min(1, r.t + delta / RESCUE_MS);
     if (!r.said && r.t >= RESCUE_LINE_AT) {
       r.said = true;
-      this.ui.say(Phaser.Utils.Array.GetRandom(RESCUE_LINES), 1100, () => this.headOf(this.player.pos, HERO_HEIGHT), {
+      const line = Phaser.Math.Between(0, RESCUE_LINES.length - 1);
+      void this.voice.play(`redBear_rescue_${line+1}`, RESCUE_LINES[line]);
+      this.ui.say(RESCUE_LINES[line], 1100, () => this.headOf(this.player.pos, HERO_HEIGHT), {
         slot: 'portrait_redBear',
         side: 'left',
       });
