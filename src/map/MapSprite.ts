@@ -17,11 +17,15 @@ export type Pose = string;
 const STRIKE_POSES = new Set(['strike', 'chop', 'smash', 'throw', 'leap', 'claw']);
 
 /**
- * 走路循环：一步多少毫秒，一个循环四步「左步 → 站姿 → 右步 → 站姿」。
- * 有走路帧（map_<名字>_walk1_<朝向>、walk2）就按这个换图；没有就一直用站姿图，只靠代码起伏
+ * 走路循环：一个循环四步「左步 → 站姿 → 右步 → 站姿」。
+ * 有走路帧（map_<名字>_walk1_<朝向>、walk2）就按这个换图；没有就一直用站姿图，只靠代码起伏。
+ * 步子按实际走了多远来数（一步约是身高的 STRIDE 倍），所以胖虎慢吞吞地迈大步、主角轻快地小步快走，脚不打滑；
+ * 一步最快 STEP_MIN_MS、最慢 STEP_MAX_MS
  */
-const STEP_MS = 150;
 const WALK_CYCLE = [1, 0, 2, 0] as const;
+const STRIDE = 0.25;
+const STEP_MIN_MS = 110;
+const STEP_MAX_MS = 480;
 
 /** 地图精图里脚底离图片底边留了 6% 的空白（见出图清单），立绘顶着时脚就在底边 */
 const MAP_ART_FOOT = 0.94;
@@ -88,8 +92,9 @@ export class MapSprite {
   /** 现在是不是拿立绘顶着 */
   private usingFallback = false;
   private ghostTimer = 0;
-  /** 走了多久（停下归零，下次起步总从同一只脚迈） */
-  private walkClock = 0;
+  /** 走了几步（带小数；停下归零，下次起步总从同一只脚迈） */
+  private walkSteps = 0;
+  private last: { x: number; y: number } | null = null;
   /** 当前是走路循环里的哪一帧：0 站姿，1、2 左右步 */
   private walkFrame = 0;
   /** 这个朝向有没有走路帧（左右两步都有才算） */
@@ -116,13 +121,16 @@ export class MapSprite {
     const pose = s.pose ?? 'idle';
     const dir = dirOf(s.facing.x, s.facing.y);
     const walking = s.moving && pose === 'idle';
-    this.walkClock = walking ? this.walkClock + delta : 0;
-    const frame = walking ? WALK_CYCLE[Math.floor(this.walkClock / STEP_MS) % 4] : 0;
+    const moved = this.last ? Math.hypot(s.x - this.last.x, s.y - this.last.y) : 0;
+    this.last = { x: s.x, y: s.y };
+    const advance = Phaser.Math.Clamp(moved / (this.height * STRIDE), delta / STEP_MAX_MS, delta / STEP_MIN_MS);
+    this.walkSteps = walking ? this.walkSteps + advance : 0;
+    const frame = walking ? WALK_CYCLE[Math.floor(this.walkSteps) % 4] : 0;
     if (dir !== this.dir || pose !== this.pose || frame !== this.walkFrame) this.applyTexture(dir, pose, frame);
 
     const z = s.z ?? 0;
     // 一步一起伏：迈步时身子提起来、落脚时沉下去，一步一个来回
-    const t = (this.walkClock / STEP_MS) * Math.PI;
+    const t = this.walkSteps * Math.PI;
     const step = walking ? Math.abs(Math.sin(t)) : 0;
     // 迈哪只脚身子就往哪边轻轻晃（两步一个来回），落脚那一下压扁一点点
     const sway = walking ? Math.sin(t / 2) : 0;
