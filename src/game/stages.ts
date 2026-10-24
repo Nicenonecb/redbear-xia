@@ -23,3 +23,7 @@ export const stepOf = (stage: StageDef, kind: ChapterStep['kind']) => stage.step
 export const roomStepOf = (stage: StageDef, room: number) => stage.steps.findIndex(s => s.kind === 'room' && s.room === room);
 
 STAGES[0].shopLines.intel = '胖虎后院关着抢来的姑娘。\n他还有两个结拜哥哥，粮草兵器一车车往山上送。';
+
+STAGES[1].boss = 'baoJinliang';
+STAGES[1].rooms.forEach((r,i)=> {r.name=['松林入口','栈道','兵营外'][i];r.waves.forEach(w=>w.forEach(s=>s.enemy=({bandit:'spearman',thrower:'archer',chief:'drillmaster'} as const)[s.enemy as 'bandit'|'thrower'|'chief']));});
+STAGES[1].shopLines = {...CHAPTER1_SHOP_LINES,greeting:'又见面了！山腰驿站，还是任某先到。',intel:'鲍金梁原是武官，比武打死同僚才落草。\n他最爱单挑，可别以为他真讲规矩。'};

@@ -16,7 +16,11 @@ export interface MapLook {
   poses?: Record<MoveId, [startup: string, active: string]>;
 }
 
-export const LOOKS = {
+export const LOOKS: Record<string, MapLook> = {
+  spearman: {mapName:"spearman",fallback:"portrait_bandit",height:170,shadow:65,poses:{slash:["ready","thrust"]}},
+  archer:{mapName:"archer",fallback:"portrait_thrower",height:165,shadow:60},
+  drillmaster:{mapName:"drillmaster",fallback:"portrait_chief",height:205,shadow:90},
+  baoJinliang:{mapName:"baoJinliang",fallback:"portrait_chief",height:230,shadow:100,poses:{thrust:["ready","thrust"],thrust3:["ready","thrust"],sweep:["ready","sweep"],vault:["ready","vault"]}},
   bandit: { mapName: 'bandit', fallback: 'portrait_bandit', height: 150, shadow: 64, poses: { slash: ['ready', 'strike'] } },
   thrower: { mapName: 'thrower', fallback: 'portrait_thrower', height: 145, shadow: 60, poses: { throw: ['ready', 'throw'] } },
   chief: {

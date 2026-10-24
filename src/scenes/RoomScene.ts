@@ -4,7 +4,7 @@ import { sfx } from '../audio/sfx';
 import { EnemyView } from '../art/enemyView';
 import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
-import { ENEMIES, ENEMY_INTROS } from '../characters/bandits';
+import { ENEMIES, ENEMY_INTROS } from '../characters/enemies';
 import type { Hurtable } from '../combat/hitbox';
 import type { MoveEvent } from '../combat/moveTable';
 import { Coin } from '../entities/Coin';

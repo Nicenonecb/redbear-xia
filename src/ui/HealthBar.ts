@@ -24,6 +24,8 @@ export class HealthBar {
       .setDepth(50);
   }
 
+  setName(name: string) { this.label.setText(name); }
+
   setVisible(visible: boolean) {
     this.visible = visible;
     this.label.setVisible(visible);

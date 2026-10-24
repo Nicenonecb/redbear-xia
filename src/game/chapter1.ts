@@ -1,5 +1,5 @@
 import type { ArtSlot } from '../art/slots';
-import type { EnemyId } from '../characters/bandits';
+import type { EnemyId } from '../characters/enemies';
 
 /**
  * 第一章 · 竹林的关卡安排：一张大地图上，沿着石板路依次是

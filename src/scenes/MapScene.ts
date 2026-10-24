@@ -5,7 +5,7 @@ import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
 import { VoicePlayer, queueVoice } from '../audio/voice';
 import { sfx } from '../audio/sfx';
-import { ENEMIES, ENEMY_INTROS, type EnemyId } from '../characters/bandits';
+import { ENEMIES, ENEMY_INTROS, type EnemyId } from '../characters/enemies';
 import { HEROES, type HeroEntry } from '../characters/heroes';
 import type { GroundArea, MoveEvent } from '../combat/moveTable';
 import type { SpawnDef } from '../game/chapter1';
@@ -20,6 +20,7 @@ import type { MapActor, MapHitResult, MapHurtable } from '../map/combat/MapActor
 import { MapCoin } from '../map/combat/MapCoin';
 import { MapEnemy } from '../map/combat/MapEnemy';
 import { MapFighter } from '../map/combat/MapFighter';
+import { BaoBoss } from '../map/bosses/BaoBoss';
 import { PangHuBoss } from '../map/bosses/PangHuBoss';
 import type { BossController } from '../map/bosses/BossController';
 import { stageFor, stepOf, roomStepOf } from '../game/stages';
@@ -221,7 +222,7 @@ export class MapScene extends Phaser.Scene {
       .filter((a) => a.room !== undefined)
       .map((a) => new Encounter(this, a, this.stage.rooms[a.room!], this.walk, M.path, this.run.step > roomStepOf(this.stage, a.room!)));
     this.spawnRen();
-    this.controller = new PangHuBoss(this);
+    this.controller = this.stage.boss === 'baoJinliang' ? new BaoBoss(this) : new PangHuBoss(this);
     this.controller.spawn();
     this.controller.events.on('yield', () => this.win(`${this.stage.name} · 放行`));
     this.controller.events.on('defeated', () => this.win(`${this.stage.name} · 过关`));
@@ -526,10 +527,10 @@ export class MapScene extends Phaser.Scene {
   }
 
   /** 遭遇战刷出一个山贼：一刷出来就盯上主角；这一局第一次见到的还弹登场提示 */
-  private spawnEnemy(sp: SpawnDef, at: Pt) {
+  spawnEnemy(sp: SpawnDef, at: Pt) {
     const def = ENEMIES[sp.enemy];
     const enemy = new MapEnemy(at.x, at.y, def, this.player, this.walk, `${this.run.step}-${this.enemies.length}-${this.time.now}`);
-    const look: MapLook = LOOKS[def.look];
+    const look: MapLook = LOOKS[def.id] ?? LOOKS[def.look];
     const sprite = new MapSprite(this, look.mapName, look.fallback, look.height, look.shadow);
     enemy.events.on('move', (e: MoveEvent) => this.onEnemyMove(enemy, e));
     enemy.events.once('dead', () => this.onEnemyDead(enemy));
@@ -538,6 +539,8 @@ export class MapScene extends Phaser.Scene {
     this.overlays.push(new DustPuff(this, { ...at }, { x: 0, y: 1 }, 420));
     this.introduce(sp.enemy);
   }
+
+  clearBossAdds() { for (const e of this.enemies) { e.enemy.hp = 0; e.sprite.destroy(); } this.enemies = []; for (const p of this.projectiles) if(p.team === 'enemy') p.destroy(); for(const r of this.rings) if(r.team === 'enemy') r.destroy(); }
 
   private introduce(id: EnemyId) {
     const seen = (this.run.seenEnemies ??= []);
@@ -797,7 +800,10 @@ export class MapScene extends Phaser.Scene {
     const M = this.stage.map;
     for (const d of M.decor) {
       const art = placeMapArt(this, d.slot, d.at.x, d.at.y, d.width);
-      if (!art) continue;
+      if (!art) {
+        if (this.run.stage > 0) { const g=this.add.graphics().setDepth(d.at.y);g.lineStyle(4, COLORS.ink,.65);g.strokeRect(d.at.x-d.width/2,d.at.y-110,d.width,110);this.add.text(d.at.x,d.at.y-60, d.slot.includes('tent')?'军帐':d.slot.includes('banner')?'彰':d.slot.includes('gate')?'宫门':'遗迹',{fontFamily:FONT_BRUSH,fontSize:'26px',color:CSS_COLORS.ink}).setOrigin(.5).setDepth(d.at.y+1); }
+        continue;
+      }
       if (d.flat) art.img.setDepth(-2990);
       else this.props.push(art);
       if (d.r) this.walk.solids!.push({ at: d.solidAt ?? d.at, r: d.r });
@@ -823,6 +829,10 @@ export class MapScene extends Phaser.Scene {
    */
   private drawGround() {
     const M = this.stage.map;
+    const ground = (slot: string, fallback: ArtSlot): ArtSlot => hasArt(this, slot as ArtSlot) ? slot as ArtSlot : fallback;
+    const forest = ground(this.run.stage === 1 ? 'ground_pine_forest' : this.run.stage === 2 ? 'ground_snow_rock' : 'ground_forest', 'ground_forest');
+    const path = ground(this.run.stage === 1 ? 'ground_mountain_path' : this.run.stage === 2 ? 'ground_stone_stairs' : 'ground_stone', 'ground_stone');
+    const arena = ground(this.run.stage === 1 ? 'ground_drill_yard' : this.run.stage === 2 ? 'ground_palace' : 'ground_camp', 'ground_camp');
     // 平铺的地面不铺满整张地图（那样每层都要一张 6400×4400 的大贴图，几百兆显存），
     // 只铺一块屏幕大小的，钉在镜头上；镜头走到哪，纹理就跟着挪到哪，看起来就是铺满的
     const layers: { t: Phaser.GameObjects.TileSprite; region?: Phaser.Geom.Rectangle }[] = [];
@@ -835,7 +845,7 @@ export class MapScene extends Phaser.Scene {
       if (!region) layers.push({ t });
       return t;
     };
-    if (hasArt(this, 'ground_forest')) tiled('art:ground_forest', GROUND_ART_TILE, -3000);
+    if (hasArt(this, forest)) tiled(`art:${forest}`, GROUND_ART_TILE, -3000);
     else tiled('gen:ground', GROUND_TILE, -3000);
     tiled('gen:groundWash', GROUND_WASH_TILE, -3000);
     this.groundLayers = layers.map((l) => l.t);
@@ -847,16 +857,16 @@ export class MapScene extends Phaser.Scene {
     }
     // 山寨的黄土地、青石板路：只在那一块铺（贴图跟着那一块大小走），再用遮罩剪出形状
     const camp = M.areas.find((a) => a.id === 'camp')!;
-    if (hasArt(this, 'ground_camp')) {
+    if (hasArt(this, arena)) {
       const rx = camp.radius * 1.1;
       const ry = camp.radius * 0.95;
       const region = new Phaser.Geom.Rectangle(camp.center.x - rx, camp.center.y - ry, rx * 2, ry * 2);
       const shape = this.make.graphics({}, false);
       shape.fillStyle(0xffffff);
       shape.fillEllipse(camp.center.x, camp.center.y, rx * 2, ry * 2);
-      tiled('art:ground_camp', GROUND_ART_TILE, -2998, region).setMask(shape.createGeometryMask()).setAlpha(0.85);
+      tiled(`art:${arena}`, GROUND_ART_TILE, -2998, region).setMask(shape.createGeometryMask()).setAlpha(0.85);
     }
-    if (hasArt(this, 'ground_stone')) {
+    if (hasArt(this, path)) {
       floor.lineStyle(M.pathWidth + 70, COLORS.inkLight, 0.08);
       floor.strokePoints(M.path);
       // 路是一条斜着的长带，一整块包住它太大了：每一段路单独铺一块
@@ -873,7 +883,7 @@ export class MapScene extends Phaser.Scene {
         shape.fillStyle(0xffffff);
         shape.fillCircle(a.x, a.y, M.pathWidth / 2);
         shape.fillCircle(b.x, b.y, M.pathWidth / 2);
-        const t = tiled('art:ground_stone', GROUND_STONE_TILE, -2997, region).setMask(shape.createGeometryMask());
+        const t = tiled(`art:${path}`, GROUND_STONE_TILE, -2997, region).setMask(shape.createGeometryMask());
         // 各段的纹理对齐到同一张网格上，接头处石板缝是连着的
         t.setTilePosition(x0 / t.tileScaleX, y0 / t.tileScaleY);
       }
@@ -953,7 +963,7 @@ export class MapScene extends Phaser.Scene {
    * 没有就用代码画的占位
    */
   private placeProp(rng: Phaser.Math.RandomDataGenerator, x: number, y: number, rock: boolean) {
-    const choices: [ArtSlot, number][] = rock
+    const choices: [ArtSlot, number][] = !rock && this.run.stage > 0 ? [['prop_pine', 300], ['prop_rock_big', 230]] : rock
       ? [['prop_rock_big', 230], ['prop_rock_small', 150], ['prop_bush', 170], ['prop_stump', 140], ['prop_pine', 300]]
       : [['prop_bamboo_big', 250], ['prop_bamboo_big', 250], ['prop_bamboo_mid', 220], ['prop_bamboo_mid', 220], ['prop_bamboo_small', 150]];
     const [slot, width] = rng.pick(choices);

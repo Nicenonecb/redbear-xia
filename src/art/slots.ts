@@ -8,6 +8,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../config';
  */
 export const ART_SLOTS = {
   title: '标题画面背景',
+  portrait_baoJinliang: '鲍金梁立绘',
   intro_wen: '温少华出师', intro_yu: '于无瑕出师',
   portrait_wenShaohua: '温少华立绘（选角界面）',
   portrait_yuWuxia: '于无瑕立绘（选角界面）',

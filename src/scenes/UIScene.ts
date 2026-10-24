@@ -101,8 +101,9 @@ export class UIScene extends Phaser.Scene {
   }
 
   /** Boss 血条：传气血比例显示，传 null 收起来 */
-  setBoss(ratio: number | null) {
+  setBoss(ratio: number | null, name = '山大王 · 胖虎') {
     if ((ratio === null) !== (this.boss === null)) this.bossBar.setVisible(ratio !== null);
+    this.bossBar.setName(name);
     this.boss = ratio;
   }
 
@@ -112,8 +113,8 @@ export class UIScene extends Phaser.Scene {
   }
 
   /** Boss 名牌 */
-  bossCard() {
-    this.overlays.push(new BossCard(this, 'card_boss_pangHu', '山大王', '胖虎'));
+  bossCard(name = '胖虎', title = '山大王') {
+    this.overlays.push(new BossCard(this, 'card_boss_pangHu', title, name));
   }
 
   /**
