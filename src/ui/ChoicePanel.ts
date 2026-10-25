@@ -27,6 +27,8 @@ export interface ChoiceConfig {
   noDim?: boolean;
   /** 面板的水平中心，默认屏幕正中 */
   centerX?: number;
+  /** 升级等战斗后弹出的选项只用 Enter 确认，避免 J / 空格连按误选。 */
+  confirmWithEnter?: boolean;
 }
 
 const CARD = { w: 250, h: 170, gap: 36 };
@@ -165,7 +167,7 @@ export class ChoicePanel {
     if (this.config.options[this.index]?.disabled) this.index = this.firstEnabled();
     this.container.add(
       this.scene.add
-        .text(cx, GAME_HEIGHT - 70, `A / D 选择 · J 确定${this.config.onCancel ? ' · K 返回' : ''}`, {
+        .text(cx, GAME_HEIGHT - 70, `A / D 选择 · ${this.config.confirmWithEnter ? 'Enter 确定 · 或鼠标点击' : 'J 确定'}${this.config.onCancel ? ' · K 返回' : ''}`, {
           fontFamily: FONT_BRUSH,
           fontSize: '20px',
           color: noDim ? CSS_COLORS.ink : CSS_COLORS.paper,
@@ -253,7 +255,7 @@ export class ChoicePanel {
     const next = ['KeyD', 'KeyS', 'ArrowRight', 'ArrowDown'];
     if (prev.includes(e.code)) this.moveSelection(-1);
     else if (next.includes(e.code)) this.moveSelection(1);
-    else if (['KeyJ', 'Space', 'Enter'].includes(e.code)) this.pick(this.index);
+    else if ((this.config.confirmWithEnter ? ['Enter'] : ['KeyJ', 'Space', 'Enter']).includes(e.code)) this.pick(this.index);
     else if (['KeyK', 'Escape'].includes(e.code) && this.config.onCancel) {
       this.close();
       this.config.onCancel();

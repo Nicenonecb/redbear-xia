@@ -564,6 +564,7 @@ export class MapScene extends Phaser.Scene {
     const L = PROGRESSION.levelUp;
     this.ui.choice({
       title: `第 ${this.run.level - this.run.pendingLevelUps + 1} 重 · 功力精进`,
+      confirmWithEnter: true,
       subtitle: this.run.pendingLevelUps > 1 ? `还有 ${this.run.pendingLevelUps} 次可选` : undefined,
       options: stats.map((id) => ({
         label: L[id].name,
