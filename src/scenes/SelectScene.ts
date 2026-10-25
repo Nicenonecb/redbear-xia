@@ -1,11 +1,9 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
-import type { HeroView } from '../art/heroView';
 import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
 import { addPaperGrain, coverArt, placeArt } from '../art/slots';
 import { HEROES } from '../characters/heroes';
-import type { Fighter } from '../entities/Fighter';
 import { clearSave } from '../game/save';
 import type { HeroId } from '../game/progression';
 import { startRun } from '../game/run';
@@ -13,18 +11,14 @@ import { startRun } from '../game/run';
 const ORDER: HeroId[] = ['wenShaohua', 'yuWuxia'];
 /** 卡片尺寸：上下给标题、按键提示留足空，四周露出背景山水 */
 const CARD = { w: 420, h: 420, y: 160, gap: 48 };
-/** 立绘放大倍数 */
-const SCALE = 2.4;
 
 /**
- * 选角界面「红熊门下」：两位徒弟各占一张卡，选中的那张描朱红，发带长发随风飘。
+ * 选角界面「红熊门下」：两位徒弟各占一张卡，选中的那张描朱红、立绘放大。
  * A/D 选择，J / 空格 / 回车确定；鼠标点卡片也行。
  */
 export class SelectScene extends Phaser.Scene {
   private index = 0;
   private frames!: Phaser.GameObjects.Graphics;
-  /** 没有立绘图的主角用剪影画，card 是对应第几张卡 */
-  private views: { view: HeroView; stand: Fighter; card: number }[] = [];
   /** 有立绘图的主角：选中的那张亮一点、大一点 */
   private arts: { img: Phaser.GameObjects.Image; card: number; scale: number }[] = [];
   private cards: Phaser.Geom.Rectangle[] = [];
@@ -36,7 +30,6 @@ export class SelectScene extends Phaser.Scene {
 
   create() {
     this.chosen = false;
-    this.views = [];
     this.arts = [];
     this.cards = [];
     if (!coverArt(this, 'bg_select')) {
@@ -61,17 +54,17 @@ export class SelectScene extends Phaser.Scene {
         .text(left, rect.bottom - 106, hero.blurb, { fontFamily: FONT_BRUSH, fontSize: '19px', color: CSS_COLORS.ink, lineSpacing: 5 })
         .setDepth(12);
 
-      // 立绘：有图用图，没图就用战斗里同一套画法放大画在卡片右侧
-      const art = placeArt(this, id === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia', rect.right - 110, rect.bottom - 104, 210, 300);
+      // 优先使用立绘；缺图时使用已加载的地图站姿，首次进场则用兵器文字回退。
+      const art = placeArt(this, id === 'wenShaohua' ? 'portrait_wenShaohua' : 'portrait_yuWuxia', rect.right - 110, rect.bottom - 104, 210, 300)
+        ?? placeArt(this, id === 'wenShaohua' ? 'map_wenShaohua_s' : 'map_yuWuxia_s', rect.right - 110, rect.bottom - 104, 210, 300);
       if (art) {
         art.setDepth(11);
         this.arts.push({ img: art, card: i, scale: art.scaleX });
         return;
       }
-      const view = hero.createView(this);
-      view.setScale(SCALE);
-      const stand = standIn(rect.right - 100, rect.y + 300, i === 0 ? 1 : -1, hero.def.ammo?.max ?? 0);
-      this.views.push({ view, stand, card: i });
+      this.add.text(rect.right - 110, rect.y + 200, hero.weapon, {
+        fontFamily: FONT_BRUSH, fontSize: '56px', color: CSS_COLORS.ink,
+      }).setOrigin(0.5).setDepth(11);
     });
 
     this.add
@@ -98,7 +91,7 @@ export class SelectScene extends Phaser.Scene {
     this.cameras.main.fadeIn(400, 239, 231, 214);
   }
 
-  update(_time: number, delta: number) {
+  update() {
     this.frames.clear();
     this.cards.forEach((r, i) => {
       const selected = i === this.index;
@@ -111,8 +104,6 @@ export class SelectScene extends Phaser.Scene {
       const selected = card === this.index;
       img.setAlpha(selected ? 1 : 0.5).setScale(scale * (selected ? 1.04 : 1));
     }
-    // 选中的那位发带、长发跟着风飘，没选中的定格
-    for (const { view, stand, card } of this.views) view.draw(stand, card === this.index ? delta : 0);
   }
 
   private onKey(e: KeyboardEvent) {
@@ -134,27 +125,4 @@ export class SelectScene extends Phaser.Scene {
     cam.fadeOut(500, 239, 231, 214);
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Intro'));
   }
-}
-
-/**
- * 选角界面里给画法用的"假人"：只带画画要读的那几个字段，站着不动。
- * 画布整体放大 SCALE 倍，所以坐标要先除回去
- */
-function standIn(x: number, feetY: number, facing: 1 | -1, ammo: number) {
-  return {
-    x: x / SCALE,
-    feetY: feetY / SCALE,
-    facing,
-    runner: { move: null, frame: 0 },
-    body: { velocity: { x: 0, y: 0 } },
-    grounded: true,
-    evading: false,
-    mercyFrames: 0,
-    flash: 0,
-    dead: false,
-    hurtFrames: 0,
-    chargeRatio: 0,
-    ammo,
-    isLocked: () => false,
-  } as unknown as Fighter;
 }

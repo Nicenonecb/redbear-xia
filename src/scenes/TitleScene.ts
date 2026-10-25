@@ -105,16 +105,15 @@ export class TitleScene extends Phaser.Scene {
     }
     this.tweens.add({ targets: prompt, alpha: 0.25, duration: 900, yoyo: true, repeat: -1 });
     this.add
-      .text(cx, GAME_HEIGHT - 48, `P · 练功场　　${import.meta.env.DEV ? '1 / 2 / 3 · 关底（B = 1）　　' : ''}M · 静音　　- / = · 音量`, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
+      .text(cx, GAME_HEIGHT - 48, `${import.meta.env.DEV ? '1 / 2 / 3 · 关底（B = 1）　　' : ''}M · 静音　　- / = · 音量`, { fontFamily: FONT_BRUSH, fontSize: '20px', color: CSS_COLORS.paper })
       .setOrigin(0.5)
       .setAlpha(0.6);
 
     this.cameras.main.fadeIn(600, 239, 231, 214);
 
-    // P 进练功场，B 用温少华直接打胖虎（调试用，不存档）
+    // 开发快捷键直接进入各关 Boss 战（不存档）
     this.entering = false;
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
-      if (e.code === 'KeyP') return this.enterGame('Game');
       if (import.meta.env.DEV && ['KeyB', 'Digit1', 'Digit2', 'Digit3'].includes(e.code)) {
         const run = startRun('wenShaohua', false);
         run.stage = e.code === 'KeyB' ? 0 : Number(e.code.at(-1)) - 1;

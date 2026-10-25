@@ -1,11 +1,14 @@
 import Phaser from 'phaser';
 import { PANGHU } from '../../characters/pangHu';
 import type { HitSpec } from '../../combat/moveTable';
-import type { PangHuStage } from '../../entities/PangHu';
+
 import type { WalkableMap } from '../walkable';
 import { dirTo, groundDist, normalize, type Vec } from './ground';
 import { MapActor } from './MapActor';
 import type { MapFighter } from './MapFighter';
+
+/** 胖虎的战斗阶段；yield 表示收钱放行。 */
+export type PangHuStage = 'intro' | 'fight' | 'transform' | 'tiger' | 'defeated' | 'yield';
 
 /** 人形、猛虎脚下的圆有多大 */
 const HUMAN_RADIUS = 34;
@@ -16,7 +19,7 @@ const LEAP_VZ = 600;
 const GRAVITY = 1800;
 
 /**
- * 地图上的第一关 Boss 胖虎（斜俯视版的 PangHu）。人形用大刀（冲锋劈砍、震地），半血变身猛虎（扑击、虎爪连挥、虎啸）。
+ * 第一关 Boss 胖虎。人形用大刀（冲锋劈砍、震地），半血变身猛虎（扑击、虎爪连挥、虎啸）。
  * 霸体：挨打只闪白、顿帧，不会被打断。地图上任何方向都能来：
  * 冲锋劈砍起手那一刻锁定方向，地上沿这个方向亮一道红线；扑击起手锁定主角脚下的落点，亮一个红圈。
  * 事件：'move' 招式事件、'transform' 开始变身、'roar' 仰天长啸、'wrap' 墨气卷起来、'burst' 水墨炸开化虎、'defeated' 被打败。

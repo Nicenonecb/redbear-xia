@@ -1,6 +1,15 @@
 import { PROGRESSION, WEAPONS, type HeroId, type StatId } from './progression';
 import { clearSave, saveRun } from './save';
 
+/** 由一局成长计算的战斗属性。 */
+export interface FighterStats {
+  hp: number;
+  maxHp: number;
+  damageScale: number;
+  speedScale: number;
+  evadeBonus: number;
+}
+
 /**
  * 一局的状态：选了谁、走到第几步、气血、等级、铜钱、武器。
  * 换场景时由场景读出来、离开时写回去；死了就整局作废（roguelike）。
@@ -25,7 +34,7 @@ export interface RunState {
   weapon: { tier: number; refine: number };
   /** 这一章红熊是否已经救过场 */
   rescueUsed: boolean;
-  /** 临时的一局（练功场、调试快捷键），不写存档 */
+  /** 临时的一局（调试快捷键），不写存档 */
   temporary?: boolean;
   /** 这一局已经见过哪些敌人（第一次见才弹登场提示） */
   seenEnemies?: string[];
@@ -36,7 +45,7 @@ const BASE_HP = 100;
 
 let current: RunState | null = null;
 
-/** persist 为 false 时不写存档：练功场、调试快捷键开的临时一局 */
+/** persist 为 false 时不写存档：调试快捷键开的临时一局 */
 export function startRun(hero: HeroId, persist = true): RunState {
   current = {
     hero,

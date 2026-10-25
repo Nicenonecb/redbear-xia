@@ -1,7 +1,7 @@
 import type { Action, Controls } from '../../input/Controls';
 import { InputBuffer } from '../../combat/InputBuffer';
 import { inRange, type CharacterDef, type HitSpec, type MoveId } from '../../combat/moveTable';
-import type { FighterStats } from '../../entities/Fighter';
+import type { FighterStats } from '../../game/run';
 import type { WalkableMap } from '../walkable';
 import { normalize, type Vec } from './ground';
 import { MapActor, type MapHitResult, type MapHurtable } from './MapActor';
@@ -13,8 +13,8 @@ const HERO_RADIUS = 18;
 const HERO_HEIGHT = 150;
 
 /**
- * 玩家在大地图上操控的角色（斜俯视版的 Fighter）。
- * 按键先进输入缓冲，再由招式表的起手招和取消窗口决定出哪一招，和横版一模一样；
+ * 玩家在大地图上操控的角色。
+ * 按键先进输入缓冲，再由招式表的起手招和取消窗口决定出哪一招；
  * 不同的是八个方向都能走、都能出招：出招瞬间按着方向键就朝那边出，闪避也朝那边冲。
  * 地图上没有跳。
  * 事件：'move' 招式事件、'dead' 气血打空、'rescue' 红熊该出手了（见 rescueBelow）。
@@ -25,7 +25,7 @@ export class MapFighter extends MapActor {
   hurtFrames = 0;
   /** 受击后的保护帧，期间不会再被打中 */
   mercyFrames = 0;
-  /** 红熊救场的气血比例线，见 Fighter.rescueBelow */
+  /** 气血低于此比例时触发救场；0 表示本关已使用 */
   rescueBelow = 0;
   /** 剩余弹药（于无瑕的飞镖） */
   ammo = 0;

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../../config';
 import type { HitSpec } from '../../combat/moveTable';
-import type { Team } from '../../entities/Projectile';
+import type { Team } from '../../combat/moveTable';
 import { hasArt, type ArtSlot } from '../../art/slots';
 import { GROUND_SQUASH, dirTo, groundDist, type Vec } from './ground';
 import type { MapHitResult, MapHurtable } from './MapActor';

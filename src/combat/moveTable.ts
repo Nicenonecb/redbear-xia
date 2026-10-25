@@ -9,6 +9,7 @@ import type { Action } from '../input/Controls';
  */
 
 export type MoveId = string;
+export type Team = 'player' | 'enemy';
 
 export interface FrameRange {
   from: number;
@@ -84,10 +85,7 @@ export interface MoveDef {
   cancels?: CancelWindow[];
   motion?: MotionSegment[];
   invuln?: FrameRange;
-  noGravity?: FrameRange;
   hold?: HoldSpec;
-  /** 一次滞空只能用一次（例如空中闪避） */
-  oncePerAir?: boolean;
   /** 敌人用：收招结束后自动接这一招（连招） */
   followUp?: MoveId;
   /**
@@ -151,7 +149,6 @@ export interface CharacterDef {
   name: string;
   hp: number;
   moveSpeed: number;
-  jumpSpeed: number;
   body: { w: number; h: number };
   moves: Record<MoveId, MoveDef>;
   /** 空闲时按键对应的起手招 */

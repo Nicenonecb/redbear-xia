@@ -6,7 +6,7 @@ const LIFE = 420;
 /**
  * 命中、化墨时溅开的一团墨点：从墨点素材里随机挑一个形状，随机转个角度，
  * 先一下子放大，再慢慢淡掉。没有墨点素材就什么都不做（代码画的墨点照样有）。
- * 按画面帧推进，可以交给 CombatScene.addOverlay。
+ * 按画面帧推进，由场景管理生命周期。
  */
 export class InkSplat {
   private readonly img: Phaser.GameObjects.Image | null;

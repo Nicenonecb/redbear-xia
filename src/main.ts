@@ -6,11 +6,8 @@ import { EndingScene } from './scenes/EndingScene';
 import { IntroScene } from './scenes/IntroScene';
 import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
-import { GameScene } from './scenes/GameScene';
-import { PangHuScene } from './scenes/PangHuScene';
 import { LetterScene } from './scenes/LetterScene';
 import { MapScene } from './scenes/MapScene';
-import { RoomScene } from './scenes/RoomScene';
 import { SelectScene } from './scenes/SelectScene';
 import { ShopScene } from './scenes/ShopScene';
 import { UIScene } from './scenes/UIScene';
@@ -27,13 +24,9 @@ const game = new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  physics: {
-    default: 'arcade',
-    arcade: { gravity: { x: 0, y: 1600 }, debug: false },
-  },
   plugins: { scene: [sharpCameraPlugin] },
   // 顺序就是画的顺序：界面层 UI 要排在大地图 Map 后面，才压在地图上面
-  scene: [BootScene, TitleScene, SelectScene, IntroScene, EndingScene, MapScene, UIScene, GameScene, RoomScene, ShopScene, PangHuScene, LetterScene],
+  scene: [BootScene, TitleScene, SelectScene, IntroScene, EndingScene, MapScene, UIScene, ShopScene, LetterScene],
 });
 
 installSharpRendering(game);

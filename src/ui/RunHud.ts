@@ -22,7 +22,7 @@ export class RunHud {
       .setDepth(50);
   }
 
-  /** player：横版的 Fighter 或者大地图上的 MapFighter，只读招式表和剩余弹药 */
+  /** player：只读招式表和剩余弹药 */
   draw(run: RunState, player: { def: CharacterDef; ammo: number }) {
     const ratio = run.exp / PROGRESSION.expToNext(run.level);
     this.g.clear();

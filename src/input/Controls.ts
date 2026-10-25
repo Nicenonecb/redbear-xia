@@ -4,26 +4,17 @@ import Phaser from 'phaser';
  * 游戏动作。逻辑层只认动作，不认具体按键，
  * 以后接手柄只需要在这里加一组绑定。
  */
-export type Action = 'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'special' | 'dodge' | 'throw';
+export type Action = 'left' | 'right' | 'up' | 'down' | 'attack' | 'special' | 'dodge' | 'throw';
 
 const KEYBOARD_BINDINGS: Record<Action, string[]> = {
   left: ['A', 'LEFT'],
   right: ['D', 'RIGHT'],
-  // 上下用在斜俯视的大地图上；横版场景里 W 还是跳
   up: ['W', 'UP'],
   down: ['S', 'DOWN'],
-  jump: ['W', 'SPACE', 'UP'],
   attack: ['J'],
   special: ['K'],
-  dodge: ['L', 'SHIFT'],
-  throw: ['I'],
-};
-
-/** 大地图（斜俯视）上没有跳：W 只管往上走，空格改成闪避 */
-const MAP_BINDINGS: Record<Action, string[]> = {
-  ...KEYBOARD_BINDINGS,
-  jump: [],
   dodge: ['L', 'SHIFT', 'SPACE'],
+  throw: ['I'],
 };
 
 const ACTIONS = Object.keys(KEYBOARD_BINDINGS) as Action[];
@@ -34,12 +25,11 @@ export class Controls {
   private pressed = new Set<Action>();
   private released = new Set<Action>();
 
-  constructor(scene: Phaser.Scene, mode: 'side' | 'map' = 'side') {
+  constructor(scene: Phaser.Scene) {
     const keyboard = scene.input.keyboard!;
-    const bindings = mode === 'map' ? MAP_BINDINGS : KEYBOARD_BINDINGS;
     this.keys = {} as Record<Action, Phaser.Input.Keyboard.Key[]>;
     for (const action of ACTIONS) {
-      this.keys[action] = bindings[action].map((code) => keyboard.addKey(code));
+      this.keys[action] = KEYBOARD_BINDINGS[action].map((code) => keyboard.addKey(code));
     }
   }
 

@@ -13,7 +13,6 @@ export const YU_WUXIA: CharacterDef = validateCharacter({
   name: '于无瑕',
   hp: 100,
   moveSpeed: 320,
-  jumpSpeed: 700,
   body: { w: 26, h: 70 },
   neutral: { attack: 'fan1', special: 'fanCharge', dodge: 'dodge', throw: 'dart' },
   ammo: { action: 'throw', max: 6, refillOnMeleeHit: 1 },
@@ -113,9 +112,7 @@ export const YU_WUXIA: CharacterDef = validateCharacter({
       active: 13,
       recovery: 6,
       invuln: { from: 1, to: 13 },
-      noGravity: { from: 0, to: 13 },
       motion: [{ from: 0, to: 13, vx: 740 }],
-      oncePerAir: true,
       cancels: [
         { from: 14, to: 19, action: 'attack', into: 'fan1' },
         { from: 14, to: 19, action: 'throw', into: 'dart' },

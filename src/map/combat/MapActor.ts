@@ -7,7 +7,7 @@ import { GROUND_SQUASH, areaOf, dirTo, inArea, type Vec } from './ground';
 /** 被打飞时往上抛的重力（像素/秒²）：招式表里击退的 y 分量在地图上变成"弹起来多高" */
 const GRAVITY = 1800;
 
-/** 地图上能被打中的东西：主角、山贼、胖虎、木人桩 */
+/** 地图上能被打中的东西：主角、山贼、Boss */
 export interface MapHurtable {
   /** 脚下的位置 */
   readonly pos: Vec;
@@ -26,9 +26,9 @@ export interface MapHitResult {
 }
 
 /**
- * 地图上主角和敌人共用的部分（斜俯视版的 Actor）：脚下的位置和速度、面向（八个方向里任意一个）、
+ * 地图上主角和敌人共用的部分：脚下的位置和速度、面向（八个方向里任意一个）、
  * 按招式表播放招式、扇形判定、顿帧、被打飞弹起。
- * 招式表还是横版那一套：位移段的 vx 沿面向走，击退的 x 沿攻击方向推开、y 变成往上弹。
+ * 招式位移规则：位移段的 vx 沿面向走，击退的 x 沿攻击方向推开、y 变成往上弹。
  * 逻辑按固定 60 帧推进，不用 Arcade 物理；走出能走的范围就推回来（见 walkable.ts）。
  */
 export abstract class MapActor implements MapHurtable {

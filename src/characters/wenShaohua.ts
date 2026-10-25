@@ -12,7 +12,6 @@ export const WEN_SHAOHUA: CharacterDef = validateCharacter({
   name: '温少华',
   hp: 100,
   moveSpeed: 280,
-  jumpSpeed: 680,
   body: { w: 28, h: 72 },
   neutral: { attack: 'liuyun1', special: 'shaohuaCharge', dodge: 'dodge' },
   moves: byId([
@@ -110,9 +109,7 @@ export const WEN_SHAOHUA: CharacterDef = validateCharacter({
       active: 14,
       recovery: 8,
       invuln: { from: 1, to: 14 },
-      noGravity: { from: 0, to: 14 },
       motion: [{ from: 0, to: 14, vx: 660 }],
-      oncePerAir: true,
       cancels: [
         { from: 17, to: 22, action: 'attack', into: 'liuyun1' },
         { from: 17, to: 22, action: 'special', into: 'shaohuaCharge' },

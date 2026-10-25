@@ -70,22 +70,10 @@ export const CHAPTER1_STEPS: ChapterStep[] = [
   { kind: 'letter' },
 ];
 
-/** 某一场遭遇战是第几步 */
-export const roomStep = (room: number) => CHAPTER1_STEPS.findIndex((s) => s.kind === 'room' && s.room === room);
-export const SHOP_STEP = CHAPTER1_STEPS.findIndex((s) => s.kind === 'shop');
-export const BOSS_STEP = CHAPTER1_STEPS.findIndex((s) => s.kind === 'boss');
-
 /** 任新野在第一章商店里说的话：先招呼，再透露胖虎的情报 */
 export const CHAPTER1_SHOP_LINES = {
   greeting: '客官里边请——\n江湖上的事，没有我任新野不知道的。',
   intel: '前面那个胖虎啊，人其实挺好的，就是贪财好色。\n真打不过，不妨多塞点铜钱给他，\n说不定他就……嘿嘿，你懂的。',
   bought: ['好眼光！', '拿好，路上当心。', '这可是好东西。'],
   farewell: '慢走，前面山路滑。',
-};
-
-/** 红熊在第一章结束后写给徒弟的嘱咐 */
-export const CHAPTER1_LETTERS = {
-  wenShaohua:
-    '少华，剑招已成，剑意未满。\n胖虎那一扑你躲得漂亮，可惜收剑早了半分。\n江湖上的老虎，不止竹林里这一只。',
-  yuWuxia: '无瑕，你出手从不多一分，很好。\n只是暗器总有打完的时候。\n记住，近身也是你的路。',
 };

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Action } from '../input/Controls';
 import { areaOf, groundDist, inArea } from '../map/combat/ground';
 // Development-only player: normal movement and inputs; never changes combat state.
-export function mapAutoPlayer(skill: number, seed: string) {
+export function mapAutoPlayer(skill = 0.75, seed = 'bot') {
   const rng = new Phaser.Math.RandomDataGenerator([seed]);
   const reactions = new WeakMap<object, { move: object; frame: number; dodge: boolean }>();
   const projectiles = new WeakMap<object, boolean>();

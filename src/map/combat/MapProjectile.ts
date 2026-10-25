@@ -1,13 +1,13 @@
 import Phaser from 'phaser';
 import type { ProjectileSpec } from '../../combat/moveTable';
-import type { Team } from '../../entities/Projectile';
+import type { Team } from '../../combat/moveTable';
 import { hasArt, type ArtSlot } from '../../art/slots';
 import { groundDist, type Vec } from './ground';
 import type { MapHitResult, MapHurtable } from './MapActor';
 
 /**
  * 地图上的飞行道具：剑气、飞镖、飞刀。沿一个方向贴地直飞，同一目标只打一次，不穿透的打中就消失。
- * 外观还是横版那套画法（以道具中心为原点、面朝右），转到飞行方向上画；离地 lift 像素高，影子落在地上。
+ * 外观以道具中心为原点、面朝右，转到飞行方向上画；离地 lift 像素高，影子落在地上。
  * 判定是道具脚下一个圆，半径取判定框长宽里大的那一半。
  */
 export class MapProjectile {

@@ -81,7 +81,7 @@ const GREET_RANGE = 450;
  * 入山、深处两场遭遇战（走进空地两头竹篱合上，山贼一波波杀进来，清完选升级、篱笆落下、存档）→
  * 任新野的茶摊（走到跟前按 J 进去买东西，也可以直接走过去）→ 山寨前的遭遇战（有头目）→
  * 胖虎山寨（开场白 →【拔剑 / 给钱】→ 开打，半血变身猛虎）→ 红熊的信。
- * 濒死时红熊救场一次。战斗的招式表和横版一样，判定是脚下朝面向张开的扇形。
+ * 濒死时红熊救场一次。战斗判定是脚下朝面向张开的扇形。
  */
 export class MapScene extends Phaser.Scene {
   run!: RunState;
@@ -180,7 +180,7 @@ export class MapScene extends Phaser.Scene {
     trimArtTextures(this);
     this.voice = new VoicePlayer(this);
     this.run = getRun() ?? startRun('wenShaohua', false);
-    this.controls = new Controls(this, 'map');
+    this.controls = new Controls(this);
     this.area = null;
     this.seenAreas = new Set();
     this.props = [];
@@ -375,7 +375,7 @@ export class MapScene extends Phaser.Scene {
     this.tickEncounters();
   }
 
-  /** 每个画面帧：画人、木人桩、特效，竹子透明，界面，区域题卡 */
+  /** 每个画面帧：画人、特效，竹子透明，界面，区域题卡 */
   private render(delta: number) {
     const p = this.player;
     this.followGround();
@@ -669,7 +669,7 @@ export class MapScene extends Phaser.Scene {
     return Math.hypot(this.player.pos.x - at.x, this.player.pos.y - at.y) < TALK_RANGE;
   }
 
-  /** 进茶摊：横版那个茶摊画面原样用，买完出来 advanceRun 会回到地图、站在茶摊前 */
+  /** 进茶摊：切换到独立商店场景，买完出来 advanceRun 会回到地图、站在茶摊前 */
   private visitShop() {
     this.leaving = true;
     this.run.hp = this.player.hp;

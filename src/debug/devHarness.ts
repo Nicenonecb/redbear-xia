@@ -1,12 +1,12 @@
 import type Phaser from 'phaser';
 import type { Action } from '../input/Controls';
-import { autoPlayer } from './autoPlayer';
+import { mapAutoPlayer } from './mapAutoPlayer';
 
 /**
  * 开发用的逐帧测试工具，只在 npm run dev 时装到 window 上，打包后不存在。
  * 在浏览器控制台里可以停掉游戏循环、按住指定按键逐帧推进，把整局打法写成脚本来测：
  *
- *   __t.go('PangHu')                        // 切到某个场景
+ *   __t.go('Map')                        // 切到某个场景
  *   __t.run([[60, ['right']], [2, ['attack']], [30, []]], s => s.player.hp)
  *                                           // 每段按住哪些键、推进多少帧，返回每帧的探针结果
  *   __t.drive(3000, (s, f) => [...])         // 每帧现场决定按什么键，写个简单 AI 替玩家打
@@ -37,7 +37,7 @@ export function installDevHarness(game: Phaser.Game) {
 
   const harness = {
     fast: false,
-    autoPlayer,
+    autoPlayer: mapAutoPlayer,
     step,
     scene,
     sleep: () => game.loop.sleep(),
@@ -63,7 +63,7 @@ export function installDevHarness(game: Phaser.Game) {
       const out: T[] = [];
       for (const [frames, held] of script) {
         for (let i = 0; i < frames; i++) {
-          // 一个键可能绑在几个动作上（W 既是上又是跳），先全松开再按下要按的，免得互相覆盖
+          // 先全松开再按下本帧需要的动作，避免沿用上一帧输入
           for (const a of Object.keys(keys) as Action[]) keys[a].forEach((k) => (k.isDown = false));
           for (const a of held) keys[a].forEach((k) => (k.isDown = true));
           step();
