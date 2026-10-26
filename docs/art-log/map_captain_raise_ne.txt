@@ -1,0 +1,10 @@
+Game map ACTION FRAME named map_captain_raise_ne.png for a top-down wuxia game.
+Character: the prince's personal guard captain: tall, armored in dark lamellar armor with faded gold trim, a plumed helmet, cold face, a pair of broad sabers, one in each hand, held crossed in front of him.
+The attached reference map_captain_ne.png is the SAME character standing in the SAME direction. Keep EXACTLY the same canvas size, the same body size and the same foot anchor point (horizontal center, 6% above the bottom); only change the pose. A short step is fine.
+Camera: true 45-degree oblique TOP-DOWN game map view (like Legend of Mir / Fantasy Westward Journey): camera elevated and looking down, top of the head and shoulder tops clearly visible, slight foreshortening (head a little larger, feet a little smaller).
+Orientation: three-quarter BACK view, facing toward the UPPER-RIGHT of the image; back of the head and the right shoulder visible, face mostly hidden.
+Action: Ready: both sabers crossed high above his head.
+The whole body and weapon must stay inside the canvas. Do NOT draw slash trails, speed lines or impact effects — the game adds those separately.
+Style: Chinese hand-painted ink wash (shuimo), fine inked linework with dry-brush flying-white texture and subtle ink bleed on edges, clean readable silhouette. Main ink #1a1714, rice-paper ivory #efe7d6 as the light color, only sparse vermilion accents #b3261e. Dignified wuxia game artwork, same rendering as the existing game art. No anime cel shading, no photographic realism, no neon glow, no text, no seal stamps, no signatures.
+Strict: genuine fully transparent background (real alpha, NOT a drawn checkerboard). NO ground, NO shadow, NO glow outside the subject, NO paper rectangle, NO backdrop, NO floating ink splashes, NO text, NO labels.
+Production alignment: retain exact 1254x1254 canvas, anatomical scale, orthographic camera elevation and foot anchor of map_captain_s.png. Standing foot baseline y=1198, midpoint x=627. Clearly rotate whole body to requested facing, not just face. Preserve full body and weapon within canvas. No zoom or recentering.

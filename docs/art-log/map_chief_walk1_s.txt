@@ -1,0 +1,3 @@
+只修改图1腰部以下的双腿和衣摆，修正走路动画。图2是另一只脚迈出的那一步，仅用来检查新图必须是相反一步；图3是站姿母图。把画面左侧现在伸到底部的靴子收回抬高；把画面右侧缩在后面的靴子向下迈出着地。成图必须画面右侧靴子最低、左侧靴子更高，两条腿的前后位置明确交换。 必须看得见两只靴子，不能只改衣服，不能整张水平翻转。头、脸、上半身、发型、服装纹样、兵器和握持手完全不变。1254x1254，保持人物比例、头的位置、画布留白和原画笔触。真透明背景，不添加文字、地面或阴影。
+最高优先级：保持原图画布留白与角色位置。Spatial registration takes precedence over approximate margins: output exactly 1254x1254, same as attached master. Master opaque silhouette bounds x=132..1185, y=50..1195. Keep master head size, head position, torso proportions and empty margins. Do not enlarge or reframe to fill canvas. Change gait locally while retaining identity, costume and texture.
+

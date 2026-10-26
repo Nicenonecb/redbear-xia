@@ -14,7 +14,7 @@ const MIRROR: Partial<Record<Dir8, Dir8>> = { w: 'e', sw: 'se', nw: 'ne' };
  * 打出去的那一下（下面这几个）往前冲，其余的蓄势姿势往后收
  */
 export type Pose = string;
-const STRIKE_POSES = new Set(['strike', 'chop', 'smash', 'throw', 'leap', 'claw']);
+const STRIKE_POSES = new Set(['strike', 'chop', 'smash', 'throw', 'leap', 'claw', 'thrust', 'sweep', 'vault', 'lash', 'arc', 'whirl', 'palm']);
 
 /**
  * 走路循环：一个循环四步「左步 → 站姿 → 右步 → 站姿」。

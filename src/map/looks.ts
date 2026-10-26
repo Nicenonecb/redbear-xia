@@ -17,27 +17,27 @@ export interface MapLook {
 }
 
 export const LOOKS: Record<string, MapLook> = {
-  swordsman: { mapName: 'swordsman', fallback: 'portrait_bandit', height: 170, shadow: 65 },
-  bannerman: { mapName: 'bannerman', fallback: 'portrait_bandit', height: 180, shadow: 65 },
+  swordsman: { mapName: 'swordsman', fallback: 'portrait_swordsman', height: 170, shadow: 65 },
+  bannerman: { mapName: 'bannerman', fallback: 'portrait_bannerman', height: 180, shadow: 65 },
   captain: {
     mapName: 'captain',
-    fallback: 'portrait_chief',
+    fallback: 'portrait_captain',
     height: 210,
     shadow: 95,
     poses: { hammer: ['raise', 'smash'], sweep: ['raise', 'smash'] },
   },
-  spearman: { mapName: 'spearman', fallback: 'portrait_bandit', height: 170, shadow: 65, poses: { slash: ['ready', 'strike'] } },
-  archer: { mapName: 'archer', fallback: 'portrait_thrower', height: 165, shadow: 60, poses: { throw: ['ready', 'throw'] } },
+  spearman: { mapName: 'spearman', fallback: 'portrait_spearman', height: 170, shadow: 65, poses: { slash: ['ready', 'strike'] } },
+  archer: { mapName: 'archer', fallback: 'portrait_archer', height: 165, shadow: 60, poses: { throw: ['ready', 'throw'] } },
   drillmaster: {
     mapName: 'drillmaster',
-    fallback: 'portrait_chief',
+    fallback: 'portrait_drillmaster',
     height: 205,
     shadow: 90,
     poses: { hammer: ['raise', 'smash'], sweep: ['raise', 'smash'] },
   },
   baoJinliang: {
     mapName: 'baoJinliang',
-    fallback: 'portrait_chief',
+    fallback: 'portrait_baoJinliang',
     height: 230,
     shadow: 100,
     poses: {

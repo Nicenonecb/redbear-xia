@@ -3,6 +3,7 @@
 > 2026-10-25 · 配合 [three-stages-plan.md](three-stages-plan.md) 和 [story-three-stages.md](story-three-stages.md)。
 > 一共 248 张，分 7 批。写法和第三、四批一样：英文提示词，每条复制整段就行，每条上面的中文是给你看的说明。
 > 代码是"图到哪张用哪张"，不用等齐；**先出第 1 批**（立绘、过场、横幅），开发第 2 阶段就用得上。
+> **2026-10-25 更新**：画风已用 4 张概念图定下（`docs/art/style-ref/`）。出图顺序、每张附哪张参考图，改看 [art-batch6-stage23-list.md](art-batch6-stage23-list.md)；提示词还是用本文件里的。
 
 ## 先对 Codex 说这一段（每一批开头说一次）
 

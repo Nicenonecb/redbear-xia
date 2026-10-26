@@ -1,0 +1,3 @@
+校准游戏走路帧。图1是站姿母图，图2是步态。请以图1为底稿，只局部修改四肢，动作参考图2。保持图1的头部大小与坐标、躯干大小、画布留白。不能放大人物，不能改变头的位置。背对镜头，画面右侧脚后撤且最低，右脚鞋底朝镜头；左脚在较高处。 最重要的是同时保留图1的人物大小与图2的迈步，不能退回站姿。头部、服装、花纹、武器、笔触和颜色以图1为准。1254x1254真透明PNG，无地面阴影文字。
+Spatial registration takes precedence over approximate margins: output exactly 1254x1254, same as attached master. Master opaque silhouette bounds x=140..1243, y=239..1157. Keep master head size, head position, torso proportions and empty margins. Do not enlarge or reframe to fill canvas. Change gait locally while retaining identity, costume and texture.
+

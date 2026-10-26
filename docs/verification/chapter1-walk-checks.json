@@ -1,0 +1,907 @@
+{
+  "heroes": [
+    {
+      "hero": "wenShaohua",
+      "checks": [
+        {
+          "name": "wenShaohua",
+          "dir": "s",
+          "textures": [
+            "art:map_wenShaohua_walk1_s",
+            "art:map_wenShaohua_s",
+            "art:map_wenShaohua_walk2_s"
+          ]
+        },
+        {
+          "name": "wenShaohua",
+          "dir": "se",
+          "textures": [
+            "art:map_wenShaohua_walk1_se",
+            "art:map_wenShaohua_se",
+            "art:map_wenShaohua_walk2_se"
+          ]
+        },
+        {
+          "name": "wenShaohua",
+          "dir": "e",
+          "textures": [
+            "art:map_wenShaohua_walk1_e",
+            "art:map_wenShaohua_e",
+            "art:map_wenShaohua_walk2_e"
+          ]
+        },
+        {
+          "name": "wenShaohua",
+          "dir": "ne",
+          "textures": [
+            "art:map_wenShaohua_walk1_ne",
+            "art:map_wenShaohua_ne",
+            "art:map_wenShaohua_walk2_ne"
+          ]
+        },
+        {
+          "name": "wenShaohua",
+          "dir": "n",
+          "textures": [
+            "art:map_wenShaohua_walk1_n",
+            "art:map_wenShaohua_n",
+            "art:map_wenShaohua_walk2_n"
+          ]
+        },
+        {
+          "name": "wenShaohua",
+          "dir": "nw",
+          "textures": [
+            "art:map_wenShaohua_walk1_ne",
+            "art:map_wenShaohua_ne",
+            "art:map_wenShaohua_walk2_ne"
+          ]
+        },
+        {
+          "name": "wenShaohua",
+          "dir": "w",
+          "textures": [
+            "art:map_wenShaohua_walk1_e",
+            "art:map_wenShaohua_e",
+            "art:map_wenShaohua_walk2_e"
+          ]
+        },
+        {
+          "name": "wenShaohua",
+          "dir": "sw",
+          "textures": [
+            "art:map_wenShaohua_walk1_se",
+            "art:map_wenShaohua_se",
+            "art:map_wenShaohua_walk2_se"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "s",
+          "textures": [
+            "art:map_bandit_walk1_s",
+            "art:map_bandit_s",
+            "art:map_bandit_walk2_s"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "se",
+          "textures": [
+            "art:map_bandit_walk1_se",
+            "art:map_bandit_se",
+            "art:map_bandit_walk2_se"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "e",
+          "textures": [
+            "art:map_bandit_walk1_e",
+            "art:map_bandit_e",
+            "art:map_bandit_walk2_e"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "ne",
+          "textures": [
+            "art:map_bandit_walk1_ne",
+            "art:map_bandit_ne",
+            "art:map_bandit_walk2_ne"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "n",
+          "textures": [
+            "art:map_bandit_walk1_n",
+            "art:map_bandit_n",
+            "art:map_bandit_walk2_n"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "nw",
+          "textures": [
+            "art:map_bandit_walk1_ne",
+            "art:map_bandit_ne",
+            "art:map_bandit_walk2_ne"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "w",
+          "textures": [
+            "art:map_bandit_walk1_e",
+            "art:map_bandit_e",
+            "art:map_bandit_walk2_e"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "sw",
+          "textures": [
+            "art:map_bandit_walk1_se",
+            "art:map_bandit_se",
+            "art:map_bandit_walk2_se"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "s",
+          "textures": [
+            "art:map_thrower_walk1_s",
+            "art:map_thrower_s",
+            "art:map_thrower_walk2_s"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "se",
+          "textures": [
+            "art:map_thrower_walk1_se",
+            "art:map_thrower_se",
+            "art:map_thrower_walk2_se"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "e",
+          "textures": [
+            "art:map_thrower_walk1_e",
+            "art:map_thrower_e",
+            "art:map_thrower_walk2_e"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "ne",
+          "textures": [
+            "art:map_thrower_walk1_ne",
+            "art:map_thrower_ne",
+            "art:map_thrower_walk2_ne"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "n",
+          "textures": [
+            "art:map_thrower_walk1_n",
+            "art:map_thrower_n",
+            "art:map_thrower_walk2_n"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "nw",
+          "textures": [
+            "art:map_thrower_walk1_ne",
+            "art:map_thrower_ne",
+            "art:map_thrower_walk2_ne"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "w",
+          "textures": [
+            "art:map_thrower_walk1_e",
+            "art:map_thrower_e",
+            "art:map_thrower_walk2_e"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "sw",
+          "textures": [
+            "art:map_thrower_walk1_se",
+            "art:map_thrower_se",
+            "art:map_thrower_walk2_se"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "s",
+          "textures": [
+            "art:map_chief_walk1_s",
+            "art:map_chief_s",
+            "art:map_chief_walk2_s"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "se",
+          "textures": [
+            "art:map_chief_walk1_se",
+            "art:map_chief_se",
+            "art:map_chief_walk2_se"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "e",
+          "textures": [
+            "art:map_chief_walk1_e",
+            "art:map_chief_e",
+            "art:map_chief_walk2_e"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "ne",
+          "textures": [
+            "art:map_chief_walk1_ne",
+            "art:map_chief_ne",
+            "art:map_chief_walk2_ne"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "n",
+          "textures": [
+            "art:map_chief_walk1_n",
+            "art:map_chief_n",
+            "art:map_chief_walk2_n"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "nw",
+          "textures": [
+            "art:map_chief_walk1_ne",
+            "art:map_chief_ne",
+            "art:map_chief_walk2_ne"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "w",
+          "textures": [
+            "art:map_chief_walk1_e",
+            "art:map_chief_e",
+            "art:map_chief_walk2_e"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "sw",
+          "textures": [
+            "art:map_chief_walk1_se",
+            "art:map_chief_se",
+            "art:map_chief_walk2_se"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "s",
+          "textures": [
+            "art:map_pangHu_walk1_s",
+            "art:map_pangHu_s",
+            "art:map_pangHu_walk2_s"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "se",
+          "textures": [
+            "art:map_pangHu_walk1_se",
+            "art:map_pangHu_se",
+            "art:map_pangHu_walk2_se"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "e",
+          "textures": [
+            "art:map_pangHu_walk1_e",
+            "art:map_pangHu_e",
+            "art:map_pangHu_walk2_e"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "ne",
+          "textures": [
+            "art:map_pangHu_walk1_ne",
+            "art:map_pangHu_ne",
+            "art:map_pangHu_walk2_ne"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "n",
+          "textures": [
+            "art:map_pangHu_walk1_n",
+            "art:map_pangHu_n",
+            "art:map_pangHu_walk2_n"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "nw",
+          "textures": [
+            "art:map_pangHu_walk1_ne",
+            "art:map_pangHu_ne",
+            "art:map_pangHu_walk2_ne"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "w",
+          "textures": [
+            "art:map_pangHu_walk1_e",
+            "art:map_pangHu_e",
+            "art:map_pangHu_walk2_e"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "sw",
+          "textures": [
+            "art:map_pangHu_walk1_se",
+            "art:map_pangHu_se",
+            "art:map_pangHu_walk2_se"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "s",
+          "textures": [
+            "art:map_tiger_walk1_s",
+            "art:map_tiger_s",
+            "art:map_tiger_walk2_s"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "se",
+          "textures": [
+            "art:map_tiger_walk1_se",
+            "art:map_tiger_se",
+            "art:map_tiger_walk2_se"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "e",
+          "textures": [
+            "art:map_tiger_walk1_e",
+            "art:map_tiger_e",
+            "art:map_tiger_walk2_e"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "ne",
+          "textures": [
+            "art:map_tiger_walk1_ne",
+            "art:map_tiger_ne",
+            "art:map_tiger_walk2_ne"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "n",
+          "textures": [
+            "art:map_tiger_walk1_n",
+            "art:map_tiger_n",
+            "art:map_tiger_walk2_n"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "nw",
+          "textures": [
+            "art:map_tiger_walk1_ne",
+            "art:map_tiger_ne",
+            "art:map_tiger_walk2_ne"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "w",
+          "textures": [
+            "art:map_tiger_walk1_e",
+            "art:map_tiger_e",
+            "art:map_tiger_walk2_e"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "sw",
+          "textures": [
+            "art:map_tiger_walk1_se",
+            "art:map_tiger_se",
+            "art:map_tiger_walk2_se"
+          ]
+        }
+      ],
+      "failures": [],
+      "loadedWalkTextures": 60,
+      "gameplayTextures": [
+        "art:map_wenShaohua_walk1_e",
+        "art:map_wenShaohua_e",
+        "art:map_wenShaohua_walk2_e"
+      ],
+      "gameplayMoved": 230.83454135850388,
+      "stop": {
+        "texture": "art:map_wenShaohua_e",
+        "x": 503.17939065972354,
+        "y": 3871.874963778703,
+        "walking": false
+      }
+    },
+    {
+      "hero": "yuWuxia",
+      "checks": [
+        {
+          "name": "yuWuxia",
+          "dir": "s",
+          "textures": [
+            "art:map_yuWuxia_walk1_s",
+            "art:map_yuWuxia_s",
+            "art:map_yuWuxia_walk2_s"
+          ]
+        },
+        {
+          "name": "yuWuxia",
+          "dir": "se",
+          "textures": [
+            "art:map_yuWuxia_walk1_se",
+            "art:map_yuWuxia_se",
+            "art:map_yuWuxia_walk2_se"
+          ]
+        },
+        {
+          "name": "yuWuxia",
+          "dir": "e",
+          "textures": [
+            "art:map_yuWuxia_walk1_e",
+            "art:map_yuWuxia_e",
+            "art:map_yuWuxia_walk2_e"
+          ]
+        },
+        {
+          "name": "yuWuxia",
+          "dir": "ne",
+          "textures": [
+            "art:map_yuWuxia_walk1_ne",
+            "art:map_yuWuxia_ne",
+            "art:map_yuWuxia_walk2_ne"
+          ]
+        },
+        {
+          "name": "yuWuxia",
+          "dir": "n",
+          "textures": [
+            "art:map_yuWuxia_walk1_n",
+            "art:map_yuWuxia_n",
+            "art:map_yuWuxia_walk2_n"
+          ]
+        },
+        {
+          "name": "yuWuxia",
+          "dir": "nw",
+          "textures": [
+            "art:map_yuWuxia_walk1_ne",
+            "art:map_yuWuxia_ne",
+            "art:map_yuWuxia_walk2_ne"
+          ]
+        },
+        {
+          "name": "yuWuxia",
+          "dir": "w",
+          "textures": [
+            "art:map_yuWuxia_walk1_e",
+            "art:map_yuWuxia_e",
+            "art:map_yuWuxia_walk2_e"
+          ]
+        },
+        {
+          "name": "yuWuxia",
+          "dir": "sw",
+          "textures": [
+            "art:map_yuWuxia_walk1_se",
+            "art:map_yuWuxia_se",
+            "art:map_yuWuxia_walk2_se"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "s",
+          "textures": [
+            "art:map_bandit_walk1_s",
+            "art:map_bandit_s",
+            "art:map_bandit_walk2_s"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "se",
+          "textures": [
+            "art:map_bandit_walk1_se",
+            "art:map_bandit_se",
+            "art:map_bandit_walk2_se"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "e",
+          "textures": [
+            "art:map_bandit_walk1_e",
+            "art:map_bandit_e",
+            "art:map_bandit_walk2_e"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "ne",
+          "textures": [
+            "art:map_bandit_walk1_ne",
+            "art:map_bandit_ne",
+            "art:map_bandit_walk2_ne"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "n",
+          "textures": [
+            "art:map_bandit_walk1_n",
+            "art:map_bandit_n",
+            "art:map_bandit_walk2_n"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "nw",
+          "textures": [
+            "art:map_bandit_walk1_ne",
+            "art:map_bandit_ne",
+            "art:map_bandit_walk2_ne"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "w",
+          "textures": [
+            "art:map_bandit_walk1_e",
+            "art:map_bandit_e",
+            "art:map_bandit_walk2_e"
+          ]
+        },
+        {
+          "name": "bandit",
+          "dir": "sw",
+          "textures": [
+            "art:map_bandit_walk1_se",
+            "art:map_bandit_se",
+            "art:map_bandit_walk2_se"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "s",
+          "textures": [
+            "art:map_thrower_walk1_s",
+            "art:map_thrower_s",
+            "art:map_thrower_walk2_s"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "se",
+          "textures": [
+            "art:map_thrower_walk1_se",
+            "art:map_thrower_se",
+            "art:map_thrower_walk2_se"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "e",
+          "textures": [
+            "art:map_thrower_walk1_e",
+            "art:map_thrower_e",
+            "art:map_thrower_walk2_e"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "ne",
+          "textures": [
+            "art:map_thrower_walk1_ne",
+            "art:map_thrower_ne",
+            "art:map_thrower_walk2_ne"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "n",
+          "textures": [
+            "art:map_thrower_walk1_n",
+            "art:map_thrower_n",
+            "art:map_thrower_walk2_n"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "nw",
+          "textures": [
+            "art:map_thrower_walk1_ne",
+            "art:map_thrower_ne",
+            "art:map_thrower_walk2_ne"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "w",
+          "textures": [
+            "art:map_thrower_walk1_e",
+            "art:map_thrower_e",
+            "art:map_thrower_walk2_e"
+          ]
+        },
+        {
+          "name": "thrower",
+          "dir": "sw",
+          "textures": [
+            "art:map_thrower_walk1_se",
+            "art:map_thrower_se",
+            "art:map_thrower_walk2_se"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "s",
+          "textures": [
+            "art:map_chief_walk1_s",
+            "art:map_chief_s",
+            "art:map_chief_walk2_s"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "se",
+          "textures": [
+            "art:map_chief_walk1_se",
+            "art:map_chief_se",
+            "art:map_chief_walk2_se"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "e",
+          "textures": [
+            "art:map_chief_walk1_e",
+            "art:map_chief_e",
+            "art:map_chief_walk2_e"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "ne",
+          "textures": [
+            "art:map_chief_walk1_ne",
+            "art:map_chief_ne",
+            "art:map_chief_walk2_ne"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "n",
+          "textures": [
+            "art:map_chief_walk1_n",
+            "art:map_chief_n",
+            "art:map_chief_walk2_n"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "nw",
+          "textures": [
+            "art:map_chief_walk1_ne",
+            "art:map_chief_ne",
+            "art:map_chief_walk2_ne"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "w",
+          "textures": [
+            "art:map_chief_walk1_e",
+            "art:map_chief_e",
+            "art:map_chief_walk2_e"
+          ]
+        },
+        {
+          "name": "chief",
+          "dir": "sw",
+          "textures": [
+            "art:map_chief_walk1_se",
+            "art:map_chief_se",
+            "art:map_chief_walk2_se"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "s",
+          "textures": [
+            "art:map_pangHu_walk1_s",
+            "art:map_pangHu_s",
+            "art:map_pangHu_walk2_s"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "se",
+          "textures": [
+            "art:map_pangHu_walk1_se",
+            "art:map_pangHu_se",
+            "art:map_pangHu_walk2_se"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "e",
+          "textures": [
+            "art:map_pangHu_walk1_e",
+            "art:map_pangHu_e",
+            "art:map_pangHu_walk2_e"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "ne",
+          "textures": [
+            "art:map_pangHu_walk1_ne",
+            "art:map_pangHu_ne",
+            "art:map_pangHu_walk2_ne"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "n",
+          "textures": [
+            "art:map_pangHu_walk1_n",
+            "art:map_pangHu_n",
+            "art:map_pangHu_walk2_n"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "nw",
+          "textures": [
+            "art:map_pangHu_walk1_ne",
+            "art:map_pangHu_ne",
+            "art:map_pangHu_walk2_ne"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "w",
+          "textures": [
+            "art:map_pangHu_walk1_e",
+            "art:map_pangHu_e",
+            "art:map_pangHu_walk2_e"
+          ]
+        },
+        {
+          "name": "pangHu",
+          "dir": "sw",
+          "textures": [
+            "art:map_pangHu_walk1_se",
+            "art:map_pangHu_se",
+            "art:map_pangHu_walk2_se"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "s",
+          "textures": [
+            "art:map_tiger_walk1_s",
+            "art:map_tiger_s",
+            "art:map_tiger_walk2_s"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "se",
+          "textures": [
+            "art:map_tiger_walk1_se",
+            "art:map_tiger_se",
+            "art:map_tiger_walk2_se"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "e",
+          "textures": [
+            "art:map_tiger_walk1_e",
+            "art:map_tiger_e",
+            "art:map_tiger_walk2_e"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "ne",
+          "textures": [
+            "art:map_tiger_walk1_ne",
+            "art:map_tiger_ne",
+            "art:map_tiger_walk2_ne"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "n",
+          "textures": [
+            "art:map_tiger_walk1_n",
+            "art:map_tiger_n",
+            "art:map_tiger_walk2_n"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "nw",
+          "textures": [
+            "art:map_tiger_walk1_ne",
+            "art:map_tiger_ne",
+            "art:map_tiger_walk2_ne"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "w",
+          "textures": [
+            "art:map_tiger_walk1_e",
+            "art:map_tiger_e",
+            "art:map_tiger_walk2_e"
+          ]
+        },
+        {
+          "name": "tiger",
+          "dir": "sw",
+          "textures": [
+            "art:map_tiger_walk1_se",
+            "art:map_tiger_se",
+            "art:map_tiger_walk2_se"
+          ]
+        }
+      ],
+      "failures": [],
+      "loadedWalkTextures": 60,
+      "gameplayTextures": [
+        "art:map_yuWuxia_walk1_e",
+        "art:map_yuWuxia_e",
+        "art:map_yuWuxia_walk2_e"
+      ],
+      "gameplayMoved": 270.27202412106703,
+      "stop": {
+        "texture": "art:map_yuWuxia_e",
+        "x": 509.68341207040396,
+        "y": 3857.42158286608,
+        "walking": false
+      }
+    }
+  ],
+  "errors": []
+}
