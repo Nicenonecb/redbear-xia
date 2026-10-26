@@ -515,6 +515,9 @@
     "map_captain_smash_se": "map_captain_smash_se.png",
     "map_captain_smash_e": "map_captain_smash_e.png",
     "map_captain_smash_ne": "map_captain_smash_ne.png",
-    "map_captain_smash_n": "map_captain_smash_n.png"
+    "map_captain_smash_n": "map_captain_smash_n.png",
+    "bg_waist_path": "bg_waist_path.png",
+    "bg_waist_duel": "bg_waist_duel.png",
+    "bg_peak_palace": "bg_peak_palace.png"
   }
 }

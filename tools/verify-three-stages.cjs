@@ -85,7 +85,7 @@ const bossOnly = process.env.BOSS_ONLY === '1';
           if (errors.length) throw Error(errors.join('\n'));
         }
     const report = {
-      date: '2026-10-25',
+      date: new Date().toISOString(),
       mode: bossOnly ? 'final-boss-fixed-loadout' : 'full-campaign',
       results,
       errors,

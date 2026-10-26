@@ -196,9 +196,10 @@ export class MapScene extends Phaser.Scene {
     this.drawGround();
 
     this.scatterProps();
-    if (this.run.stage === 2)
+    if (this.run.stage > 0)
       for (let i = 0; i < 9; i++) {
-        const cloud = this.add.ellipse(1100 + i * 530, 2200 - i * 155, 800, 180, 0xf6f2e9, 0.16).setDepth(8000);
+        const cloud = (placeMapArt(this, 'prop_cloud', 1100 + i * 530, 2200 - i * 155, 800)?.img ??
+          this.add.ellipse(1100 + i * 530, 2200 - i * 155, 800, 180, 0xf6f2e9)).setAlpha(0.16).setDepth(8000);
         this.tweens.add({ targets: cloud, x: cloud.x + 170, alpha: 0.3, duration: 7500 + i * 170, yoyo: true, repeat: -1 });
       }
     this.walk = { path: M.path, pathWidth: M.pathWidth, areas: M.areas, lock: null, solids: [] };
@@ -1107,7 +1108,8 @@ export class MapScene extends Phaser.Scene {
     const choices: [ArtSlot, number][] =
       !rock && this.run.stage > 0
         ? [
-            ['prop_pine', 300],
+            ['prop_pine_big', this.run.stage === 1 ? 340 : 260],
+            ['prop_pine_small', 220],
             ['prop_rock_big', 230],
           ]
         : rock

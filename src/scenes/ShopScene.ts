@@ -35,7 +35,7 @@ export class ShopScene extends Phaser.Scene {
   create() {
     this.run = getRun() ?? startRun('wenShaohua', false);
     this.leaving = false;
-    if (!coverArt(this, 'bg_shop')) {
+    if (!coverArt(this, this.run.stage === 1 ? 'bg_waist_path' : this.run.stage === 2 ? 'bg_peak_palace' : 'bg_shop')) {
       drawInkMountains(this, { width: GAME_WIDTH, horizon: 300, bottom: GROUND_Y, layers: 3, seed: 'tea-stall' });
     }
     addPaperGrain(this);

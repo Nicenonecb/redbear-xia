@@ -5,7 +5,7 @@ import { MountainBoss } from '../combat/MountainBoss';
 import type { BossController } from './BossController';
 import { MapSprite, poseOf } from '../MapSprite';
 import { fillSector, type MapScene } from '../../scenes/MapScene';
-import { areaOf, dirTo } from '../combat/ground';
+import { areaOf, dirTo, groundAngle } from '../combat/ground';
 import { hasArt, type ArtSlot } from '../../art/slots';
 import { sfx } from '../../audio/sfx';
 import { InkSplat } from '../../art/inkSplat';
@@ -17,6 +17,7 @@ export class ZhangBoss implements BossController {
   private human!: MapSprite;
   private awake!: MapSprite;
   private introduced = false;
+  private activeMove: string | null = null;
   private glow!: Phaser.GameObjects.Graphics;
   private transforming = false;
   private escaping = false;
@@ -48,6 +49,7 @@ export class ZhangBoss implements BossController {
         ['今日之败……记下了。'],
         () => this.escape(),
         () => this.host.headOf(this.actor.pos, 245),
+        { slot: 'portrait_zhangHuatian_beaten', side: 'right' },
       );
     });
   }
@@ -67,6 +69,7 @@ export class ZhangBoss implements BossController {
         this.actor.startFight();
       },
       () => this.host.headOf(this.actor.pos, 230),
+      { slot: 'portrait_zhangHuatian', side: 'right' },
     );
   }
   private escape() {
@@ -78,7 +81,7 @@ export class ZhangBoss implements BossController {
     this.host.cameras.main.zoomTo(renderScale() * 0.8, 700);
     const brothers = [
       new MapSprite(this.host, 'pangHu', 'portrait_pangHu', 215, 90),
-      new MapSprite(this.host, 'baoJinliang', 'portrait_chief', 225, 90),
+      new MapSprite(this.host, 'baoJinliang', 'portrait_baoJinliang', 225, 90),
     ];
     const positions = [
       { x: a.pos.x - 650, y: a.pos.y + 140 },
@@ -97,6 +100,7 @@ export class ZhangBoss implements BossController {
       this.host.talk(
         ['胖虎：大哥快走！', '鲍金梁：我挡着！'],
         () => {
+          this.awake.forceArt(null);
           const p = { x: a.pos.x, y: a.pos.y };
           this.host.tweens.add({
             targets: p,
@@ -137,9 +141,9 @@ export class ZhangBoss implements BossController {
     this.host.cinematic = true;
     this.host.cameras.main.zoomTo(renderScale() * 1.3, 700);
     this.human.forceArt('map_zhangHuatian_transform_1');
-    this.host.ui.say('本想留你全尸。', 1200, () => this.host.headOf(a.pos, 230));
+    this.host.ui.say('本想留你全尸。', 1200, () => this.host.headOf(a.pos, 230), { slot: 'portrait_zhangHuatian', side: 'right' });
     this.host.time.delayedCall(1400, () => {
-      this.host.ui.say('前朝的天下……我一寸一寸夺回来！', 1600, () => this.host.headOf(a.pos, 230));
+      this.host.ui.say('前朝的天下……我一寸一寸夺回来！', 1600, () => this.host.headOf(a.pos, 230), { slot: 'portrait_zhangHuatian_awaken', side: 'right' });
       this.human.img.setTint(0xffcc55);
       this.human.forceArt('map_zhangHuatian_transform_2');
       sfx.play('charge');
@@ -174,6 +178,7 @@ export class ZhangBoss implements BossController {
     });
     this.host.time.delayedCall(4200, () => {
       this.transforming = false;
+      this.host.ui.endTalk();
       this.glow.clear();
       this.host.cameras.main.zoomTo(renderScale(), 600);
       this.host.cinematic = false;
@@ -183,6 +188,22 @@ export class ZhangBoss implements BossController {
   }
   tick() {
     this.actor.tick();
+    const a = this.actor;
+    const move = a.runner.phase === 'active' ? a.runner.move : null;
+    if (move?.hit && move.id !== this.activeMove) {
+      const area = areaOf(move.hit);
+      if (['arc', 'whirl', 'snare'].includes(move.id)) {
+        const at = move.id === 'snare' ? a.aim : a.pos;
+        const reach = move.id === 'snare' ? 70 : area.reach;
+        this.events.emit('overlay', new ArtPop(this.host, 'fx_whip_ring', at.x, at.y,
+          reach * 2, at.y + 2, 0, false, Math.max(260, move.active * 1000 / 60)));
+      } else if (['lash', 'lash2', 'lashB'].includes(move.id)) {
+        this.events.emit('overlay', new ArtPop(this.host, 'fx_whip_lash',
+          a.pos.x + a.facing.x * area.reach / 2, a.pos.y - 55 + a.facing.y * area.reach / 2,
+          area.reach, a.pos.y + 2, groundAngle(a.facing), true));
+      }
+    }
+    this.activeMove = move?.id ?? null;
   }
   render(delta: number) {
     if (this.escaping) return;

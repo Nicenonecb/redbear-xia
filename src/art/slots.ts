@@ -8,6 +8,9 @@ import { GAME_HEIGHT, GAME_WIDTH } from '../config';
  */
 export const ART_SLOTS = {
   title: '标题画面背景',
+  bg_waist_path: '山腰栈道插画',
+  bg_waist_duel: '山腰擂台插画',
+  bg_peak_palace: '山峰行宫插画',
   portrait_zhangHuatian: '彰化天',
   portrait_zhangHuatian_awaken: '彰化天白发觉醒',
   portrait_spearman: '矛手',

@@ -7,12 +7,14 @@ import type { BossController } from './BossController';
 import { MapSprite, poseOf } from '../MapSprite';
 import { LOOKS } from '../looks';
 import { fillSector, type MapScene } from '../../scenes/MapScene';
-import { areaOf, GROUND_SQUASH } from '../combat/ground';
+import { ArtPop } from '../combat/fx';
+import { areaOf, groundAngle, GROUND_SQUASH } from '../combat/ground';
 export class BaoBoss implements BossController {
   readonly events = new Phaser.Events.EventEmitter();
   actor!: MountainBoss;
   private sprite!: MapSprite;
   private introduced = false;
+  private activeMove: string | null = null;
   private ring!: Phaser.GameObjects.Graphics;
   private spectators: MapSprite[] = [];
   constructor(private host: MapScene) {}
@@ -29,7 +31,7 @@ export class BaoBoss implements BossController {
     );
     this.ring = this.host.add.graphics().setDepth(-2900);
     for (let i = 0; i < 4; i++) {
-      const s = new MapSprite(this.host, 'spearman', 'portrait_bandit', 160, 60);
+      const s = new MapSprite(this.host, 'spearman', 'portrait_spearman', 160, 60);
       const angle = Math.PI + (i * Math.PI) / 3;
       s.update({ x: at.x + Math.cos(angle) * 540, y: at.y + Math.sin(angle) * 540, facing: { x: 0, y: 1 }, moving: false }, 0);
       this.spectators.push(s);
@@ -43,6 +45,7 @@ export class BaoBoss implements BossController {
           this.host.spawnEnemy({ enemy: 'archer', side: 'right' }, { x: at.x, y: at.y - 150 });
         },
         () => this.host.headOf(this.actor.pos, 230),
+        { slot: 'portrait_baoJinliang_angry', side: 'right' },
       );
     });
     this.actor.events.once('defeated', () => {
@@ -56,6 +59,7 @@ export class BaoBoss implements BossController {
           this.events.emit('defeated');
         },
         () => this.host.headOf(this.actor.pos, 230),
+        { slot: 'portrait_baoJinliang_beaten', side: 'right' },
       );
     });
   }
@@ -95,10 +99,20 @@ export class BaoBoss implements BossController {
         this.actor.startFight();
       },
       () => this.host.headOf(this.actor.pos, 230),
+      { slot: 'portrait_baoJinliang', side: 'right' },
     );
   }
   tick() {
     this.actor.tick();
+    const a = this.actor;
+    const move = a.runner.phase === 'active' ? a.runner.move : null;
+    if (move?.hit && move.id !== this.activeMove && ['thrust', 'thrust3', 'thrustB', 'thrustC', 'charge'].includes(move.id)) {
+      const reach = areaOf(move.hit).reach;
+      this.events.emit('overlay', new ArtPop(this.host, 'fx_spear_thrust',
+        a.pos.x + a.facing.x * reach / 2, a.pos.y - 55 + a.facing.y * reach / 2,
+        reach, a.pos.y + 2, groundAngle(a.facing), true));
+    }
+    this.activeMove = move?.id ?? null;
   }
   render(delta: number) {
     const a = this.actor;
