@@ -2,6 +2,8 @@
  * 正常速度（非 fast，画面照常渲染）下测 AI 每帧决策耗时：特征提取 + 网络推理。
  *   PLAYWRIGHT_MODULE=<playwright> node tools/measure-latency.cjs --policy /abs/policy.json --hero wenShaohua --seconds 60 --out /abs/latency.json
  * 输出决策耗时 p50/p99/max，以及渲染帧间隔（确认仍是 60 帧左右）。
+ * 剧情翻页、升级面板、商店还没接 2B：非可操控帧由老师脚本在每个渲染帧按键（与 run-student 相同的分工），
+ * 只统计大地图上 AI 自己决策的帧。
  */
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const fs = require('node:fs');
@@ -35,10 +37,17 @@ const seconds = Number(args.seconds ?? 60);
       return a;
     };
     window.raf = [];
-    let last = performance.now();
+    const bot = __t.autoPlayer(1, 'latency-probe', { expert: true });
+    let last = performance.now(), f = 0, keys = {};
     const tick = (t) => {
       raf.push(t - last);
       last = t;
+      const sc = __t.scene();
+      const p = sc.player;
+      Object.values(keys).flat().forEach((k) => (k.isDown = false));
+      keys = sc.controls?.keys ?? {};
+      const live = sc.scene.key === 'Map' && p && !p.dead && !sc.leaving && !sc.pauses?.size;
+      if (!live) for (const a of bot(sc, f++)) keys[a]?.forEach((k) => (k.isDown = true));
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
