@@ -6,7 +6,7 @@ import { ChoicePanel, type ChoiceConfig } from '../ui/ChoicePanel';
 import { CutIn } from '../ui/CutIn';
 import { HealthBar } from '../ui/HealthBar';
 import { IntroCard } from '../ui/IntroCard';
-import { PauseMenu } from '../ui/PauseMenu';
+import { PauseMenu, type CheatSwitch } from '../ui/PauseMenu';
 import { Portrait } from '../ui/Portrait';
 import { RunHud } from '../ui/RunHud';
 import { SpeechBubble } from '../ui/SpeechBubble';
@@ -155,9 +155,9 @@ export class UIScene extends Phaser.Scene {
 
   /** 暂停菜单（大地图按 Esc / P）：菜单开着时返回它 */
   pauseMenu?: PauseMenu;
-  openPause(hint: string, onResume: () => void, onQuit: () => void) {
+  openPause(hint: string, cheat: CheatSwitch, onResume: () => void, onQuit: () => void) {
     this.pauseMenu?.close();
-    this.pauseMenu = new PauseMenu(this, hint, onResume, onQuit);
+    this.pauseMenu = new PauseMenu(this, hint, cheat, onResume, onQuit);
   }
 
   /** 选项面板（升级三选一、拔剑还是给钱） */

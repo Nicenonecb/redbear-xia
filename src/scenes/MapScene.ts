@@ -237,6 +237,7 @@ export class MapScene extends Phaser.Scene {
       hp: this.run.hp,
     });
     this.player.rescueBelow = this.run.rescueUsed ? 0 : PROGRESSION.rescue.below;
+    this.player.godMode = !!this.run.cheat;
     this.player.events.on('move', (e: MoveEvent) => this.onPlayerMove(e));
     this.player.events.on('rescue', () => this.rescue());
     this.player.onLethal = () => {
@@ -334,6 +335,7 @@ export class MapScene extends Phaser.Scene {
     this.scene.pause();
     this.ui.openPause(
       this.heroEntry.mapHint,
+      { on: !!this.run.cheat, set: (on) => this.setCheat(on) },
       () => {
         this.swallowInput = true;
         this.scene.resume();
@@ -345,6 +347,15 @@ export class MapScene extends Phaser.Scene {
         this.scene.start('Title');
       },
     );
+  }
+
+  /** 开 / 关金手指：气血无限、攻击 ×2.5；开的时候顺手把血补满。记在这一局的存档里 */
+  setCheat(on: boolean) {
+    this.run.cheat = on;
+    this.player.godMode = on;
+    this.player.applyStats({ ...runStats(this.run), hp: on ? this.player.maxHp : this.player.hp });
+    this.run.hp = this.player.hp;
+    saveRun(this.run);
   }
 
   update(_time: number, delta: number) {

@@ -38,7 +38,12 @@ export interface RunState {
   temporary?: boolean;
   /** 这一局已经见过哪些敌人（第一次见才弹登场提示） */
   seenEnemies?: string[];
+  /** 金手指（暂停菜单里开）：气血无限、攻击 ×CHEAT_ATTACK */
+  cheat?: boolean;
 }
+
+/** 金手指开着时攻击乘多少 */
+export const CHEAT_ATTACK = 2.5;
 
 /** 主角的基础气血 */
 const BASE_HP = 100;
@@ -90,7 +95,10 @@ export function runStats(run: RunState) {
   return {
     maxHp: BASE_HP + run.stats.vitality * L.vitality.hp,
     damageScale:
-      weapon.damage * (1 + run.weapon.refine * PROGRESSION.shop.refine.bonus) * (1 + run.stats.attack * L.attack.damage),
+      weapon.damage *
+      (1 + run.weapon.refine * PROGRESSION.shop.refine.bonus) *
+      (1 + run.stats.attack * L.attack.damage) *
+      (run.cheat ? CHEAT_ATTACK : 1),
     speedScale: 1 + run.stats.agility * L.agility.speed,
     evadeBonus: run.stats.agility * L.agility.evadeFrames,
     weaponName: weapon.name + (run.weapon.refine ? ` +${run.weapon.refine}` : ''),

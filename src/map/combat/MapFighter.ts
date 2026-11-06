@@ -66,6 +66,9 @@ export class MapFighter extends MapActor {
     return results;
   }
 
+  /** 金手指：照样挨打、硬直、被击退，但不掉血 */
+  godMode = false;
+
   applyStats(stats: FighterStats) {
     this.maxHp = stats.maxHp;
     this.hp = Math.min(stats.hp, stats.maxHp);
@@ -92,7 +95,7 @@ export class MapFighter extends MapActor {
 
   takeHit(hit: HitSpec, dir: Vec) {
     if (this.invulnerable) return;
-    this.hp = Math.max(0, this.hp - hit.damage);
+    if (!this.godMode) this.hp = Math.max(0, this.hp - hit.damage);
     const protectedByCharm = this.hp === 0 && this.onLethal?.();
     if (protectedByCharm) {
       this.hp = 1;
