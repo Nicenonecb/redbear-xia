@@ -43,7 +43,7 @@ import {
   placeMapArt,
 } from '../map/mapArt';
 import { MapSprite, poseOf } from '../map/MapSprite';
-import { WALK_MARGIN, distToPath, type WalkableMap } from '../map/walkable';
+import { WALK_MARGIN, inVoid, pathEdgeDist, segmentWidth, type WalkableMap } from '../map/walkable';
 import { DamageNumbers } from '../ui/DamageNumbers';
 import type { ScreenPoint, UIScene } from './UIScene';
 
@@ -55,6 +55,8 @@ const HERO_HEIGHT = 170;
 /** 挡在主角前面的竹子淡到多透明；淡入淡出要多久（毫秒） */
 const SEE_THROUGH_ALPHA = 0.35;
 const SEE_THROUGH_FADE = 150;
+/** 悬崖、云海那一侧离路多远以内不长树（铺雾） */
+const VOID_DEPTH = 650;
 /** 竹子离能走的边界多远才开始长：贴着边界种一排，看着就是一堵竹墙 */
 const BAMBOO_GAP = 40;
 /** 边界上那排竹子隔多远一丛 */
@@ -196,12 +198,11 @@ export class MapScene extends Phaser.Scene {
     this.drawGround();
 
     this.scatterProps();
-    if (this.run.stage > 0)
-      for (let i = 0; i < 9; i++) {
-        const cloud = (placeMapArt(this, 'prop_cloud', 1100 + i * 530, 2200 - i * 155, 800)?.img ??
-          this.add.ellipse(1100 + i * 530, 2200 - i * 155, 800, 180, 0xf6f2e9)).setAlpha(0.16).setDepth(8000);
-        this.tweens.add({ targets: cloud, x: cloud.x + 170, alpha: 0.3, duration: 7500 + i * 170, yoyo: true, repeat: -1 });
-      }
+    (M.clouds ?? []).forEach(({ at, width }, i) => {
+      const cloud = (placeMapArt(this, 'prop_cloud', at.x, at.y, width)?.img ??
+        this.add.ellipse(at.x, at.y, width, width * 0.22, 0xf6f2e9)).setAlpha(0.16).setDepth(8000);
+      this.tweens.add({ targets: cloud, x: cloud.x + 170, alpha: 0.3, duration: 7500 + i * 170, yoyo: true, repeat: -1 });
+    });
     this.walk = { path: M.path, pathWidth: M.pathWidth, areas: M.areas, lock: null, solids: [] };
     this.placeDecor();
     this.coins = [];
@@ -930,7 +931,9 @@ export class MapScene extends Phaser.Scene {
         }
         continue;
       }
+      if (d.flip) art.img.setFlipX(true);
       if (d.flat) art.img.setDepth(-2990);
+      if (d.clipAbove) this.clipAbove(art.img, d.clipAbove);
       else this.props.push(art);
       if (d.r) this.walk.solids!.push({ at: d.solidAt ?? d.at, r: d.r });
       for (const sd of d.solids ?? []) this.walk.solids!.push({ at: sd, r: sd.r });
@@ -946,6 +949,28 @@ export class MapScene extends Phaser.Scene {
       const art = placeMapArt(this, 'prop_camp_wall', x, y, wall.width);
       if (art) this.props.push(art);
     }
+  }
+
+  /**
+   * 只留下图上一条线以下（画面下方）的部分。线用图上的位置给（占图宽、图高的几成），
+   * 栈道图上半截的崖壁画到了图边，直接摆会看到一道直边；沿着远侧栏杆的柱顶剪掉，外面露出路边的松林
+   */
+  private clipAbove(img: Phaser.GameObjects.Image, [x0, y0, x1, y1]: [number, number, number, number]) {
+    const at = (fx: number, fy: number) => ({
+      x: img.x + (fx - img.originX) * img.width * img.scaleX * (img.flipX ? -1 : 1),
+      y: img.y + (fy - img.originY) * img.height * img.scaleY,
+    });
+    const a = at(x0, y0);
+    const b = at(x1, y1);
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    const ux = (b.x - a.x) / len;
+    const uy = (b.y - a.y) / len;
+    const far = 3000;
+    const p = (t: number, down: number) => ({ x: a.x + ux * t, y: a.y + uy * t + down });
+    const shape = this.make.graphics({}, false);
+    shape.fillStyle(0xffffff);
+    shape.fillPoints([p(-far, 0), p(len + far, 0), p(len + far, far), p(-far, far)], true);
+    img.setMask(shape.createGeometryMask());
   }
 
   /**
@@ -1005,13 +1030,14 @@ export class MapScene extends Phaser.Scene {
       tiled(`art:${arena}`, GROUND_ART_TILE, -2998, region).setMask(shape.createGeometryMask()).setAlpha(0.85);
     }
     if (hasArt(this, path)) {
-      floor.lineStyle(M.pathWidth + 70, COLORS.inkLight, 0.08);
-      floor.strokePoints(M.path);
-      // 路是一条斜着的长带，一整块包住它太大了：每一段路单独铺一块
+      // 路是一条斜着的长带，一整块包住它太大了：每一段路单独铺一块（栈道、石阶那几段窄一些）
       for (let i = 0; i < M.path.length - 1; i++) {
         const a = M.path[i];
         const b = M.path[i + 1];
-        const pad = M.pathWidth / 2 + 4;
+        const pw = segmentWidth(M.path, i, M.pathWidth);
+        floor.lineStyle(pw + 70, COLORS.inkLight, 0.08);
+        floor.lineBetween(a.x, a.y, b.x, b.y);
+        const pad = pw / 2 + 4;
         const x0 = Math.floor(Math.min(a.x, b.x) - pad);
         const y0 = Math.floor(Math.min(a.y, b.y) - pad);
         const region = new Phaser.Geom.Rectangle(
@@ -1021,11 +1047,11 @@ export class MapScene extends Phaser.Scene {
           Math.ceil(Math.abs(a.y - b.y) + pad * 2),
         );
         const shape = this.make.graphics({}, false);
-        shape.lineStyle(M.pathWidth, 0xffffff);
+        shape.lineStyle(pw, 0xffffff);
         shape.lineBetween(a.x, a.y, b.x, b.y);
         shape.fillStyle(0xffffff);
-        shape.fillCircle(a.x, a.y, M.pathWidth / 2);
-        shape.fillCircle(b.x, b.y, M.pathWidth / 2);
+        shape.fillCircle(a.x, a.y, pw / 2);
+        shape.fillCircle(b.x, b.y, pw / 2);
         const t = tiled(`art:${path}`, GROUND_STONE_TILE, -2997, region).setMask(shape.createGeometryMask());
         // 各段的纹理对齐到同一张网格上，接头处石板缝是连着的
         t.setTilePosition(x0 / t.tileScaleX, y0 / t.tileScaleY);
@@ -1033,6 +1059,63 @@ export class MapScene extends Phaser.Scene {
     } else {
       drawStonePath(floor, M.path, M.pathWidth, M.seed);
     }
+    this.drawVoid();
+  }
+
+  /**
+   * 悬崖、云海（路段标了 edge 的那几段）：路边往外铺两排云（prop_cloud，缺图用代码画的淡椭圆），
+   * 看着就是脚下空了、底下是云。能走的地方（路面、空地）用反向遮罩抠出来，云不盖上去
+   */
+  private drawVoid() {
+    const M = this.stage.map;
+    if (!M.path.some((p) => p.edge)) return;
+    const rng = new Phaser.Math.RandomDataGenerator([`${M.seed}-mist`]);
+    const mist = this.add.container(0, 0).setDepth(-2995);
+    const puff = (x: number, y: number, width: number, alpha: number) => {
+      const art = placeMapArt(this, 'prop_cloud', x, y, width);
+      const img = art?.img ?? this.add.ellipse(x, y, width, width * 0.3, COLORS.paper);
+      if (art && rng.frac() < 0.5) art.img.setFlipX(true);
+      img.setAlpha(alpha);
+      mist.add(img);
+    };
+    for (let i = 0; i < M.path.length - 1; i++) {
+      const edge = M.path[i].edge;
+      if (!edge) continue;
+      const a = M.path[i];
+      const b = M.path[i + 1];
+      const len = Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
+      let nx = -(b.y - a.y) / len;
+      let ny = (b.x - a.x) / len;
+      if (ny < 0 || (ny === 0 && nx < 0)) (nx = -nx), (ny = -ny);
+      const half = segmentWidth(M.path, i, M.pathWidth) / 2 + WALK_MARGIN;
+      for (let d = 0; d <= len; d += 240)
+        for (const side of edge === 'cliff' ? [1] : [1, -1])
+          for (const [off, width, alpha] of [
+            [half + 170, 620, 0.85],
+            [half + 470, 760, 0.7],
+          ]) {
+            const t = d / len;
+            const o = off + rng.realInRange(-40, 40);
+            puff(
+              Phaser.Math.Linear(a.x, b.x, t) + nx * side * o + rng.realInRange(-60, 60),
+              Phaser.Math.Linear(a.y, b.y, t) + ny * side * o,
+              width * rng.realInRange(0.85, 1.15),
+              alpha,
+            );
+          }
+    }
+    const hole = this.make.graphics({}, false);
+    hole.fillStyle(0xffffff);
+    for (let i = 0; i < M.path.length - 1; i++) {
+      const pw = segmentWidth(M.path, i, M.pathWidth) + WALK_MARGIN * 2;
+      hole.lineStyle(pw, 0xffffff);
+      hole.lineBetween(M.path[i].x, M.path[i].y, M.path[i + 1].x, M.path[i + 1].y);
+      hole.fillCircle(M.path[i].x, M.path[i].y, pw / 2);
+    }
+    for (const a of M.areas) hole.fillCircle(a.center.x, a.center.y, a.radius);
+    const mask = hole.createGeometryMask();
+    mask.setInvertAlpha(true);
+    mist.setMask(mask);
   }
 
   /** 每个画面帧：铺满屏幕的那几层地面跟着镜头挪，纹理按地图坐标对齐，走起来地面不会跟着人滑 */
@@ -1055,14 +1138,19 @@ export class MapScene extends Phaser.Scene {
   private scatterProps() {
     const M = this.stage.map;
     const rng = new Phaser.Math.RandomDataGenerator([M.seed]);
-    const clearOfPath = M.pathWidth / 2 + WALK_MARGIN + BAMBOO_GAP;
-    const clear = (x: number, y: number, slack = 0) =>
+    // 不长树的地方：路面（各段按自己的宽）、空地、悬崖云海那一侧
+    const offPath = (x: number, y: number, slack = 0) =>
       x > 0 &&
       y > 0 &&
       x < M.width &&
       y < M.height &&
-      distToPath(x, y, M.path) >= clearOfPath - slack &&
+      pathEdgeDist(x, y, M.path, M.pathWidth, WALK_MARGIN + BAMBOO_GAP) >= -slack &&
       !M.areas.some((a) => Phaser.Math.Distance.Between(x, y, a.center.x, a.center.y) < a.radius + BAMBOO_GAP - 10 - slack);
+    const clear = (x: number, y: number, slack = 0) => offPath(x, y, slack) && !inVoid(x, y, M.path, VOID_DEPTH);
+    // 悬崖边上：一溜山石，稀一点
+    const rim = (x: number, y: number) => {
+      if (offPath(x, y, 2) && rng.frac() < 0.55) this.placeProp(rng, x, y, true, true);
+    };
 
     // 路两边的竹墙
     for (let i = 0; i < M.path.length - 1; i++) {
@@ -1071,12 +1159,14 @@ export class MapScene extends Phaser.Scene {
       const len = Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
       const nx = -(b.y - a.y) / len;
       const ny = (b.x - a.x) / len;
+      const clearOfPath = segmentWidth(M.path, i, M.pathWidth) / 2 + WALK_MARGIN + BAMBOO_GAP;
       for (let d = 0; d < len; d += EDGE_SPACING) {
         for (const side of [-1, 1]) {
           const off = clearOfPath + rng.realInRange(0, 30);
           const x = Phaser.Math.Linear(a.x, b.x, d / len) + nx * side * off + rng.realInRange(-15, 15);
           const y = Phaser.Math.Linear(a.y, b.y, d / len) + ny * side * off;
-          if (clear(x, y, 2)) this.placeProp(rng, x, y, false);
+          if (inVoid(x, y, M.path, VOID_DEPTH)) rim(x, y);
+          else if (clear(x, y, 2)) this.placeProp(rng, x, y, false);
         }
       }
     }
@@ -1089,7 +1179,8 @@ export class MapScene extends Phaser.Scene {
         const r = r0 + rng.realInRange(0, 30);
         const x = area.center.x + Math.cos(ang) * r;
         const y = area.center.y + Math.sin(ang) * r;
-        if (clear(x, y, 2)) this.placeProp(rng, x, y, false);
+        if (inVoid(x, y, M.path, VOID_DEPTH)) rim(x, y);
+        else if (clear(x, y, 2)) this.placeProp(rng, x, y, false);
       }
     }
     // 再往外撒满
@@ -1107,9 +1198,14 @@ export class MapScene extends Phaser.Scene {
    * 种一丛竹子 / 摆一块石头。有第三批的竹丛、山石图就用图（大中小随机挑，偶尔夹灌木、竹桩），
    * 没有就用代码画的占位
    */
-  private placeProp(rng: Phaser.Math.RandomDataGenerator, x: number, y: number, rock: boolean) {
-    const choices: [ArtSlot, number][] =
-      !rock && this.run.stage > 0
+  private placeProp(rng: Phaser.Math.RandomDataGenerator, x: number, y: number, rock: boolean, bareRock = false) {
+    const choices: [ArtSlot, number][] = bareRock
+      ? [
+          ['prop_rock_big', 200],
+          ['prop_rock_small', 140],
+          ['prop_rock_small', 120],
+        ]
+      : !rock && this.run.stage > 0
         ? [
             ['prop_pine_big', this.run.stage === 1 ? 340 : 260],
             ['prop_pine_small', 220],

@@ -1,9 +1,9 @@
 {
-  "date": "2026-11-06T07:46:11.933Z",
+  "date": "2026-11-06T08:11:27.672Z",
   "stages": [
     {
       "stage": 0,
-      "loadMs": 3355,
+      "loadMs": 5322,
       "loadedFiles": 224,
       "textures": 253,
       "prefetched": 108,
@@ -12,7 +12,7 @@
     },
     {
       "stage": 1,
-      "loadMs": 1755,
+      "loadMs": 2647,
       "loadedFiles": 110,
       "textures": 204,
       "prefetched": 128,
@@ -21,7 +21,7 @@
     },
     {
       "stage": 2,
-      "loadMs": 2309,
+      "loadMs": 3441,
       "loadedFiles": 130,
       "textures": 241,
       "prefetched": 0,
@@ -29,8 +29,8 @@
       "missed": []
     }
   ],
-  "bootMs": 674,
-  "bootFiles": 39,
+  "bootMs": 729,
+  "bootFiles": 38,
   "bootTextures": 29,
   "ok": true,
   "errors": []

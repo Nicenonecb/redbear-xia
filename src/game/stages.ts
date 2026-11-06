@@ -6,7 +6,8 @@ import { WAIST_MAP } from '../map/stages/waist';
 import { PEAK_MAP } from '../map/stages/peak';
 export type StageId = 'foot' | 'waist' | 'peak';
 export type BossId = 'pangHu' | 'baoJinliang' | 'zhangHuatian';
-export type MapDef = typeof FOOT_MAP;
+export type { MapDef } from '../map/chapter1Map';
+import type { MapDef } from '../map/chapter1Map';
 export type ShopLines = typeof CHAPTER1_SHOP_LINES;
 export interface StageDef {
   id: StageId;
