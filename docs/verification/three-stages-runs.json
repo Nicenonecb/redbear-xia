@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-26T02:06:00.954Z",
+  "date": "2026-11-06T08:29:31.965Z",
   "mode": "full-campaign",
   "results": [
     {
@@ -11,7 +11,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -58,68 +58,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 57,
-          "coins": 151
+          "hp": 48,
+          "coins": 136
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 52,
-          "coins": 245
+          "hp": 59,
+          "coins": 242
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 69
+          "coins": 61
         },
         {
           "key": "1:4",
           "level": 8,
           "hp": 140,
-          "coins": 108
+          "coins": 106
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 80,
-          "coins": 207
+          "hp": 56,
+          "coins": 185
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 80,
-          "coins": 207
+          "hp": 56,
+          "coins": 185
         },
         {
           "key": "2:1",
           "level": 9,
-          "hp": 100,
-          "coins": 255
+          "hp": 76,
+          "coins": 245
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 120,
-          "coins": 381
+          "hp": 106,
+          "coins": 382
         },
         {
           "key": "2:3",
           "level": 11,
-          "hp": 180,
-          "coins": 138
+          "hp": 200,
+          "coins": 134
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 164,
-          "coins": 191
+          "hp": 184,
+          "coins": 190
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 90,
-          "coins": 287
+          "hp": 100,
+          "coins": 303
         }
       ],
       "stalled": false
@@ -129,11 +129,11 @@
       "skill": 0.75,
       "hero": "wenShaohua",
       "seed": "acceptance-wenShaohua-1",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 19201,
+      "frames": 20317,
       "checkpoints": [
         {
           "key": "0:0",
@@ -180,68 +180,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 52,
-          "coins": 142
+          "hp": 45,
+          "coins": 149
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 65,
-          "coins": 232
+          "hp": 58,
+          "coins": 246
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 55
+          "coins": 66
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 120,
-          "coins": 99
+          "hp": 126,
+          "coins": 103
         },
         {
           "key": "1:5",
           "level": 9,
           "hp": 70,
-          "coins": 183
+          "coins": 187
         },
         {
           "key": "2:0",
           "level": 9,
           "hp": 70,
-          "coins": 183
+          "coins": 187
         },
         {
           "key": "2:1",
           "level": 9,
           "hp": 90,
-          "coins": 238
+          "coins": 247
         },
         {
           "key": "2:2",
           "level": 11,
           "hp": 130,
-          "coins": 366
+          "coins": 364
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 117
+          "coins": 115
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 168,
-          "coins": 170
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 100,
-          "coins": 271
+          "hp": 190,
+          "coins": 175
         }
       ],
       "stalled": false
@@ -251,11 +245,11 @@
       "skill": 0.75,
       "hero": "wenShaohua",
       "seed": "acceptance-wenShaohua-2",
-      "cleared": false,
+      "cleared": true,
       "stage": 2,
-      "step": 4,
+      "step": 5,
       "phase": 2,
-      "frames": 17886,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -302,62 +296,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 60,
-          "coins": 151
+          "hp": 51,
+          "coins": 134
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 59,
-          "coins": 234
+          "hp": 62,
+          "coins": 236
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 53
+          "coins": 56
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 120,
-          "coins": 90
+          "hp": 140,
+          "coins": 95
         },
         {
           "key": "1:5",
           "level": 9,
           "hp": 37,
-          "coins": 178
+          "coins": 185
         },
         {
           "key": "2:0",
           "level": 9,
           "hp": 37,
-          "coins": 178
+          "coins": 185
         },
         {
           "key": "2:1",
           "level": 9,
           "hp": 47,
-          "coins": 240
+          "coins": 243
         },
         {
           "key": "2:2",
           "level": 11,
           "hp": 87,
-          "coins": 368
+          "coins": 369
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 85
+          "coins": 84
         },
         {
           "key": "2:4",
           "level": 12,
           "hp": 174,
-          "coins": 137
+          "coins": 144
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 237
         }
       ],
       "stalled": false
@@ -367,11 +367,11 @@
       "skill": 0.75,
       "hero": "wenShaohua",
       "seed": "acceptance-wenShaohua-3",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 19201,
+      "frames": 20842,
       "checkpoints": [
         {
           "key": "0:0",
@@ -406,80 +406,74 @@
         {
           "key": "0:5",
           "level": 5,
-          "hp": 58,
+          "hp": 74,
           "coins": 94
         },
         {
           "key": "1:0",
           "level": 5,
-          "hp": 58,
+          "hp": 74,
           "coins": 94
         },
         {
           "key": "1:1",
           "level": 6,
-          "hp": 78,
-          "coins": 139
+          "hp": 74,
+          "coins": 131
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 89,
-          "coins": 235
+          "hp": 80,
+          "coins": 223
         },
         {
           "key": "1:3",
           "level": 7,
-          "hp": 140,
-          "coins": 98
+          "hp": 120,
+          "coins": 83
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 140,
-          "coins": 137
+          "hp": 120,
+          "coins": 131
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 55,
-          "coins": 246
+          "hp": 12,
+          "coins": 237
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 55,
-          "coins": 246
+          "hp": 12,
+          "coins": 237
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 85,
-          "coins": 297
+          "hp": 52,
+          "coins": 277
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 85,
-          "coins": 435
+          "hp": 52,
+          "coins": 419
         },
         {
           "key": "2:3",
           "level": 11,
-          "hp": 200,
-          "coins": 0
+          "hp": 180,
+          "coins": 134
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 200,
-          "coins": 51
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 1,
-          "coins": 160
+          "hp": 180,
+          "coins": 183
         }
       ],
       "stalled": false
@@ -493,7 +487,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -541,67 +535,67 @@
           "key": "1:1",
           "level": 6,
           "hp": 62,
-          "coins": 178
+          "coins": 186
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 66,
-          "coins": 280
+          "hp": 82,
+          "coins": 278
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 99
+          "coins": 137
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 140,
-          "coins": 132
+          "hp": 131,
+          "coins": 188
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 57,
-          "coins": 240
+          "hp": 11,
+          "coins": 292
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 57,
-          "coins": 240
+          "hp": 11,
+          "coins": 292
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 97,
-          "coins": 292
+          "hp": 51,
+          "coins": 317
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 107,
-          "coins": 412
+          "hp": 71,
+          "coins": 478
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 18
+          "coins": 44
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 190,
-          "coins": 62
+          "hp": 178,
+          "coins": 88
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 100,
-          "coins": 161
+          "hp": 1,
+          "coins": 176
         }
       ],
       "stalled": false
@@ -615,7 +609,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 20401,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -662,68 +656,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 60,
-          "coins": 147
+          "hp": 51,
+          "coins": 141
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 80,
-          "coins": 234
+          "hp": 55,
+          "coins": 229
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 96
+          "coins": 51
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 133,
-          "coins": 138
+          "hp": 106,
+          "coins": 125
         },
         {
           "key": "1:5",
-          "level": 9,
-          "hp": 70,
-          "coins": 244
+          "level": 8,
+          "hp": 28,
+          "coins": 173
         },
         {
           "key": "2:0",
-          "level": 9,
-          "hp": 70,
-          "coins": 244
+          "level": 8,
+          "hp": 28,
+          "coins": 173
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 110,
-          "coins": 297
+          "level": 9,
+          "hp": 48,
+          "coins": 228
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 130,
-          "coins": 421
+          "hp": 88,
+          "coins": 354
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 23
+          "coins": 67
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 184,
-          "coins": 76
+          "hp": 178,
+          "coins": 118
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 1,
-          "coins": 176
+          "hp": 100,
+          "coins": 226
         }
       ],
       "stalled": false
@@ -737,7 +731,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -784,68 +778,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 73,
-          "coins": 129
+          "hp": 82,
+          "coins": 142
         },
         {
           "key": "1:2",
           "level": 7,
           "hp": 93,
-          "coins": 232
+          "coins": 228
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 95
+          "coins": 92
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 133,
-          "coins": 133
+          "hp": 140,
+          "coins": 136
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 77,
-          "coins": 225
+          "hp": 70,
+          "coins": 233
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 77,
-          "coins": 225
+          "hp": 70,
+          "coins": 233
         },
         {
           "key": "2:1",
           "level": 9,
-          "hp": 97,
-          "coins": 280
+          "hp": 90,
+          "coins": 289
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 117,
-          "coins": 402
+          "hp": 120,
+          "coins": 411
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 2
+          "coins": 17
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 184,
-          "coins": 48
+          "hp": 162,
+          "coins": 75
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 100,
-          "coins": 155
+          "hp": 1,
+          "coins": 177
         }
       ],
       "stalled": false
@@ -859,7 +853,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 20401,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -906,68 +900,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 74,
-          "coins": 143
+          "hp": 72,
+          "coins": 139
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 87,
-          "coins": 234
+          "hp": 71,
+          "coins": 227
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 94
+          "coins": 86
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 126,
-          "coins": 135
+          "hp": 122,
+          "coins": 130
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 49,
-          "coins": 230
+          "hp": 46,
+          "coins": 236
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 49,
-          "coins": 230
+          "hp": 46,
+          "coins": 236
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 79,
-          "coins": 283
+          "hp": 86,
+          "coins": 291
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 79,
-          "coins": 411
+          "hp": 96,
+          "coins": 425
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 125
+          "coins": 139
         },
         {
           "key": "2:4",
           "level": 12,
           "hp": 184,
-          "coins": 183
+          "coins": 189
         },
         {
           "key": "2:5",
           "level": 12,
           "hp": 100,
-          "coins": 292
+          "coins": 280
         }
       ],
       "stalled": false
@@ -981,7 +975,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -1028,68 +1022,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 66,
-          "coins": 153
+          "hp": 57,
+          "coins": 151
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 77,
-          "coins": 252
+          "hp": 61,
+          "coins": 243
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 112
+          "coins": 65
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 131,
-          "coins": 160
+          "hp": 117,
+          "coins": 110
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 54,
-          "coins": 258
+          "hp": 70,
+          "coins": 223
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 54,
-          "coins": 258
+          "hp": 70,
+          "coins": 223
         },
         {
           "key": "2:1",
-          "level": 9,
-          "hp": 64,
-          "coins": 316
+          "level": 10,
+          "hp": 110,
+          "coins": 280
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 104,
-          "coins": 452
+          "hp": 130,
+          "coins": 402
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 52
+          "coins": 5
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 184,
-          "coins": 112
+          "hp": 158,
+          "coins": 68
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 1,
-          "coins": 208
+          "hp": 100,
+          "coins": 161
         }
       ],
       "stalled": false
@@ -1103,7 +1097,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -1150,68 +1144,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 40,
-          "coins": 175
+          "hp": 70,
+          "coins": 178
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 53,
-          "coins": 275
+          "hp": 83,
+          "coins": 271
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 94
+          "coins": 135
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 126,
-          "coins": 129
+          "hp": 117,
+          "coins": 182
         },
         {
           "key": "1:5",
           "level": 9,
           "hp": 66,
-          "coins": 241
+          "coins": 268
         },
         {
           "key": "2:0",
           "level": 9,
           "hp": 66,
-          "coins": 241
+          "coins": 268
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 106,
-          "coins": 292
+          "level": 9,
+          "hp": 86,
+          "coins": 322
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 126,
-          "coins": 427
+          "hp": 116,
+          "coins": 439
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 32
+          "coins": 43
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 168,
-          "coins": 88
+          "hp": 190,
+          "coins": 94
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 1,
-          "coins": 198
+          "hp": 100,
+          "coins": 195
         }
       ],
       "stalled": false
@@ -1221,11 +1215,11 @@
       "skill": 0.75,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-0",
-      "cleared": false,
+      "cleared": true,
       "stage": 2,
-      "step": 4,
+      "step": 5,
       "phase": 2,
-      "frames": 18818,
+      "frames": 24001,
       "checkpoints": [
         {
           "key": "0:0",
@@ -1272,62 +1266,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 42,
-          "coins": 145
+          "hp": 60,
+          "coins": 121
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 53,
-          "coins": 243
+          "hp": 71,
+          "coins": 235
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 63
+          "coins": 99
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 113,
-          "coins": 105
+          "hp": 131,
+          "coins": 135
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 70,
-          "coins": 216
+          "hp": 63,
+          "coins": 235
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 70,
-          "coins": 216
+          "hp": 63,
+          "coins": 235
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 90,
-          "coins": 249
+          "level": 9,
+          "hp": 73,
+          "coins": 287
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 110,
-          "coins": 392
+          "hp": 113,
+          "coins": 415
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 148
+          "coins": 21
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 200,
-          "coins": 204
+          "hp": 184,
+          "coins": 77
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 1,
+          "coins": 170
         }
       ],
       "stalled": false
@@ -1341,7 +1341,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 21601,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -1388,68 +1388,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 43,
-          "coins": 187
+          "hp": 52,
+          "coins": 183
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 40,
-          "coins": 282
+          "hp": 47,
+          "coins": 275
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 101
+          "coins": 99
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 103,
-          "coins": 144
+          "hp": 131,
+          "coins": 125
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 80,
-          "coins": 241
+          "hp": 54,
+          "coins": 237
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 80,
-          "coins": 241
+          "hp": 54,
+          "coins": 237
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 120,
-          "coins": 294
+          "level": 9,
+          "hp": 74,
+          "coins": 293
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 140,
-          "coins": 422
+          "hp": 114,
+          "coins": 421
         },
         {
           "key": "2:3",
           "level": 11,
-          "hp": 220,
-          "coins": 23
+          "hp": 200,
+          "coins": 25
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 188,
-          "coins": 84
+          "hp": 190,
+          "coins": 80
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 110,
-          "coins": 196
+          "hp": 100,
+          "coins": 170
         }
       ],
       "stalled": false
@@ -1459,11 +1459,11 @@
       "skill": 0.75,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-2",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 20401,
+      "frames": 22559,
       "checkpoints": [
         {
           "key": "0:0",
@@ -1511,67 +1511,61 @@
           "key": "1:1",
           "level": 6,
           "hp": 54,
-          "coins": 183
+          "coins": 178
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 58,
-          "coins": 276
+          "hp": 74,
+          "coins": 272
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 160,
-          "coins": 98
+          "coins": 93
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 160,
+          "hp": 146,
           "coins": 142
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 76,
-          "coins": 237
+          "hp": 54,
+          "coins": 249
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 76,
-          "coins": 237
+          "hp": 54,
+          "coins": 249
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 116,
-          "coins": 292
+          "hp": 94,
+          "coins": 310
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 126,
-          "coins": 425
+          "hp": 104,
+          "coins": 444
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 220,
-          "coins": 25
+          "coins": 8
         },
         {
           "key": "2:4",
           "level": 12,
           "hp": 198,
-          "coins": 81
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 1,
-          "coins": 179
+          "coins": 59
         }
       ],
       "stalled": false
@@ -1585,7 +1579,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -1597,7 +1591,7 @@
           "key": "0:1",
           "level": 2,
           "hp": 100,
-          "coins": 19
+          "coins": 20
         },
         {
           "key": "0:2",
@@ -1632,68 +1626,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 61,
-          "coins": 154
+          "hp": 70,
+          "coins": 147
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 72,
-          "coins": 250
+          "hp": 81,
+          "coins": 239
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 113
+          "coins": 100
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 131,
-          "coins": 157
+          "hp": 111,
+          "coins": 146
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 23,
-          "coins": 262
+          "hp": 46,
+          "coins": 248
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 23,
-          "coins": 262
+          "hp": 46,
+          "coins": 248
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 63,
-          "coins": 314
+          "level": 9,
+          "hp": 66,
+          "coins": 297
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 83,
-          "coins": 434
+          "hp": 106,
+          "coins": 410
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 145
+          "coins": 12
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 200,
-          "coins": 190
+          "hp": 184,
+          "coins": 72
         },
         {
           "key": "2:5",
           "level": 12,
           "hp": 100,
-          "coins": 284
+          "coins": 172
         }
       ],
       "stalled": false
@@ -1707,7 +1701,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -1742,80 +1736,80 @@
         {
           "key": "0:5",
           "level": 5,
-          "hp": 24,
+          "hp": 40,
           "coins": 103
         },
         {
           "key": "1:0",
           "level": 5,
-          "hp": 24,
+          "hp": 40,
           "coins": 103
         },
         {
           "key": "1:1",
           "level": 6,
-          "hp": 44,
-          "coins": 137
+          "hp": 60,
+          "coins": 128
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 57,
-          "coins": 230
+          "hp": 71,
+          "coins": 236
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 49
+          "coins": 95
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 140,
-          "coins": 93
+          "hp": 92,
+          "coins": 134
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 71,
-          "coins": 183
+          "hp": 52,
+          "coins": 243
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 71,
-          "coins": 183
+          "hp": 52,
+          "coins": 243
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 111,
-          "coins": 242
+          "hp": 92,
+          "coins": 298
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 131,
-          "coins": 378
+          "hp": 102,
+          "coins": 424
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 133
+          "coins": 28
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 162,
-          "coins": 195
+          "hp": 200,
+          "coins": 78
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 58,
-          "coins": 289
+          "hp": 1,
+          "coins": 184
         }
       ],
       "stalled": false
@@ -1825,11 +1819,11 @@
       "skill": 0.75,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-5",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 20401,
+      "frames": 21441,
       "checkpoints": [
         {
           "key": "0:0",
@@ -1876,68 +1870,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 38,
-          "coins": 143
+          "hp": 40,
+          "coins": 130
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 80,
-          "coins": 228
+          "hp": 51,
+          "coins": 218
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 90
+          "coins": 40
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 126,
-          "coins": 134
+          "hp": 107,
+          "coins": 77
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 60,
-          "coins": 215
+          "hp": 27,
+          "coins": 160
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 60,
-          "coins": 215
+          "hp": 27,
+          "coins": 160
         },
         {
           "key": "2:1",
           "level": 9,
-          "hp": 80,
-          "coins": 262
+          "hp": 47,
+          "coins": 198
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 120,
-          "coins": 391
+          "hp": 87,
+          "coins": 339
         },
         {
           "key": "2:3",
           "level": 11,
-          "hp": 200,
-          "coins": 148
+          "hp": 220,
+          "coins": 53
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 200,
-          "coins": 203
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 100,
-          "coins": 304
+          "hp": 188,
+          "coins": 116
         }
       ],
       "stalled": false
@@ -1951,7 +1939,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 20401,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2004,62 +1992,62 @@
         {
           "key": "1:2",
           "level": 7,
-          "hp": 56,
-          "coins": 270
+          "hp": 40,
+          "coins": 287
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 89
+          "coins": 108
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 111,
-          "coins": 129
+          "hp": 131,
+          "coins": 209
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 35,
-          "coins": 242
+          "hp": 70,
+          "coins": 250
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 35,
-          "coins": 242
+          "hp": 70,
+          "coins": 250
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 75,
-          "coins": 283
+          "hp": 110,
+          "coins": 302
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 95,
-          "coins": 432
+          "hp": 130,
+          "coins": 415
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 145
+          "coins": 23
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 162,
-          "coins": 205
+          "hp": 200,
+          "coins": 74
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 58,
-          "coins": 301
+          "hp": 1,
+          "coins": 179
         }
       ],
       "stalled": false
@@ -2069,11 +2057,11 @@
       "skill": 0.75,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-7",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 21601,
+      "frames": 22511,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2120,68 +2108,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 83,
-          "coins": 148
+          "hp": 81,
+          "coins": 153
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 87,
-          "coins": 252
+          "hp": 76,
+          "coins": 246
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 180,
-          "coins": 73
+          "coins": 67
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 164,
-          "coins": 103
+          "hp": 150,
+          "coins": 106
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 115,
-          "coins": 218
+          "hp": 80,
+          "coins": 212
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 115,
-          "coins": 218
+          "hp": 80,
+          "coins": 212
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 135,
-          "coins": 278
+          "hp": 110,
+          "coins": 265
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 145,
-          "coins": 409
+          "hp": 110,
+          "coins": 395
         },
         {
           "key": "2:3",
           "level": 11,
-          "hp": 220,
-          "coins": 13
+          "hp": 240,
+          "coins": 111
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 210,
-          "coins": 68
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 1,
-          "coins": 160
+          "hp": 240,
+          "coins": 169
         }
       ],
       "stalled": false
@@ -2191,11 +2173,11 @@
       "skill": 0.75,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-8",
-      "cleared": false,
+      "cleared": true,
       "stage": 2,
-      "step": 4,
+      "step": 5,
       "phase": 2,
-      "frames": 18677,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2242,62 +2224,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 48,
-          "coins": 137
+          "hp": 41,
+          "coins": 134
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 68,
-          "coins": 228
+          "hp": 54,
+          "coins": 225
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 45
+          "coins": 46
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 126,
-          "coins": 79
+          "hp": 122,
+          "coins": 93
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 32,
-          "coins": 186
+          "hp": 48,
+          "coins": 201
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 32,
-          "coins": 186
+          "hp": 48,
+          "coins": 201
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 72,
-          "coins": 241
+          "hp": 88,
+          "coins": 258
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 92,
-          "coins": 364
+          "hp": 98,
+          "coins": 381
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 75
+          "coins": 99
         },
         {
           "key": "2:4",
           "level": 12,
           "hp": 200,
-          "coins": 123
+          "coins": 157
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 248
         }
       ],
       "stalled": false
@@ -2311,7 +2299,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 21601,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2358,68 +2346,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 47,
-          "coins": 183
+          "hp": 70,
+          "coins": 188
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 73,
-          "coins": 270
+          "hp": 56,
+          "coins": 281
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 133
+          "coins": 100
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 122,
-          "coins": 164
+          "hp": 131,
+          "coins": 201
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 71,
-          "coins": 288
+          "hp": 81,
+          "coins": 253
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 71,
-          "coins": 288
+          "hp": 81,
+          "coins": 253
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 111,
-          "coins": 348
+          "hp": 121,
+          "coins": 305
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 131,
-          "coins": 465
+          "hp": 121,
+          "coins": 420
         },
         {
           "key": "2:3",
           "level": 11,
-          "hp": 200,
-          "coins": 67
+          "hp": 180,
+          "coins": 20
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 200,
-          "coins": 134
+          "hp": 180,
+          "coins": 82
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 32,
-          "coins": 224
+          "hp": 48,
+          "coins": 184
         }
       ],
       "stalled": false
@@ -2433,7 +2421,7 @@
       "stage": 2,
       "step": 4,
       "phase": 2,
-      "frames": 17695,
+      "frames": 19691,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2480,62 +2468,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 54,
-          "coins": 155
+          "hp": 45,
+          "coins": 144
         },
         {
           "key": "1:2",
           "level": 7,
           "hp": 56,
-          "coins": 244
+          "coins": 235
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 67
+          "coins": 55
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 140,
-          "coins": 107
+          "hp": 104,
+          "coins": 170
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 63,
-          "coins": 198
+          "hp": 21,
+          "coins": 216
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 63,
-          "coins": 198
+          "hp": 21,
+          "coins": 216
         },
         {
           "key": "2:1",
-          "level": 9,
-          "hp": 63,
-          "coins": 260
+          "level": 10,
+          "hp": 110,
+          "coins": 271
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 83,
-          "coins": 387
+          "hp": 130,
+          "coins": 388
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 103
+          "coins": 143
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 162,
-          "coins": 157
+          "hp": 178,
+          "coins": 199
         }
       ],
       "stalled": false
@@ -2549,7 +2537,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2597,67 +2585,67 @@
           "key": "1:1",
           "level": 6,
           "hp": 70,
-          "coins": 140
+          "coins": 149
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 74,
-          "coins": 236
+          "hp": 81,
+          "coins": 247
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 100
+          "coins": 108
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 106,
-          "coins": 137
+          "hp": 110,
+          "coins": 157
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 6,
-          "coins": 237
+          "hp": 17,
+          "coins": 242
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 6,
-          "coins": 237
+          "hp": 17,
+          "coins": 242
         },
         {
           "key": "2:1",
           "level": 9,
-          "hp": 26,
-          "coins": 303
+          "hp": 37,
+          "coins": 289
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 110,
-          "coins": 446
+          "hp": 67,
+          "coins": 418
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 47
+          "coins": 132
         },
         {
           "key": "2:4",
           "level": 12,
           "hp": 190,
-          "coins": 100
+          "coins": 178
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 1,
-          "coins": 203
+          "hp": 58,
+          "coins": 269
         }
       ],
       "stalled": false
@@ -2667,11 +2655,11 @@
       "skill": 0.5,
       "hero": "wenShaohua",
       "seed": "acceptance-wenShaohua-2",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 18001,
+      "frames": 19322,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2718,68 +2706,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 53,
-          "coins": 147
+          "hp": 44,
+          "coins": 142
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 46,
-          "coins": 226
+          "hp": 39,
+          "coins": 234
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 49
+          "coins": 55
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 91,
-          "coins": 78
+          "hp": 111,
+          "coins": 95
         },
         {
           "key": "1:5",
-          "level": 8,
-          "hp": 70,
-          "coins": 168
+          "level": 9,
+          "hp": 12,
+          "coins": 190
         },
         {
           "key": "2:0",
-          "level": 8,
-          "hp": 70,
-          "coins": 168
+          "level": 9,
+          "hp": 12,
+          "coins": 190
         },
         {
           "key": "2:1",
           "level": 9,
-          "hp": 80,
-          "coins": 199
+          "hp": 90,
+          "coins": 249
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 120,
-          "coins": 351
+          "hp": 130,
+          "coins": 381
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 107
+          "coins": 136
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 178,
-          "coins": 161
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 58,
-          "coins": 259
+          "hp": 162,
+          "coins": 195
         }
       ],
       "stalled": false
@@ -2793,7 +2775,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 18001,
+      "frames": 20401,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2841,67 +2823,67 @@
           "key": "1:1",
           "level": 6,
           "hp": 37,
-          "coins": 150
+          "coins": 141
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 80,
-          "coins": 238
+          "hp": 39,
+          "coins": 240
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 97
+          "coins": 63
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 120,
-          "coins": 130
+          "hp": 113,
+          "coins": 109
         },
         {
           "key": "1:5",
-          "level": 9,
-          "hp": 8,
-          "coins": 241
+          "level": 8,
+          "hp": 38,
+          "coins": 187
         },
         {
           "key": "2:0",
-          "level": 9,
-          "hp": 8,
-          "coins": 241
+          "level": 8,
+          "hp": 38,
+          "coins": 187
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 110,
-          "coins": 295
+          "level": 9,
+          "hp": 58,
+          "coins": 239
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 120,
-          "coins": 423
+          "hp": 88,
+          "coins": 376
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 25
+          "coins": 92
         },
         {
           "key": "2:4",
           "level": 12,
           "hp": 200,
-          "coins": 70
+          "coins": 150
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 1,
-          "coins": 166
+          "hp": 100,
+          "coins": 240
         }
       ],
       "stalled": false
@@ -2915,7 +2897,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 20401,
       "checkpoints": [
         {
           "key": "0:0",
@@ -2963,67 +2945,67 @@
           "key": "1:1",
           "level": 6,
           "hp": 70,
-          "coins": 134
+          "coins": 142
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 81,
-          "coins": 224
+          "hp": 90,
+          "coins": 237
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 84
+          "coins": 100
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 93,
-          "coins": 119
+          "hp": 111,
+          "coins": 152
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 31,
-          "coins": 216
+          "hp": 25,
+          "coins": 254
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 31,
-          "coins": 216
+          "hp": 25,
+          "coins": 254
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 71,
-          "coins": 255
+          "level": 9,
+          "hp": 45,
+          "coins": 306
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 71,
-          "coins": 401
+          "hp": 65,
+          "coins": 424
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 113
+          "coins": 135
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 158,
-          "coins": 166
+          "hp": 200,
+          "coins": 179
         },
         {
           "key": "2:5",
           "level": 12,
           "hp": 58,
-          "coins": 270
+          "coins": 287
         }
       ],
       "stalled": false
@@ -3033,11 +3015,11 @@
       "skill": 0.5,
       "hero": "wenShaohua",
       "seed": "acceptance-wenShaohua-5",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 19201,
+      "frames": 19780,
       "checkpoints": [
         {
           "key": "0:0",
@@ -3084,68 +3066,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 70,
-          "coins": 151
+          "hp": 63,
+          "coins": 148
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 67,
-          "coins": 250
+          "hp": 65,
+          "coins": 234
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 70
+          "coins": 58
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 131,
-          "coins": 110
+          "hp": 111,
+          "coins": 99
         },
         {
           "key": "1:5",
-          "level": 8,
-          "hp": 37,
-          "coins": 180
+          "level": 9,
+          "hp": 69,
+          "coins": 189
         },
         {
           "key": "2:0",
-          "level": 8,
-          "hp": 37,
-          "coins": 180
+          "level": 9,
+          "hp": 69,
+          "coins": 189
         },
         {
           "key": "2:1",
           "level": 9,
-          "hp": 57,
-          "coins": 232
+          "hp": 79,
+          "coins": 244
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 87,
-          "coins": 358
+          "hp": 119,
+          "coins": 364
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 74
+          "coins": 122
         },
         {
           "key": "2:4",
           "level": 12,
           "hp": 200,
-          "coins": 127
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 100,
-          "coins": 216
+          "coins": 181
         }
       ],
       "stalled": false
@@ -3155,11 +3131,11 @@
       "skill": 0.5,
       "hero": "wenShaohua",
       "seed": "acceptance-wenShaohua-6",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 18001,
+      "frames": 19935,
       "checkpoints": [
         {
           "key": "0:0",
@@ -3206,68 +3182,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 47,
-          "coins": 147
+          "hp": 38,
+          "coins": 141
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 42,
-          "coins": 244
+          "hp": 49,
+          "coins": 236
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 68
+          "coins": 58
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 140,
-          "coins": 110
+          "hp": 133,
+          "coins": 98
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 45,
-          "coins": 202
+          "hp": 34,
+          "coins": 207
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 45,
-          "coins": 202
+          "hp": 34,
+          "coins": 207
         },
         {
           "key": "2:1",
-          "level": 9,
-          "hp": 45,
-          "coins": 248
+          "level": 10,
+          "hp": 64,
+          "coins": 261
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 75,
-          "coins": 374
+          "hp": 64,
+          "coins": 390
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 84
+          "coins": 101
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 162,
-          "coins": 130
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 58,
-          "coins": 224
+          "hp": 178,
+          "coins": 161
         }
       ],
       "stalled": false
@@ -3281,7 +3251,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -3328,68 +3298,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 70,
-          "coins": 143
+          "hp": 54,
+          "coins": 144
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 47,
-          "coins": 230
+          "hp": 65,
+          "coins": 247
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 52
+          "coins": 70
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 113,
-          "coins": 93
+          "hp": 133,
+          "coins": 113
         },
         {
           "key": "1:5",
-          "level": 8,
-          "hp": 52,
-          "coins": 182
+          "level": 9,
+          "hp": 70,
+          "coins": 205
         },
         {
           "key": "2:0",
-          "level": 8,
-          "hp": 52,
-          "coins": 182
+          "level": 9,
+          "hp": 70,
+          "coins": 205
         },
         {
           "key": "2:1",
           "level": 9,
-          "hp": 62,
-          "coins": 232
+          "hp": 80,
+          "coins": 266
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 92,
-          "coins": 360
+          "hp": 110,
+          "coins": 398
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 71
+          "coins": 6
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 184,
-          "coins": 122
+          "hp": 174,
+          "coins": 57
         },
         {
           "key": "2:5",
           "level": 12,
           "hp": 100,
-          "coins": 217
+          "coins": 155
         }
       ],
       "stalled": false
@@ -3403,7 +3373,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 19201,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -3450,68 +3420,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 70,
-          "coins": 145
+          "hp": 61,
+          "coins": 147
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 53,
-          "coins": 255
+          "hp": 63,
+          "coins": 240
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 79
+          "coins": 63
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 126,
-          "coins": 116
+          "hp": 110,
+          "coins": 93
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 70,
-          "coins": 224
+          "hp": 44,
+          "coins": 201
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 70,
-          "coins": 224
+          "hp": 44,
+          "coins": 201
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 110,
-          "coins": 262
+          "hp": 74,
+          "coins": 253
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 130,
-          "coins": 394
+          "hp": 94,
+          "coins": 373
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 148
+          "coins": 84
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 168,
-          "coins": 208
+          "hp": 184,
+          "coins": 135
         },
         {
           "key": "2:5",
           "level": 12,
           "hp": 58,
-          "coins": 321
+          "coins": 244
         }
       ],
       "stalled": false
@@ -3525,7 +3495,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 18001,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -3572,68 +3542,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 52,
-          "coins": 144
+          "hp": 54,
+          "coins": 141
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 49,
-          "coins": 237
+          "hp": 58,
+          "coins": 235
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 57
+          "coins": 55
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 126,
-          "coins": 95
+          "hp": 115,
+          "coins": 103
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 50,
-          "coins": 185
+          "hp": 70,
+          "coins": 196
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 50,
-          "coins": 185
+          "hp": 70,
+          "coins": 196
         },
         {
           "key": "2:1",
           "level": 9,
-          "hp": 60,
-          "coins": 237
+          "hp": 70,
+          "coins": 253
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 100,
-          "coins": 370
+          "hp": 110,
+          "coins": 377
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 122
+          "coins": 128
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 190,
-          "coins": 178
+          "hp": 178,
+          "coins": 191
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 58,
-          "coins": 272
+          "hp": 100,
+          "coins": 296
         }
       ],
       "stalled": false
@@ -3647,7 +3617,7 @@
       "stage": 2,
       "step": 4,
       "phase": 2,
-      "frames": 18235,
+      "frames": 20925,
       "checkpoints": [
         {
           "key": "0:0",
@@ -3695,61 +3665,61 @@
           "key": "1:1",
           "level": 6,
           "hp": 80,
-          "coins": 147
+          "coins": 126
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 72,
-          "coins": 237
+          "hp": 91,
+          "coins": 246
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 160,
-          "coins": 59
+          "coins": 105
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 108,
-          "coins": 96
+          "hp": 137,
+          "coins": 144
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 20,
-          "coins": 218
+          "hp": 33,
+          "coins": 239
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 20,
-          "coins": 218
+          "hp": 33,
+          "coins": 239
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 60,
-          "coins": 281
+          "hp": 73,
+          "coins": 285
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 70,
-          "coins": 415
+          "hp": 73,
+          "coins": 424
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 220,
-          "coins": 132
+          "coins": 142
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 198,
-          "coins": 184
+          "hp": 210,
+          "coins": 201
         }
       ],
       "stalled": false
@@ -3763,7 +3733,7 @@
       "stage": 2,
       "step": 4,
       "phase": 2,
-      "frames": 19576,
+      "frames": 22499,
       "checkpoints": [
         {
           "key": "0:0",
@@ -3810,62 +3780,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 53,
-          "coins": 158
+          "hp": 62,
+          "coins": 156
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 64,
-          "coins": 252
+          "hp": 84,
+          "coins": 244
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 180,
-          "coins": 76
+          "coins": 63
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 143,
-          "coins": 111
+          "hp": 173,
+          "coins": 101
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 48,
-          "coins": 229
+          "hp": 31,
+          "coins": 198
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 48,
-          "coins": 229
+          "hp": 31,
+          "coins": 198
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 88,
-          "coins": 281
+          "level": 9,
+          "hp": 51,
+          "coins": 253
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 108,
-          "coins": 393
+          "hp": 91,
+          "coins": 394
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 240,
-          "coins": 111
+          "coins": 107
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 218,
-          "coins": 168
+          "hp": 164,
+          "coins": 159
         }
       ],
       "stalled": false
@@ -3879,7 +3849,7 @@
       "stage": 2,
       "step": 4,
       "phase": 2,
-      "frames": 20007,
+      "frames": 22141,
       "checkpoints": [
         {
           "key": "0:0",
@@ -3891,7 +3861,7 @@
           "key": "0:1",
           "level": 2,
           "hp": 92,
-          "coins": 22
+          "coins": 20
         },
         {
           "key": "0:2",
@@ -3926,62 +3896,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 64,
-          "coins": 139
+          "hp": 71,
+          "coins": 144
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 54,
-          "coins": 231
+          "hp": 82,
+          "coins": 228
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 180,
-          "coins": 53
+          "coins": 48
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 140,
-          "coins": 91
+          "hp": 151,
+          "coins": 89
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 90,
-          "coins": 188
+          "hp": 73,
+          "coins": 192
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 90,
-          "coins": 188
+          "hp": 73,
+          "coins": 192
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 130,
-          "coins": 237
+          "hp": 103,
+          "coins": 242
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 150,
-          "coins": 359
+          "hp": 103,
+          "coins": 384
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 240,
-          "coins": 112
+          "coins": 100
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 202,
-          "coins": 167
+          "hp": 208,
+          "coins": 147
         }
       ],
       "stalled": false
@@ -3991,11 +3961,11 @@
       "skill": 0.5,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-3",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 21601,
+      "frames": 22203,
       "checkpoints": [
         {
           "key": "0:0",
@@ -4042,68 +4012,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 81,
-          "coins": 141
+          "hp": 90,
+          "coins": 146
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 87,
-          "coins": 237
+          "hp": 85,
+          "coins": 235
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 180,
-          "coins": 58
+          "coins": 59
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 144,
-          "coins": 100
+          "hp": 146,
+          "coins": 101
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 66,
-          "coins": 202
+          "hp": 51,
+          "coins": 209
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 66,
-          "coins": 202
+          "hp": 51,
+          "coins": 209
         },
         {
           "key": "2:1",
-          "level": 9,
-          "hp": 86,
-          "coins": 257
+          "level": 10,
+          "hp": 91,
+          "coins": 270
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 106,
-          "coins": 385
+          "hp": 91,
+          "coins": 383
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 240,
-          "coins": 100
+          "coins": 95
         },
         {
           "key": "2:4",
           "level": 12,
           "hp": 218,
-          "coins": 147
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 120,
-          "coins": 247
+          "coins": 152
         }
       ],
       "stalled": false
@@ -4113,11 +4077,11 @@
       "skill": 0.5,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-4",
-      "cleared": false,
+      "cleared": true,
       "stage": 2,
-      "step": 4,
+      "step": 5,
       "phase": 2,
-      "frames": 18419,
+      "frames": 22801,
       "checkpoints": [
         {
           "key": "0:0",
@@ -4152,74 +4116,80 @@
         {
           "key": "0:5",
           "level": 5,
-          "hp": 40,
+          "hp": 50,
           "coins": 101
         },
         {
           "key": "1:0",
           "level": 5,
-          "hp": 40,
+          "hp": 50,
           "coins": 101
         },
         {
           "key": "1:1",
           "level": 6,
-          "hp": 51,
-          "coins": 135
+          "hp": 70,
+          "coins": 127
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 39,
-          "coins": 237
+          "hp": 72,
+          "coins": 239
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 61
+          "coins": 98
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 110,
-          "coins": 165
+          "hp": 131,
+          "coins": 134
         },
         {
           "key": "1:5",
           "level": 9,
           "hp": 70,
-          "coins": 207
+          "coins": 240
         },
         {
           "key": "2:0",
           "level": 9,
           "hp": 70,
-          "coins": 207
+          "coins": 240
         },
         {
           "key": "2:1",
           "level": 10,
           "hp": 110,
-          "coins": 250
+          "coins": 295
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 120,
-          "coins": 387
+          "hp": 130,
+          "coins": 421
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 143
+          "coins": 26
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 184,
-          "coins": 203
+          "hp": 152,
+          "coins": 83
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 195
         }
       ],
       "stalled": false
@@ -4233,7 +4203,7 @@
       "stage": 1,
       "step": 4,
       "phase": 1,
-      "frames": 11366,
+      "frames": 14286,
       "checkpoints": [
         {
           "key": "0:0",
@@ -4280,26 +4250,26 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 70,
-          "coins": 137
+          "hp": 63,
+          "coins": 138
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 74,
-          "coins": 235
+          "hp": 44,
+          "coins": 241
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 95
+          "coins": 65
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 110,
-          "coins": 131
+          "hp": 105,
+          "coins": 97
         }
       ],
       "stalled": false
@@ -4309,11 +4279,11 @@
       "skill": 0.5,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-6",
-      "cleared": false,
+      "cleared": true,
       "stage": 2,
-      "step": 4,
+      "step": 5,
       "phase": 2,
-      "frames": 18168,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -4361,61 +4331,67 @@
           "key": "1:1",
           "level": 6,
           "hp": 51,
-          "coins": 146
+          "coins": 147
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 73,
-          "coins": 238
+          "hp": 48,
+          "coins": 237
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 100
+          "coins": 56
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 111,
-          "coins": 141
+          "hp": 93,
+          "coins": 97
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 44,
-          "coins": 241
+          "hp": 70,
+          "coins": 200
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 44,
-          "coins": 241
+          "hp": 70,
+          "coins": 200
         },
         {
           "key": "2:1",
           "level": 10,
-          "hp": 64,
-          "coins": 299
+          "hp": 110,
+          "coins": 257
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 74,
-          "coins": 434
+          "hp": 130,
+          "coins": 388
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 144
+          "coins": 145
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 162,
-          "coins": 201
+          "hp": 178,
+          "coins": 196
+        },
+        {
+          "key": "2:5",
+          "level": 12,
+          "hp": 100,
+          "coins": 293
         }
       ],
       "stalled": false
@@ -4425,11 +4401,11 @@
       "skill": 0.5,
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-7",
-      "cleared": true,
+      "cleared": false,
       "stage": 2,
-      "step": 5,
+      "step": 4,
       "phase": 2,
-      "frames": 19201,
+      "frames": 20198,
       "checkpoints": [
         {
           "key": "0:0",
@@ -4476,68 +4452,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 35,
-          "coins": 143
+          "hp": 70,
+          "coins": 140
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 80,
-          "coins": 236
+          "hp": 74,
+          "coins": 231
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 99
+          "coins": 93
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 113,
-          "coins": 141
+          "hp": 140,
+          "coins": 133
         },
         {
           "key": "1:5",
           "level": 9,
-          "hp": 3,
-          "coins": 230
+          "hp": 28,
+          "coins": 235
         },
         {
           "key": "2:0",
           "level": 9,
-          "hp": 3,
-          "coins": 230
+          "hp": 28,
+          "coins": 235
         },
         {
           "key": "2:1",
-          "level": 9,
-          "hp": 90,
-          "coins": 284
+          "level": 10,
+          "hp": 68,
+          "coins": 291
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 130,
-          "coins": 406
+          "hp": 88,
+          "coins": 426
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 200,
-          "coins": 13
+          "coins": 144
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 200,
-          "coins": 72
-        },
-        {
-          "key": "2:5",
-          "level": 12,
-          "hp": 4,
-          "coins": 176
+          "hp": 184,
+          "coins": 201
         }
       ],
       "stalled": false
@@ -4551,7 +4521,7 @@
       "stage": 2,
       "step": 5,
       "phase": 2,
-      "frames": 20401,
+      "frames": 21601,
       "checkpoints": [
         {
           "key": "0:0",
@@ -4598,68 +4568,68 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 55,
-          "coins": 185
+          "hp": 53,
+          "coins": 184
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 43,
-          "coins": 278
+          "hp": 48,
+          "coins": 280
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 160,
-          "coins": 97
+          "coins": 101
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 142,
-          "coins": 135
+          "hp": 144,
+          "coins": 141
         },
         {
           "key": "1:5",
-          "level": 9,
-          "hp": 56,
-          "coins": 236
+          "level": 8,
+          "hp": 51,
+          "coins": 228
         },
         {
           "key": "2:0",
-          "level": 9,
-          "hp": 56,
-          "coins": 236
+          "level": 8,
+          "hp": 51,
+          "coins": 228
         },
         {
           "key": "2:1",
-          "level": 10,
-          "hp": 96,
-          "coins": 289
+          "level": 9,
+          "hp": 71,
+          "coins": 284
         },
         {
           "key": "2:2",
           "level": 11,
-          "hp": 106,
-          "coins": 398
+          "hp": 111,
+          "coins": 402
         },
         {
           "key": "2:3",
           "level": 11,
           "hp": 220,
-          "coins": 115
+          "coins": 9
         },
         {
           "key": "2:4",
           "level": 12,
-          "hp": 220,
-          "coins": 163
+          "hp": 198,
+          "coins": 72
         },
         {
           "key": "2:5",
           "level": 12,
-          "hp": 110,
-          "coins": 265
+          "hp": 68,
+          "coins": 172
         }
       ],
       "stalled": false
@@ -4670,10 +4640,10 @@
       "hero": "yuWuxia",
       "seed": "acceptance-yuWuxia-9",
       "cleared": false,
-      "stage": 1,
+      "stage": 2,
       "step": 4,
-      "phase": 1,
-      "frames": 12713,
+      "phase": 2,
+      "frames": 20429,
       "checkpoints": [
         {
           "key": "0:0",
@@ -4685,7 +4655,7 @@
           "key": "0:1",
           "level": 2,
           "hp": 93,
-          "coins": 23
+          "coins": 24
         },
         {
           "key": "0:2",
@@ -4720,26 +4690,62 @@
         {
           "key": "1:1",
           "level": 6,
-          "hp": 38,
-          "coins": 145
+          "hp": 47,
+          "coins": 138
         },
         {
           "key": "1:2",
           "level": 7,
-          "hp": 73,
-          "coins": 241
+          "hp": 51,
+          "coins": 244
         },
         {
           "key": "1:3",
           "level": 7,
           "hp": 140,
-          "coins": 103
+          "coins": 68
         },
         {
           "key": "1:4",
           "level": 8,
-          "hp": 113,
-          "coins": 143
+          "hp": 111,
+          "coins": 170
+        },
+        {
+          "key": "1:5",
+          "level": 9,
+          "hp": 44,
+          "coins": 213
+        },
+        {
+          "key": "2:0",
+          "level": 9,
+          "hp": 44,
+          "coins": 213
+        },
+        {
+          "key": "2:1",
+          "level": 10,
+          "hp": 84,
+          "coins": 265
+        },
+        {
+          "key": "2:2",
+          "level": 11,
+          "hp": 84,
+          "coins": 394
+        },
+        {
+          "key": "2:3",
+          "level": 11,
+          "hp": 200,
+          "coins": 109
+        },
+        {
+          "key": "2:4",
+          "level": 12,
+          "hp": 200,
+          "coins": 164
         }
       ],
       "stalled": false
@@ -4750,18 +4756,18 @@
     {
       "skill": 0.75,
       "total": 20,
-      "cleared": 17,
+      "cleared": 15,
       "reachedWaistBoss": 20,
       "stalled": 0,
-      "defeatedInFinalPhase": 3
+      "defeatedInFinalPhase": 5
     },
     {
       "skill": 0.5,
       "total": 20,
-      "cleared": 12,
+      "cleared": 9,
       "reachedWaistBoss": 20,
       "stalled": 0,
-      "defeatedInFinalPhase": 6
+      "defeatedInFinalPhase": 10
     }
   ]
 }
