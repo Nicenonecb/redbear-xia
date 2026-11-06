@@ -28,6 +28,7 @@ const fs = require('node:fs');
     await page.route('**/voice/fixture.wav', (route) => route.fulfill({ contentType: 'audio/wav', body: wav }));
     await page.goto(process.env.TEST_URL || 'http://127.0.0.1:5173');
     await page.waitForFunction(() => window.__t?.ready, {}, { timeout: 60000 });
+    await page.evaluate(() => __t.keepAllArt());
     await page.evaluate(async () => {
       const r = await import('/src/game/run.ts');
       r.startRun('wenShaohua');

@@ -33,11 +33,11 @@ function bake(scene: Phaser.Scene, key: string, w: number, h: number, draw: (g: 
 }
 
 /** 生成地图要用的全部占位贴图；进地图时调一次 */
-export function bakeMapTextures(scene: Phaser.Scene, seed: string) {
+export function bakeMapTextures(scene: Phaser.Scene, seed: string, treeSlot: 'prop_bamboo_big' | 'prop_pine_big' = 'prop_bamboo_big') {
   const rng = new Phaser.Math.RandomDataGenerator([seed]);
   bakeGround(scene, rng);
-  // 有竹丛、山石的精图就不用再画占位了（每张都按屏幕倍数画，也占显存）
-  const hasProps = hasArt(scene, 'prop_bamboo_big') && hasArt(scene, 'prop_rock_big');
+  // 有这一关的树（山脚竹丛、山腰山峰松树）和山石的精图就不用再画占位了（每张都按屏幕倍数画，也占显存）
+  const hasProps = hasArt(scene, treeSlot) && hasArt(scene, 'prop_rock_big');
   for (let i = 0; i < BAMBOO_VARIANTS; i++) {
     if (hasProps) scene.textures.exists(`gen:bamboo${i}`) && scene.textures.remove(`gen:bamboo${i}`);
     else bakeBamboo(scene, `gen:bamboo${i}`, rng);

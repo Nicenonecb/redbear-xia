@@ -11,6 +11,7 @@ const bossOnly = process.env.BOSS_ONLY === '1';
   try {
     await page.goto(process.env.TEST_URL || 'http://127.0.0.1:5173');
     await page.waitForFunction(() => window.__t?.ready, {}, { timeout: 60000 });
+    await page.evaluate(() => __t.keepAllArt());
     for (const skill of [0.75, 0.5])
       for (const hero of ['wenShaohua', 'yuWuxia'])
         for (let trial = 0; trial < 10; trial++) {

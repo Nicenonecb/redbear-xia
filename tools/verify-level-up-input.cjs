@@ -14,6 +14,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
   try {
     await page.goto(process.env.TEST_URL || 'http://127.0.0.1:5173');
     await page.waitForFunction(() => window.__t?.ready, {}, { timeout: 60000 });
+    await page.evaluate(() => __t.keepAllArt());
     await page.evaluate(async () => {
       const { startRun, gainExp } = await import('/src/game/run.ts');
       const run = startRun('wenShaohua', false);

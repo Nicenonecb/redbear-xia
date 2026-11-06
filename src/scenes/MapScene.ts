@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
-import { hasArt, queueMapArt, trimArtTextures, type ArtSlot } from '../art/slots';
+import { hasArt, prefetchStageArt, queueStageArt, trimArtTextures, type ArtSlot } from '../art/slots';
 import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
 import { VoicePlayer, queueVoice } from '../audio/voice';
@@ -147,12 +147,12 @@ export class MapScene extends Phaser.Scene {
   }
 
   /**
-   * 进地图前加载这一局用得上的第三批图（第一次进来要等几秒，画一道墨条；之后再进就不用等了）
+   * 进地图前只加载这一关用得上的图（第一次进来要等几秒，画一道墨条；上一关在后台预取过的从缓存读，很快）
    */
   preload() {
     queueVoice(this, ['redBear_rescue_1', 'redBear_rescue_2', 'redBear_rescue_3']);
-    const hero = (getRun() ?? startRun('wenShaohua', false)).hero;
-    if (!queueMapArt(this, hero)) return;
+    const run = getRun() ?? startRun('wenShaohua', false);
+    if (!queueStageArt(this, run.hero, run.stage)) return;
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
     const label = this.add
@@ -191,7 +191,7 @@ export class MapScene extends Phaser.Scene {
     this.lastPhase = null;
     const M = this.stage.map;
 
-    bakeMapTextures(this, M.seed);
+    bakeMapTextures(this, M.seed, this.run.stage > 0 ? 'prop_pine_big' : 'prop_bamboo_big');
 
     this.drawGround();
 
@@ -299,7 +299,10 @@ export class MapScene extends Phaser.Scene {
       this.scene.stop('UI');
       this.scene.start('Title');
     });
+    // 打这一关时，下一关的图在后台慢慢下载到浏览器缓存
+    const stopPrefetch = prefetchStageArt(this, this.run.hero, this.run.stage + 1);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      stopPrefetch();
       this.scene.stop('UI');
       this.controller.dispose();
       sfx.stopAmbient();

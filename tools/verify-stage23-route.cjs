@@ -5,6 +5,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     const page = await browser.newPage();
     await page.goto(process.env.TEST_URL || 'http://127.0.0.1:5173');
     await page.waitForFunction(() => window.__t?.ready, {}, {timeout:90000});
+    await page.evaluate(() => __t.keepAllArt());
     await page.evaluate(async () => {
       const r = (await import('/src/game/run.ts')).startRun('yuWuxia', false);
       r.stage = 1; r.step = 4;

@@ -99,34 +99,195 @@ function manifestImages(scene: Phaser.Scene) {
 }
 
 /**
- * 在 Boot 场景里调用：把标题、选角、界面、茶摊、信这些登记过槽位的图排进加载队列。
- * 大地图的图（第三批，几百兆）不在这里加载，进地图时再按选的主角加载，见 queueMapArt
+ * 只在某几关用到的人物：地图图 map_<名字>_*、立绘 portrait_<名字>*、名牌 card_boss_<名字>、特写 cutin_<名字>_* 都按名字认。
+ * 值是哪几关（0 山脚、1 山腰、2 山峰）。没列的人（两位主角、红熊、任新野）每关都要
+ */
+const STAGE_CAST: Record<string, number[]> = {
+  bandit: [0],
+  thrower: [0],
+  chief: [0],
+  pangHu: [0],
+  tiger: [0],
+  maiden: [0],
+  spearman: [1],
+  archer: [1],
+  drillmaster: [1],
+  baoJinliang: [1],
+  swordsman: [2],
+  bannerman: [2],
+  captain: [2],
+  zhangHuatian: [2],
+};
+
+/** 只在某几关用到的地面、物件、背景、特效（全名）。没列的每关都要（篱笆、山石、刀光这些） */
+const STAGE_SCENERY: Record<string, number[]> = {
+  ground_forest: [0],
+  ground_stone: [0],
+  ground_camp: [0],
+  ground_pine_forest: [1],
+  ground_mountain_path: [1],
+  ground_drill_yard: [1],
+  ground_snow_rock: [2],
+  ground_stone_stairs: [2],
+  ground_palace: [2],
+  prop_bamboo_big: [0],
+  prop_bamboo_mid: [0],
+  prop_bamboo_small: [0],
+  prop_camp_gate: [0],
+  prop_camp_hall: [0],
+  prop_camp_wall: [0],
+  prop_brazier: [0],
+  prop_banner: [0],
+  prop_watchtower: [0],
+  prop_weapon_rack: [0],
+  prop_tiger_rug: [0],
+  prop_cage: [0],
+  prop_cage_open: [0],
+  prop_embroidery_tower: [0],
+  prop_teastall: [0, 1],
+  prop_signpost: [0, 1],
+  prop_pine_big: [1, 2],
+  prop_pine_small: [1, 2],
+  prop_cloud: [1, 2],
+  prop_plank_road: [1, 2],
+  prop_hitching_post: [1],
+  prop_army_tent: [1],
+  prop_weapon_rack_spear: [1],
+  prop_war_banner: [1],
+  prop_command_stage: [1],
+  prop_ring_post: [1],
+  prop_dummy: [1],
+  prop_broken_stele: [2],
+  prop_temple_ruin: [2],
+  prop_incense_burner: [2],
+  prop_old_dragon_banner: [2],
+  prop_palace_gate: [2],
+  prop_stone_lion: [2],
+  fx_claw: [0],
+  fx_roar_ring: [0],
+  fx_spear_thrust: [1],
+  fx_whip_lash: [2],
+  fx_whip_ring: [2],
+  fx_gold_burst: [2],
+  fx_cloth_burst: [2],
+  bg_room1: [0],
+  bg_room2: [0],
+  bg_room3: [0],
+  bg_boss: [0],
+  bg_shop: [0],
+  ending_chapter1: [0],
+  bg_waist_path: [1],
+  bg_waist_duel: [1],
+  bg_peak_palace: [2],
+  ending_final: [2],
+  // 胖虎败后山顶有个彰化天的人影在看（按立绘涂黑）
+  portrait_zhangHuatian: [0, 2],
+};
+
+/** 山峰结尾三兄弟一起逃走：胖虎、鲍金梁要在山峰上露面，但只用站姿和走路帧 */
+const PEAK_ESCAPE = /^map_(pangHu|baoJinliang)_(walk\d_)?(n|ne|e|se|s)$/;
+
+/**
+ * 开发测试用：自动跑局的脚本在三关之间来回同步切场景，等不了每关的异步加载。
+ * 打开后进地图时三关的图一次加载完、不卸载（等于改版前的做法）。只有 __t.keepAllArt() 会打开
+ */
+export const artDebug = { keepAll: false };
+
+/** 这张图只在哪几关用到；每关都要的返回 null */
+export function stagesOf(slot: string): number[] | null {
+  if (slot in STAGE_SCENERY) return STAGE_SCENERY[slot];
+  const rest = /^(map|portrait|cutin|card_boss)_/.test(slot) ? slot.replace(/^(map|portrait|cutin|card_boss)_/, '') : '';
+  const name = rest && Object.keys(STAGE_CAST).find((c) => rest.startsWith(c));
+  if (!name) return null;
+  return PEAK_ESCAPE.test(slot) ? [...STAGE_CAST[name], 2] : STAGE_CAST[name];
+}
+
+const isOtherHero = (slot: string, hero: string) =>
+  slot.startsWith(`map_${hero === 'wenShaohua' ? 'yuWuxia' : 'wenShaohua'}_`);
+
+/** 第 stage 关、这位主角要用的全部图 [槽位, 文件] */
+function stageImages(scene: Phaser.Scene, hero: string, stage: number) {
+  return manifestImages(scene).filter(([slot]) => {
+    if (!(slot in ART_SLOTS) && !MAP_ART.test(slot)) return false;
+    if (isOtherHero(slot, hero)) return false;
+    const st = stagesOf(slot);
+    // 每关都要的界面图在 Boot 里就加载了，这里只管地图图和这一关独有的
+    if (!st) return !(slot in ART_SLOTS);
+    return st.includes(stage);
+  });
+}
+
+/**
+ * 在 Boot 场景里调用：只加载标题、选角、出师、界面、茶摊老板、信这些每关都用得上的登记槽位图。
+ * 各关独有的背景、立绘、名牌（还有地图图）进那一关时再加载，见 queueStageArt
  */
 export function queueArt(scene: Phaser.Scene) {
   for (const [slot, file] of manifestImages(scene)) {
-    if (slot in ART_SLOTS) scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
+    if (slot in ART_SLOTS && !stagesOf(slot)) scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
   }
 }
 
 /**
- * 进大地图前调用：把第三批的图排进加载队列，只加载这一局用得上的——
- * 没选的那位主角的人物图不加载；上一局留下的那位主角的图从显卡里卸掉。已经加载过的不会重复加载。
+ * 进某一关的大地图前调用：只把这一关、这位主角用得上的图排进加载队列（已经在显卡里的不重复加载）；
+ * 同时把用不上的图从显卡里卸掉——另一位主角的、已经打过的关独有的。下一关的图不卸（可能刚预取过）。
  * 返回排进队列的张数
  */
-export function queueMapArt(scene: Phaser.Scene, hero: string) {
-  const other = hero === 'wenShaohua' ? 'yuWuxia' : 'wenShaohua';
-  const isOther = (slot: string) => slot.startsWith(`map_${other}_`);
-  for (const key of scene.textures.getTextureKeys()) {
-    if (key.startsWith('art:') && isOther(key.slice(4))) scene.textures.remove(key);
+export function queueStageArt(scene: Phaser.Scene, hero: string, stage: number) {
+  if (artDebug.keepAll) {
+    const all = new Map([0, 1, 2].flatMap((st) => stageImages(scene, hero, st)));
+    const loaded = new Set(scene.textures.getTextureKeys());
+    let n = 0;
+    for (const [slot, file] of all) {
+      if (loaded.has(textureKey(slot as ArtSlot))) continue;
+      scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
+      n++;
+    }
+    return n;
   }
+  for (const key of scene.textures.getTextureKeys()) {
+    if (!key.startsWith('art:')) continue;
+    const slot = key.slice(4);
+    const st = stagesOf(slot);
+    if (isOtherHero(slot, hero) || (st && !st.includes(stage) && !st.includes(stage + 1))) scene.textures.remove(key);
+  }
+  const loaded = new Set(scene.textures.getTextureKeys());
   let n = 0;
-  for (const [slot, file] of manifestImages(scene)) {
-    if (slot in ART_SLOTS || !MAP_ART.test(slot) || isOther(slot)) continue;
-    if (scene.textures.exists(textureKey(slot as ArtSlot))) continue;
+  for (const [slot, file] of stageImages(scene, hero, stage)) {
+    if (loaded.has(textureKey(slot as ArtSlot))) continue;
     scene.load.image(textureKey(slot as ArtSlot), `art/${file}`);
     n++;
   }
   return n;
+}
+
+/**
+ * 打这一关时在后台把下一关的图先下载到浏览器缓存里（只下载，不解码、不进显卡，所以不占显存、不卡帧），
+ * 到下一关加载时直接从缓存读，几乎不用等。一次只下两张，不和战斗抢网速。
+ * 返回一个函数，调用就停下（离开场景时用）
+ */
+export function prefetchStageArt(scene: Phaser.Scene, hero: string, stage: number) {
+  if (stage > 2 || typeof fetch !== 'function' || location.protocol === 'file:') return () => {};
+  const loaded = new Set(scene.textures.getTextureKeys());
+  const queue = stageImages(scene, hero, stage)
+    .filter(([slot]) => !loaded.has(textureKey(slot as ArtSlot)))
+    .map(([, file]) => `art/${file}`);
+  let stopped = false;
+  const worker = async () => {
+    while (!stopped && queue.length) {
+      const url = queue.shift()!;
+      try {
+        const res = await fetch(url, { priority: 'low' } as RequestInit);
+        await res.arrayBuffer();
+      } catch {
+        // 预取失败没关系，进下一关时照常加载
+      }
+    }
+  };
+  worker();
+  worker();
+  return () => {
+    stopped = true;
+  };
 }
 
 /**
@@ -138,10 +299,12 @@ export function trimArtTextures(scene: Phaser.Scene) {
   const data = scene.cache.json.get('mapAnchors') as
     { images?: Record<string, { trim?: number[] }>; props?: Record<string, { trim?: number[] }> } | undefined;
   const all = { ...data?.images, ...data?.props };
+  // 只看已经加载的图（按关加载以后，别的关的图本来就不在）
+  const loaded = new Set(scene.textures.getTextureKeys());
   for (const [slot, info] of Object.entries(all)) {
     const key = textureKey(slot as ArtSlot);
     const box = info.trim;
-    if (!box || !scene.textures.exists(key)) continue;
+    if (!box || !loaded.has(key)) continue;
     const old = scene.textures.get(key);
     const src = old.getSourceImage() as HTMLImageElement;
     // 已经裁过了（裁好的是 canvas）

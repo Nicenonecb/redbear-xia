@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { Action } from '../input/Controls';
 import { mapAutoPlayer } from './mapAutoPlayer';
+import { artDebug } from '../art/slots';
 
 /**
  * 开发用的逐帧测试工具，只在 npm run dev 时装到 window 上，打包后不存在。
@@ -45,6 +46,10 @@ export function installDevHarness(game: Phaser.Game) {
     /** 图片还在加载时别切场景，不然启动场景一停，没加载完的图就都丢了 */
     get ready() {
       return !game.scene.isActive('Boot');
+    },
+    /** 三关的图进地图时一次加载完、不卸载（脚本同步切关用）；之后要先 go('Map') 并等它加载完 */
+    keepAllArt() {
+      artDebug.keepAll = true;
     },
     /** 切到某个场景并停掉自动循环；data 会原样传给场景 */
     go(key: string, data?: object) {
