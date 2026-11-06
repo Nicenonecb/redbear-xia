@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-给第三批地图人物图算"脚底在哪儿、人有多高"，写到 public/art/map-anchors.json，游戏按它对齐。
+给第三批地图人物图算"脚底在哪儿、人有多高"（量 art-source/ 里的原图），写到 public/art/map-anchors.json，游戏按它对齐。
 地图物件（prop_*）也记下落地的那个点和实际画了东西的左右范围。
 
 Codex 出的图画布都一样大（同一个人的各张图是对着同一块画布画的），人大致站在画布正中，
@@ -19,7 +19,9 @@ import glob, json, os, re, statistics
 import numpy as np
 from PIL import Image
 
-ART = os.path.join(os.path.dirname(__file__), '..', 'public', 'art')
+# 量原图（art-source/ 里的 PNG）；游戏用的无损 WebP 和原图像素一模一样，结果写到 public/art/
+ART = os.path.join(os.path.dirname(__file__), '..', 'art-source')
+OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'art')
 DIRS = ['s', 'se', 'e', 'ne', 'n']
 
 
@@ -96,5 +98,5 @@ out = {
     'props': props,
     'bodyHeight': {k: round(statistics.median(v)) for k, v in heights.items()},
 }
-json.dump(out, open(os.path.join(ART, 'map-anchors.json'), 'w'), ensure_ascii=False, indent=1)
+json.dump(out, open(os.path.join(OUT, 'map-anchors.json'), 'w'), ensure_ascii=False, indent=1)
 print(len(images), 'images;', out['bodyHeight'])
