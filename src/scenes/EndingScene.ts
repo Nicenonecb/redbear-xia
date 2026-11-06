@@ -13,12 +13,25 @@ import { cjkWrap } from '../ui/cjkWrap';
 /** 尾声：三兄弟没被抓住，坐船出海了（第二章的引子） */
 const EPILOGUE = '胖虎、鲍金梁、彰化天三兄弟乘船出海，\n从此不知所踪……';
 /** 谢幕：每项工作都是胖虎做的 */
-const CREDITS = ['故事剧本', '关卡设计', '动作设计', '美术设计', '音乐音效', '代码编写'];
-const AUTHOR = '胖虎';
+/** 制作名单：胖虎 × 一起干活的 AI（联名写法）；note 是那一项下面的小字备注 */
+const CREDITS: { role: string; names: string[]; note?: string }[] = [
+  { role: '故事剧本', names: ['胖虎', 'OpenBear'] },
+  { role: '关卡设计', names: ['胖虎'] },
+  { role: '动作设计', names: ['胖虎'] },
+  { role: '美术设计', names: ['胖虎', 'OpenBear', 'Codex'] },
+  { role: '音乐音效', names: ['胖虎', 'Claude Code'] },
+  {
+    role: '代码编写',
+    names: ['胖虎', 'OpenBear', 'Claude Code', 'Codex', 'DeepSeek', 'CodeBear'],
+    note: '（PS：我和 AI 天下无敌，嘿嘿）',
+  },
+];
+/** 名字一行最多排多宽，超出就折到下一行（下一行以 × 开头） */
+const NAMES_MAX_W = 430;
 /** 括号里是这个人在游戏里"演"的角色 */
 const THANKS = [
   '感谢温总（温少华）和于姐（于无瑕）的认可与大力支持',
-  '感谢 OPENBEAR 团队：产品小雨（彰化天）、',
+  '感谢 OpenBear 团队：产品小雨（彰化天）、',
   '后端开发刘荣梁（鲍金梁）、PE 刘上维，',
   '以及 UI 团队、前端开发部门的各位同事',
   '日常给予我的情绪价值',
@@ -120,14 +133,39 @@ export class EndingScene extends Phaser.Scene {
     y += 90;
     divider(y);
 
-    // 制作：一项一行，左边分工（大字）、右边名字（小字），最后盖一方朱印
+    // 制作：一项一行，左边分工（大字）、右边名字（小字，胖虎 × AI），最后盖一方朱印
     y += 70;
     label('制 作', y);
     y += 70;
-    for (const role of CREDITS) {
-      add(this.add.text(cx - 24, y, role, { ...ink, fontSize: '28px' }).setOrigin(1, 0).setLetterSpacing(3));
-      add(this.add.text(cx + 24, y + 3, AUTHOR, { ...ink, fontSize: '24px' }).setOrigin(0, 0).setAlpha(0.92).setLetterSpacing(3));
-      y += 56;
+    // 分工和名字的分界线往左挪一点，名字那一列长，整块看起来才居中
+    const split = cx - 110;
+    for (const { role, names, note } of CREDITS) {
+      add(this.add.text(split - 24, y, role, { ...ink, fontSize: '28px' }).setOrigin(1, 0).setLetterSpacing(3));
+      // 名字：实墨；中间的 × 用朱红小字，像联名款
+      const left = split + 24;
+      let x = left;
+      let row = y + 3;
+      names.forEach((n, i) => {
+        const name = this.add.text(0, row, n, { ...ink, fontSize: '24px' }).setAlpha(0.92).setLetterSpacing(i === 0 ? 3 : 1);
+        if (i > 0) {
+          const times = this.add.text(0, row + 1, '×', { ...ink, fontSize: '20px', color: CSS_COLORS.red });
+          if (x + 12 + times.width + 12 + name.width > left + NAMES_MAX_W) {
+            x = left;
+            row += 38;
+            times.setY(row + 1);
+            name.setY(row);
+          } else x += 12;
+          add(times.setX(x));
+          x += times.width + 12;
+        }
+        add(name.setX(x));
+        x += name.width;
+      });
+      y = row + 53;
+      if (note) {
+        add(this.add.text(left, y - 12, note, { ...ink, fontSize: '20px', color: CSS_COLORS.red }).setAlpha(0.8));
+        y += 30;
+      }
     }
     y += 24;
     const seal = this.add.container(cx, y + 28).setAngle(-8);
