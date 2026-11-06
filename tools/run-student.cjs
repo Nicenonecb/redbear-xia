@@ -7,7 +7,7 @@
  *
  * 先启动 Vite（npm run dev），再：
  *   PLAYWRIGHT_MODULE=<playwright> node tools/run-student.cjs --mode eval --policy /abs/policy.json \
- *     --out /abs/dir --split dev --prefix xia-dev --runs 20 [--start 0]
+ *     --out /abs/dir --split dev --prefix xia-dev --runs 20 [--start 0] [--heroes wenShaohua]
  *   PLAYWRIGHT_MODULE=<playwright> node tools/run-student.cjs --mode dagger --policy /abs/policy.json \
  *     --out /abs/dir --split dagger1 --prefix xia-train-d1 --runs 50 [--beta 0]
  *
@@ -33,6 +33,8 @@ const start = Number(args.start ?? 0);
 const beta = Number(args.beta ?? 0);
 // 老师默认 expert（见 src/debug/mapAutoPlayer.ts）；--expert 0 退回普通打法
 const expert = (args.expert ?? '1') !== '0';
+// --heroes wenShaohua 只跑指定主角（逗号分隔），默认两个都跑
+const heroes = (args.heroes ?? 'wenShaohua,yuWuxia').split(',');
 const policyFile = path.resolve(args.policy);
 const policy = JSON.parse(fs.readFileSync(policyFile, 'utf8'));
 const dir = path.join(path.resolve(args.out), args.split);
@@ -68,7 +70,7 @@ const gitRev = (() => {
       new HandPolicy(policy); // 先校验一次权重文件
       return { version: f.FEATURE_VERSION, dim: f.FEATURE_DIM, actions: f.AI_ACTIONS };
     }, policy);
-    for (const hero of ['wenShaohua', 'yuWuxia'])
+    for (const hero of heroes)
       for (let trial = start; trial < start + runs; trial++) {
         const seed = `${args.prefix}-${hero}-${trial}`;
         const t0 = Date.now();
