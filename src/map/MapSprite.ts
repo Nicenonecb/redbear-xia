@@ -190,6 +190,12 @@ export class MapSprite {
     this.shadow.setVisible(v);
   }
 
+  /** 整个人连影子一起淡（在 update 之后调；update 会按闪避、受击重设人的透明度） */
+  setAlpha(a: number) {
+    this.img.setAlpha(this.img.alpha * a);
+    this.shadow.setAlpha(this.shadow.alpha * a);
+  }
+
   destroy() {
     this.img.destroy();
     this.shadow.destroy();

@@ -30,6 +30,7 @@ import { MapProjectile } from '../map/combat/MapProjectile';
 import { RingWave } from '../map/combat/RingWave';
 import { ArtPop, ChargeAura, DustPuff, SlashFx, type Overlay } from '../map/combat/fx';
 import { Encounter } from '../map/Encounter';
+import { Drill } from '../map/Drill';
 import { LOOKS, type MapLook } from '../map/looks';
 import {
   BAMBOO_SIZE,
@@ -127,6 +128,10 @@ export class MapScene extends Phaser.Scene {
   private showDebug = false;
   private enemies: { enemy: MapEnemy; sprite: MapSprite; look: MapLook }[] = [];
   rings: RingWave[] = [];
+  /** 山腰兵营外在练兵的新兵（第二关，这片空地还没打过时才有） */
+  drill: Drill | null = null;
+  /** 镜头暂时看向哪儿（null 跟着主角） */
+  private lookAt: Pt | null = null;
   /** 地上的红色预警（扇形、红线、红圈），每帧重画 */
   private warn!: Phaser.GameObjects.Graphics;
   /** 出招前武器上的一下闪光 */
@@ -209,6 +214,7 @@ export class MapScene extends Phaser.Scene {
     this.pauses = new Set();
     this.talking = null;
     this.rescueShow = null;
+    this.lookAt = null;
     this.leaving = false;
     this.renGreeted = false;
     this.warn = this.add.graphics().setDepth(-2900);
@@ -259,6 +265,12 @@ export class MapScene extends Phaser.Scene {
     this.encounters = M.areas
       .filter((a) => a.room !== undefined)
       .map((a) => new Encounter(this, a, this.stage.rooms[a.room!], this.walk, M.path, this.run.step > roomStepOf(this.stage, a.room!)));
+    this.drill = null;
+    const campFront = M.areas.find((a) => a.id === 'campFront');
+    if (this.run.stage === 1 && campFront && this.run.step <= roomStepOf(this.stage, campFront.room!)) {
+      this.drill = new Drill(this, campFront);
+      this.walk.solids!.push(...this.drill.solids);
+    }
     this.spawnRen();
     this.controller =
       this.stage.boss === 'zhangHuatian'
@@ -384,8 +396,8 @@ export class MapScene extends Phaser.Scene {
   private render(delta: number) {
     const p = this.player;
     this.followGround();
-    // 变身演出时镜头对着胖虎
-    const focus = this.cinematic && this.boss ? this.boss.pos : p.pos;
+    // 变身演出时镜头对着胖虎；念某些台词时镜头看向说话的人（lookAt）
+    const focus = this.lookAt ?? (this.cinematic && this.boss ? this.boss.pos : p.pos);
     this.camTarget.setPosition(focus.x, focus.y - (this.cinematic ? 100 : 60));
     this.sprite.update(
       {
@@ -404,6 +416,15 @@ export class MapScene extends Phaser.Scene {
       delta,
     );
     for (const e of this.encounters) e.draw(delta);
+    if (this.drill) {
+      const fighting = this.encounters.some((e) => e.area.id === 'campFront' && e.state !== 'idle');
+      this.drill.update(delta, p.pos, fighting, (lines, where) => {
+        if (this.pauses.size || this.leaving) return void (this.drill!.talked = false);
+        // 镜头挪到主角和新兵中间，看得见是谁在说话
+        this.lookAt = { x: (p.pos.x + where.x) / 2, y: (p.pos.y + where.y) / 2 };
+        this.talk(lines, () => (this.lookAt = null), () => this.headOf(where, 160));
+      });
+    }
     this.renSprite.update({ x: this.stage.map.renXinye.x, y: this.stage.map.renXinye.y, facing: { x: 0, y: 1 }, moving: false }, delta);
     this.renPrompt.setVisible(this.canVisitShop() && !this.pauses.size);
     for (const { enemy: e, sprite, look } of this.enemies) {

@@ -4,7 +4,7 @@
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const fs = require('node:fs');
 const out = 'docs/verification/clues';
-const only = (process.env.ONLY || 'ledger').split(',');
+const only = (process.env.ONLY || 'ledger,drill').split(',');
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'chrome', headless: true, args: ['--mute-audio'] });
@@ -35,7 +35,8 @@ const only = (process.env.ONLY || 'ledger').split(',');
         const m = __t.scene();
         window.said = [];
         const ui = m.ui;
-        const say = ui.say.bind(ui);
+        // UI 场景是同一个对象，换场景重进也不换：只包一层
+        const say = (ui.__origSay ??= ui.say.bind(ui));
         ui.say = (line, ...rest) => {
           window.said.push(line);
           return say(line, ...rest);
@@ -85,20 +86,31 @@ const only = (process.env.ONLY || 'ledger').split(',');
         m.player.pos.x = info.center.x - 560;
         m.player.pos.y = info.center.y + 60;
       }, info);
+      // 第一张截图：镜头临时对着木人桩，看新兵练刺
+      await page.evaluate((info) => {
+        const m = __t.scene();
+        m.cameras.main.stopFollow();
+        m.cameras.main.centerOn(info.at.x - 120, info.at.y - 60);
+      }, info);
       await page.waitForTimeout(1200);
       const poses = await page.evaluate(() => __t.scene().drill.recruits.map((r) => r.pose));
       await page.waitForTimeout(500);
       const poses2 = await page.evaluate(() => __t.scene().drill.recruits.map((r) => r.pose));
       ok(poses.join() !== poses2.join() || poses.some((p) => p === 'strike'), 'recruits are not drilling');
       await page.screenshot({ path: `${out}/drill.png` });
+      await page.evaluate(() => {
+        const m = __t.scene();
+        m.cameras.main.startFollow(m.camTarget, true, 0.12, 0.12);
+      });
       // 走近一点：弹对话
       await page.evaluate((info) => {
         const m = __t.scene();
-        m.player.pos.x = info.at.x - 330;
-        m.player.pos.y = info.at.y + 160;
+        // 还没走进空地（遭遇战没开打），但已经够近
+        m.player.pos.x = info.center.x - 500;
+        m.player.pos.y = info.center.y + 50;
       }, info);
       await page.waitForFunction(() => window.said.some((l) => l.includes('杭州')), {}, { timeout: 15000 });
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(1300);
       await page.screenshot({ path: `${out}/drill-talk.png` });
       await page.waitForFunction(() => window.said.some((l) => l.includes('少打听')), {}, { timeout: 15000 });
       // 走进空地中间：遭遇战开打，新兵散开
