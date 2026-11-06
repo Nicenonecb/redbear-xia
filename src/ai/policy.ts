@@ -1,5 +1,5 @@
 import type { Action } from '../input/Controls';
-import { AI_ACTIONS, FEATURE_DIM, FEATURE_VERSION } from './features';
+import { AI_ACTIONS, FEATURE_DIM, FEATURE_PREFIX_DIMS, FEATURE_VERSION } from './features';
 
 /**
  * 浏览器内的小型策略网络（MLP）前向推理，纯 TS，不依赖任何推理库。
@@ -8,7 +8,7 @@ import { AI_ACTIONS, FEATURE_DIM, FEATURE_VERSION } from './features';
  * {
  *   "schema": "xia-hand-mlp-v1",
  *   "version": "xia-hand-v1",            // 不可覆盖的版本标签
- *   "featureVersion": "xia-features-v1", // 必须与 FEATURE_VERSION 一致
+ *   "featureVersion": "xia-features-v2", // 与 FEATURE_VERSION 一致，或是 FEATURE_PREFIX_DIMS 里的旧版本
  *   "inputDim": FEATURE_DIM,
  *   "actions": ["left", ...],            // 必须与 AI_ACTIONS 顺序一致
  *   "mean": [...], "std": [...],          // 可选：输入标准化，长度 inputDim
@@ -39,6 +39,8 @@ function decodeF32(b64: string): Float32Array {
 
 export class HandPolicy {
   readonly version: string;
+  /** 这份权重读的特征维数（旧版本是当前特征的前缀） */
+  readonly dim: number;
   private readonly layers: { in: number; out: number; w: Float32Array; b: Float32Array }[];
   private readonly mean: Float32Array | null;
   private readonly invStd: Float32Array | null;
@@ -47,9 +49,11 @@ export class HandPolicy {
 
   constructor(file: PolicyFile) {
     if (file.schema !== 'xia-hand-mlp-v1') throw new Error(`unknown policy schema ${file.schema}`);
-    if (file.featureVersion !== FEATURE_VERSION)
-      throw new Error(`policy expects ${file.featureVersion}, game provides ${FEATURE_VERSION}`);
-    if (file.inputDim !== FEATURE_DIM) throw new Error(`policy inputDim ${file.inputDim} != ${FEATURE_DIM}`);
+    // 当前版本整段读；旧版本（特征是当前版本的前缀）只读前 inputDim 维
+    const dim = file.featureVersion === FEATURE_VERSION ? FEATURE_DIM : FEATURE_PREFIX_DIMS[file.featureVersion];
+    if (!dim) throw new Error(`policy expects ${file.featureVersion}, game provides ${FEATURE_VERSION}`);
+    if (file.inputDim !== dim) throw new Error(`policy inputDim ${file.inputDim} != ${dim}`);
+    this.dim = dim;
     if (file.actions.join() !== AI_ACTIONS.join()) throw new Error('policy action order mismatch');
     if (file.activation !== 'relu') throw new Error(`unsupported activation ${file.activation}`);
     this.version = file.version;
@@ -59,7 +63,7 @@ export class HandPolicy {
       if (w.length !== l.in * l.out || b.length !== l.out) throw new Error(`layer ${k} size mismatch`);
       return { in: l.in, out: l.out, w, b };
     });
-    if (this.layers[0]?.in !== FEATURE_DIM) throw new Error('first layer input size mismatch');
+    if (this.layers[0]?.in !== dim) throw new Error('first layer input size mismatch');
     if (this.layers.at(-1)?.out !== AI_ACTIONS.length) throw new Error('last layer output size mismatch');
     for (let k = 1; k < this.layers.length; k++)
       if (this.layers[k].in !== this.layers[k - 1].out) throw new Error(`layer ${k} chain mismatch`);
@@ -67,7 +71,7 @@ export class HandPolicy {
     this.invStd = file.std ? Float32Array.from(file.std, (s) => (s > 1e-6 ? 1 / s : 1)) : null;
     if (file.thresholds.length !== AI_ACTIONS.length) throw new Error('thresholds size mismatch');
     this.thresholds = Float32Array.from(file.thresholds);
-    this.buffers = [new Float32Array(FEATURE_DIM), ...this.layers.map((l) => new Float32Array(l.out))];
+    this.buffers = [new Float32Array(dim), ...this.layers.map((l) => new Float32Array(l.out))];
   }
 
   static async load(url: string) {
@@ -79,7 +83,7 @@ export class HandPolicy {
   /** 每个动作的 sigmoid 概率（顺序同 AI_ACTIONS） */
   probabilities(features: Float32Array): Float32Array {
     const x = this.buffers[0];
-    for (let i = 0; i < FEATURE_DIM; i++) {
+    for (let i = 0; i < this.dim; i++) {
       const v = this.mean ? (features[i] - this.mean[i]) * this.invStd![i] : features[i];
       x[i] = v;
     }

@@ -1,12 +1,18 @@
 import type { Action } from '../input/Controls';
 import { areaOf, groundDist, inArea } from '../map/combat/ground';
+import { outside } from '../map/walkable';
 
 /**
  * AI 操控用的状态特征：把大地图场景的一帧换成定长数字向量。
  * 训练（导出老师数据）和上线推理都只调用这一个函数，保证两边输入完全一致。
  * 改动任何一项都必须升级 FEATURE_VERSION，旧权重不能直接沿用。
  */
-export const FEATURE_VERSION = 'xia-features-v1';
+export const FEATURE_VERSION = 'xia-features-v2';
+/**
+ * v2 = v1 的 256 维原样不动 + 末尾追加的 Boss 出招预告和走位探测。
+ * 旧版权重（v1）只读前 256 维，所以同一份代码仍能评测旧版本作对照。
+ */
+export const FEATURE_PREFIX_DIMS: Record<string, number> = { 'xia-features-v1': 256 };
 
 /** 输出顺序固定，与 Controls 里的 Action 一一对应 */
 export const AI_ACTIONS: readonly Action[] = ['left', 'right', 'up', 'down', 'attack', 'special', 'dodge', 'throw'];
@@ -36,6 +42,11 @@ const FOE_KEYS = [
 for (let i = 0; i < K_FOES; i++) add(`foe${i}.`, FOE_KEYS);
 for (let i = 0; i < K_RINGS; i++) add(`ring${i}.`, ['on', 'dx', 'dy', 'gap', 'radius']);
 for (let i = 0; i < K_SHOTS; i++) add(`shot${i}.`, ['on', 'dx', 'dy', 'dist', 'dirX', 'dirY', 'incoming']);
+// v2：最近的 Boss 下一招预告（Boss 按固定顺序出招，冷却和顺序是老师躲"金龙卷"时用的信息）
+add('bossNext.', ['on', 'idle', 'cooldown', 'long', 'reach', 'arc', 'margin', 'startup']);
+// v2：8 个方向、60/120/180 像素处是否走得通（老师挑退路时用的同一个判断）
+const PROBE_STEPS = [60, 120, 180];
+for (let k = 0; k < 8; k++) add(`probe${k}.`, PROBE_STEPS.map(String));
 
 export const FEATURE_NAMES: readonly string[] = names;
 export const FEATURE_DIM = names.length;
@@ -219,6 +230,38 @@ export function extractFeatures(s: any, frame: number): Float32Array | null {
     put(sh.dir.x);
     put(sh.dir.y);
     put(sh.incoming);
+  }
+
+  // v2：Boss 下一招预告。与 mapAutoPlayer expert 的提前退让规则读同样的字段
+  const boss = foes
+    .filter((e: any) => bosses.has(e) && typeof e.def?.attacks?.[0] === 'string')
+    .sort((a: any, b: any) => groundDist(a.pos.x - p.pos.x, a.pos.y - p.pos.y) - groundDist(b.pos.x - p.pos.x, b.pos.y - p.pos.y))[0];
+  if (boss) {
+    let next = boss.def.moves[boss.def.attacks[(boss.sequence ?? 0) % boss.def.attacks.length]];
+    const first = next;
+    let long: any = null;
+    for (let k = 0; next && k < 4; k++) {
+      if (next.hit && next.active > 20 && areaOf(next.hit).reach >= 200) {
+        if (areaOf(next.hit).arc >= 180) long = next;
+        break;
+      }
+      next = next.followUp ? boss.def.moves[next.followUp] : null;
+    }
+    const area = long ? areaOf(long.hit) : first?.hit ? areaOf(first.hit) : { reach: 0, arc: 0 };
+    put(1);
+    put(!boss.runner?.move);
+    put(clip((boss.cooldown ?? 0) / 60, 0, 4));
+    put(!!long);
+    put(clip(area.reach / 300));
+    put(area.arc / 360);
+    put(long ? clip((groundDist(p.pos.x - boss.pos.x, p.pos.y - boss.pos.y) - (area.reach + p.radius + 90)) / 300) : 0);
+    put(clip((first?.startup ?? 0) / 60, 0, 4));
+  } else i += 8;
+  // v2：走位探测（1 = 那里出界走不通）
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2;
+    for (const step of PROBE_STEPS)
+      put(!!s.walk && outside(s.walk, p.pos.x + Math.cos(a) * step, p.pos.y + Math.sin(a) * step) > 0);
   }
 
   if (i !== FEATURE_DIM) throw new Error(`feature size ${i} != ${FEATURE_DIM}`);
