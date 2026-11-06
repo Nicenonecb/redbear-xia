@@ -50,7 +50,7 @@ export const HEROES: Record<HeroId, HeroEntry> = {
     def: YU_WUXIA,
     region: '西南',
     weapon: '扇与暗器',
-    blurb: '清冷利落，快节奏、高机动。\n扇子横扫、掷扇往返两打，飞镖连发；\n镖打光了就贴上去，近战命中把镖挣回来。',
+    blurb: '清冷利落，快节奏、高机动。\n扇子横扫、掷扇往返两打，飞镖连发。',
     mapHint: 'WASD 走 · J 扇子横扫 · K 按住蓄力 掷扇 · I 飞镖 · L/空格 闪避 · ` 判定 · Esc 返回标题',
     spawnOnMap({ scene, player: p, addProjectile }, name) {
       const { x, y } = p.pos;

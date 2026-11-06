@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { sfx } from './audio/sfx';
-import { canvasSize, installSharpRendering, sharpCameraPlugin } from './render/sharp';
-import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from './config';
+import { canvasSize, installSharpRendering, sharpCameraPlugin, viewRect } from './render/sharp';
+import { COLORS, CSS_COLORS, FONT_BRUSH } from './config';
 import { EndingScene } from './scenes/EndingScene';
 import { IntroScene } from './scenes/IntroScene';
 import { BootScene } from './scenes/BootScene';
@@ -43,7 +43,7 @@ window.addEventListener('keydown', (e) => {
   if (!scene) return;
   const label = sfx.muted ? '静音' : `音量 ${Math.round(sfx.volume * 100)}%`;
   const text = scene.add
-    .text(GAME_WIDTH - 24, GAME_HEIGHT - 70, label, { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.ink, backgroundColor: CSS_COLORS.paper, padding: { x: 10, y: 4 } })
+    .text(viewRect().right - 24, viewRect().bottom - 70, label, { fontFamily: FONT_BRUSH, fontSize: '22px', color: CSS_COLORS.ink, backgroundColor: CSS_COLORS.paper, padding: { x: 10, y: 4 } })
     .setOrigin(1, 1)
     .setDepth(200);
   scene.time.delayedCall(900, () => text.destroy());

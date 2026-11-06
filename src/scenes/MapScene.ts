@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { viewRect } from '../render/sharp';
 import { hasArt, prefetchStageArt, queueStageArt, trimArtTextures, type ArtSlot } from '../art/slots';
 import { InkSplat } from '../art/inkSplat';
 import { drawThrowingKnife } from '../art/projectiles';
@@ -893,8 +894,9 @@ export class MapScene extends Phaser.Scene {
   /** 地图上一点的头顶在画面（设计坐标）上的哪儿：台词气泡用 */
   headOf(at: Vec, height: number): ScreenPoint {
     const v = this.cameras.main.worldView;
-    const k = GAME_WIDTH / v.width;
-    return { x: (at.x - v.x) * k, y: (at.y - height - v.y) * k };
+    const screen = viewRect();
+    const k = screen.width / v.width;
+    return { x: screen.x + (at.x - v.x) * k, y: screen.y + (at.y - height - v.y) * k };
   }
 
   /** 头顶飘一行字（升级、拿到铜钱） */
@@ -1018,8 +1020,8 @@ export class MapScene extends Phaser.Scene {
     // 只铺一块屏幕大小的，钉在镜头上；镜头走到哪，纹理就跟着挪到哪，看起来就是铺满的
     const layers: { t: Phaser.GameObjects.TileSprite; region?: Phaser.Geom.Rectangle }[] = [];
     const tiled = (key: string, tile: number, depth: number, region?: Phaser.Geom.Rectangle) => {
-      const w = region?.width ?? GAME_WIDTH + 64;
-      const h = region?.height ?? GAME_HEIGHT + 64;
+      const w = region?.width ?? viewRect().width + 64;
+      const h = region?.height ?? viewRect().height + 64;
       const t = this.add
         .tileSprite(region?.x ?? 0, region?.y ?? 0, w, h, key)
         .setOrigin(0)

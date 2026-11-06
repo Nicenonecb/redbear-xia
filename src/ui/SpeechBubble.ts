@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
+import { COLORS, CSS_COLORS, FONT_BRUSH } from '../config';
+import { viewRect } from '../render/sharp';
 
 /** 每个字打出来的间隔（毫秒） */
 const CHAR_MS = 55;
@@ -53,7 +54,8 @@ export class SpeechBubble {
     const h = this.text.height;
     this.text.setText(this.line.slice(0, Math.floor(this.elapsed / CHAR_MS) + 1)).setVisible(true);
 
-    const left = Phaser.Math.Clamp(x - w / 2 - PAD, 10, GAME_WIDTH - w - PAD * 2 - 10);
+    const v = viewRect();
+    const left = Phaser.Math.Clamp(x - w / 2 - PAD, v.x + 10, v.right - w - PAD * 2 - 10);
     const top = y - h - PAD * 2 - 16;
     const tailX = Phaser.Math.Clamp(x, left + 20, left + w + PAD * 2 - 20);
 

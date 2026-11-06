@@ -11,6 +11,7 @@ import { RunHud } from '../ui/RunHud';
 import { SpeechBubble } from '../ui/SpeechBubble';
 import type { RunState } from '../game/run';
 import type { MapFighter } from '../map/combat/MapFighter';
+import { viewRect } from '../render/sharp';
 
 /** 区域题卡：淡入、停住、淡出各多长（毫秒） */
 const CARD_IN = 400;
@@ -61,17 +62,19 @@ export class UIScene extends Phaser.Scene {
 
   create(data: UIData) {
     this.card = null;
-    const backdrop = this.add.graphics();
+    // 贴着屏幕实际的边摆（窗口比 16:9 宽时左右会多出一截）
+    const v = viewRect();
+    const backdrop = this.add.graphics().setPosition(v.x, v.y);
     backdrop.fillGradientStyle(COLORS.paper, COLORS.paper, COLORS.paper, COLORS.paper, 0.85, 0, 0.85, 0);
     backdrop.fillRect(0, 0, 420, 120);
     backdrop.fillRect(0, 120, 420, 30);
-    this.areaText = this.add.text(24, 20, '', { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink });
-    this.hpBar = new HealthBar(this, 24, 84, 240, data.heroName);
+    this.areaText = this.add.text(v.x + 24, v.y + 20, '', { fontFamily: FONT_BRUSH, fontSize: '28px', color: CSS_COLORS.ink });
+    this.hpBar = new HealthBar(this, v.x + 24, v.y + 84, 240, data.heroName);
     this.run = data.run;
     this.player = data.player;
-    this.hud = new RunHud(this, 24, 104);
+    this.hud = new RunHud(this, v.x + 24, v.y + 104);
     this.waveText = this.add
-      .text(GAME_WIDTH - 30, GAME_HEIGHT - 40, '', {
+      .text(v.right - 30, v.bottom - 40, '', {
         fontFamily: FONT_BRUSH,
         fontSize: '24px',
         color: CSS_COLORS.ink,
@@ -84,7 +87,7 @@ export class UIScene extends Phaser.Scene {
     this.dimTarget = 0;
     this.portraits = { left: new Portrait(this, 'portrait_redBear', 'left'), right: new Portrait(this, 'portrait_pangHu', 'right') };
     this.add
-      .text(24, GAME_HEIGHT - 40, data.hint, {
+      .text(v.x + 24, v.bottom - 40, data.hint, {
         fontFamily: FONT_BRUSH,
         fontSize: '20px',
         color: CSS_COLORS.ink,
@@ -193,8 +196,9 @@ export class UIScene extends Phaser.Scene {
   showAreaCard(name: string, art: ArtSlot) {
     this.card?.container.destroy();
     const container = this.add.container(0, 0).setAlpha(0);
-    const cx = GAME_WIDTH - 24 - CARD_WIDTH / 2;
-    const y = 120;
+    const v = viewRect();
+    const cx = v.right - 24 - CARD_WIDTH / 2;
+    const y = v.y + 120;
     let nameY = y + 30;
     if (hasArt(this, art)) {
       const img = this.add.image(cx, y, `art:${art}`);
@@ -232,7 +236,8 @@ export class UIScene extends Phaser.Scene {
     this.dim.clear();
     if (this.dimAlpha > 0.01) {
       this.dim.fillStyle(COLORS.ink, this.dimAlpha);
-      this.dim.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      const v = viewRect();
+      this.dim.fillRect(v.x, v.y, v.width, v.height);
     }
     const card = this.card;
     if (!card) return;

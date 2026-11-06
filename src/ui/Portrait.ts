@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { hasArt, placeArt, type ArtSlot } from '../art/slots';
+import { viewRect } from '../render/sharp';
 
 /** 竖图（人）和横图（猛虎）各自的最大显示尺寸 */
 const PORTRAIT_MAX = { w: 380, h: 440 };
@@ -41,10 +41,11 @@ export class Portrait {
   show() {
     if (!hasArt(this.scene, this.slot)) return;
     if (!this.img) {
-      const x = this.side === 'left' ? 20 : GAME_WIDTH - 20;
+      const v = viewRect();
+      const x = this.side === 'left' ? v.x + 20 : v.right - 20;
       const tex = this.scene.textures.get(`art:${this.slot}`).getSourceImage();
       const max = tex.width > tex.height ? LANDSCAPE_MAX : PORTRAIT_MAX;
-      this.img = placeArt(this.scene, this.slot, x, GAME_HEIGHT, max.w, max.h, this.side === 'left' ? 0 : 1, 1);
+      this.img = placeArt(this.scene, this.slot, x, v.bottom, max.w, max.h, this.side === 'left' ? 0 : 1, 1);
       this.img?.setDepth(39).setAlpha(0);
     }
     if (!this.img) return;

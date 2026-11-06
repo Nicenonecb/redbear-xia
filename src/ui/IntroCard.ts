@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { COLORS, CSS_COLORS, FONT_BRUSH } from '../config';
 import { hasArt, type ArtSlot } from '../art/slots';
+import { viewRect } from '../render/sharp';
 
 /** 停留多久（毫秒），前后各留一点淡入淡出 */
 const DURATION = 3200;
@@ -18,8 +19,9 @@ export class IntroCard {
   constructor(scene: Phaser.Scene, slot: ArtSlot, name: string, tip: string, tier: string) {
     const w = 380;
     const h = 128;
-    const x = GAME_WIDTH - w - 30;
-    const y = GAME_HEIGHT - h - 70;
+    const v = viewRect();
+    const x = v.right - w - 30;
+    const y = v.bottom - h - 70;
     this.container = scene.add.container(0, 0).setDepth(48).setAlpha(0);
 
     const bg = scene.add.graphics();

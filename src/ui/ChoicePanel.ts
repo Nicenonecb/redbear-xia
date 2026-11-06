@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
 import { hasArt, type ArtSlot } from '../art/slots';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
+import { viewRect } from '../render/sharp';
 
 export interface ChoiceOption {
   label: string;
@@ -94,7 +95,8 @@ export class ChoicePanel {
     if (!noDim) {
       const dim = this.scene.add.graphics();
       dim.fillStyle(COLORS.ink, 0.55);
-      dim.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      const v = viewRect();
+      dim.fillRect(v.x, v.y, v.width, v.height);
       this.container.add(dim);
     }
 

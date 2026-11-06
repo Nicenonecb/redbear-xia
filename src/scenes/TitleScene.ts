@@ -4,11 +4,12 @@ import { sfx } from '../audio/sfx';
 import { FallingLeaves, drawBambooForest } from '../art/bamboo';
 import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
-import { addPaperGrain, placeArt } from '../art/slots';
+import { addPaperGrain, coverArt, placeArt } from '../art/slots';
 import { STAGES } from '../game/stages';
 import { sceneForStep } from '../game/flow';
 import { setRun, startRun } from '../game/run';
 import { describeSave, loadRun } from '../game/save';
+import { viewRect } from '../render/sharp';
 
 /** 远处山崖的位置，红熊站在崖顶 */
 const CLIFF = { x: 1010, y: 500 };
@@ -26,7 +27,7 @@ export class TitleScene extends Phaser.Scene {
     this.bear = undefined;
 
     // 有标题画就用标题画，没有就用代码画的远山、竹林和崖顶的红熊
-    if (!placeArt(this, 'title', cx, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0.5, 0.5)) {
+    if (!coverArt(this, 'title')) {
       drawInkMountains(this, { width: GAME_WIDTH, horizon: 380, bottom: GAME_HEIGHT, layers: 4, seed: 'title' });
       drawBambooForest(this, { width: GAME_WIDTH, height: GAME_HEIGHT, groundY: GAME_HEIGHT, seed: 'title-bamboo', backLayers: 1, mountains: false });
       const cliff = this.add.graphics();
@@ -49,7 +50,8 @@ export class TitleScene extends Phaser.Scene {
     // 底部压一道渐淡的墨，下面那几行提示字在亮的标题画上也看得清
     const band = this.add.graphics();
     band.fillGradientStyle(COLORS.ink, COLORS.ink, COLORS.ink, COLORS.ink, 0, 0, 0.78, 0.78);
-    band.fillRect(0, GAME_HEIGHT - 190, GAME_WIDTH, 190);
+    const v = viewRect();
+    band.fillRect(v.x, v.bottom - 190, v.width, 190);
     // 浏览器要等玩家第一次按键或点击才放出声音，在那之前风声先排着
     sfx.startAmbient();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => sfx.stopAmbient());

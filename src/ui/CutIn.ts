@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH } from '../config';
 import { hasArt, type ArtSlot } from '../art/slots';
+import { viewRect } from '../render/sharp';
 
 /** 从右边冲进来、停一下、往左边冲出去，一共多长（毫秒） */
 const DURATION = 1300;
@@ -15,7 +16,7 @@ export class CutIn {
 
   constructor(scene: Phaser.Scene, slot: ArtSlot, private readonly y: number, depth = 33) {
     this.img = hasArt(scene, slot) ? scene.add.image(GAME_WIDTH * 1.5, y, `art:${slot}`).setDepth(depth) : null;
-    if (this.img) this.img.setScale(GAME_WIDTH / this.img.width);
+    if (this.img) this.img.setScale(Math.max(GAME_WIDTH, viewRect().width) / this.img.width);
   }
 
   get done() {
@@ -29,10 +30,11 @@ export class CutIn {
     // 前 25% 冲进来，中间停住，最后 25% 冲出去
     const t = this.t;
     const center = GAME_WIDTH / 2;
+    const span = img.displayWidth;
     let x: number;
-    if (t < 0.25) x = Phaser.Math.Linear(GAME_WIDTH * 1.5, center, Phaser.Math.Easing.Cubic.Out(t / 0.25));
+    if (t < 0.25) x = Phaser.Math.Linear(center + span, center, Phaser.Math.Easing.Cubic.Out(t / 0.25));
     else if (t < 0.75) x = center - (t - 0.25) * 60;
-    else x = Phaser.Math.Linear(center - 30, -GAME_WIDTH * 0.5, Phaser.Math.Easing.Cubic.In((t - 0.75) / 0.25));
+    else x = Phaser.Math.Linear(center - 30, center - span, Phaser.Math.Easing.Cubic.In((t - 0.75) / 0.25));
     img.setPosition(x, this.y);
     img.setAlpha(t < 0.75 ? 1 : 1 - (t - 0.75) / 0.25);
     if (this.t >= 1) img.destroy();
