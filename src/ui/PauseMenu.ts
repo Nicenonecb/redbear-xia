@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { sfx } from '../audio/sfx';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { viewRect } from '../render/sharp';
+import { CHEAT_ATTACK, CHEAT_SPEED } from '../game/run';
 
 const PANEL = { w: 680, rowH: 40, pad: 36 };
 const BUTTON = { w: 190, h: 58, gap: 26 };
@@ -19,7 +20,7 @@ export interface CheatSwitch {
  * A/D、W/S 或方向键选，J / 空格 / 回车确定，Esc / P 直接继续；鼠标点也行。
  * 菜单开着时大地图整个停住（场景暂停），菜单本身画在界面层上。
  *
- * 金手指：先问一句"公司最帅的人是谁？"，填什么名字都算答对，开了以后气血无限、攻击 ×2.5；
+ * 金手指：先问一句"公司最帅的人是谁？"，填什么名字都算答对，开了以后气血无限、攻击 ×CHEAT_ATTACK、移速 ×CHEAT_SPEED；
  * 开着时这一项变成"关金手指"，点一下就关
  */
 export class PauseMenu {
@@ -132,7 +133,7 @@ export class PauseMenu {
       bg.lineStyle(on ? 4 : 2, on ? COLORS.red : COLORS.ink);
       bg.strokeRect(rect.x, rect.y, rect.width, rect.height);
     });
-    this.status.setText(this.cheat.on ? '金手指已开：气血无限 · 攻击 ×2.5' : '');
+    this.status.setText(this.cheat.on ? `金手指已开：气血无限 · 攻击 ×${CHEAT_ATTACK} · 移速 ×${CHEAT_SPEED}` : '');
   }
 
   private pick(i: number) {

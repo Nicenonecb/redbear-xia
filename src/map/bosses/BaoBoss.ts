@@ -53,7 +53,7 @@ export class BaoBoss implements BossController {
       this.spectators.forEach((s) => s.destroy());
       this.spectators = [];
       this.host.talk(
-        ['……痛快。可惜，大哥明年就要拿下杭州，到时候……你们都得死。'],
+        ['大哥明年就要拿下杭州，到时候……你们都得死。'],
         () => {
           this.host.walk.lock = null;
           this.events.emit('defeated');

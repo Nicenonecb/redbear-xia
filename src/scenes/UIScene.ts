@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { music } from '../audio/music';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { hasArt, type ArtSlot } from '../art/slots';
 import { BossCard } from '../ui/BossCard';
@@ -123,6 +124,7 @@ export class UIScene extends Phaser.Scene {
 
   /** Boss 名牌 */
   bossCard(name = '胖虎', title = '山大王', art: ArtSlot = 'card_boss_pangHu') {
+    music.play('boss');
     this.overlays.push(new BossCard(this, art, title, name));
   }
 

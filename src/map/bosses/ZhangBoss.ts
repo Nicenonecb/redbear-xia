@@ -63,7 +63,7 @@ export class ZhangBoss implements BossController {
     this.introduced = true;
     this.events.emit('intro');
     this.host.talk(
-      ['老三贪，老二蠢，可都好用。红熊的徒弟……你毁了我两年的心血。'],
+      ['你……你毁了我两年的心血。'],
       () => {
         this.host.ui.bossCard('彰化天', '金鞭 · 前朝皇子', 'card_boss_zhangHuatian');
         this.actor.startFight();
@@ -120,7 +120,7 @@ export class ZhangBoss implements BossController {
               brothers.forEach((s) => s.destroy());
               sfx.play('ink');
               this.host.talk(
-                ['杭州城里见。'],
+                ['青山不改，绿水长流……后会有期。'],
                 () => this.events.emit('defeated'),
                 () => this.host.headOf(p, 230),
               );

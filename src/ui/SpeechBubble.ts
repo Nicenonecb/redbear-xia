@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS, CSS_COLORS, FONT_BRUSH } from '../config';
 import { viewRect } from '../render/sharp';
+import { cjkWrap } from './cjkWrap';
 
 /** 每个字打出来的间隔（毫秒） */
 const CHAR_MS = 55;
@@ -22,9 +23,10 @@ export class SpeechBubble {
       .setVisible(false);
   }
 
-  /** 换行请在台词里自己写 \n */
+  /** 太长会自动折行，也可以在台词里自己写 \n */
   say(line: string, holdMs = 1600) {
-    this.line = line;
+    // 太长的按字折行（台词里写的 \n 照样生效）
+    this.line = cjkWrap(this.text, line, 460);
     this.elapsed = 0;
     this.holdMs = holdMs;
   }

@@ -52,4 +52,4 @@ export const WEAPONS: Record<HeroId, { name: string; damage: number; price: numb
 };
 
 /** 红熊濒死救场时随机说一句 */
-export const RESCUE_LINES = ['徒儿，撑住。', '为师还在，倒不了。', '起来，这一课还没上完。'];
+export const RESCUE_LINES = ['为师救你一命！', '有为师在，谁也伤不了你！'];

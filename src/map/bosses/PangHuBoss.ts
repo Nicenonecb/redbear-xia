@@ -88,7 +88,7 @@ export class PangHuBoss implements BossController {
     this.host.player.vel = { x: 0, y: 0 };
     sfx.play('growl');
     this.bossTalk(
-      [...(this.host.run.stage === 0 ? ['嘿嘿，又来一个想救美人的？我这后院的姑娘，可都是给我大哥备下的！'] : []), PANGHU.lines.intro],
+      [...(this.host.run.stage === 0 ? ['嘿嘿，又来一个想救美人的？我这后院的姑娘，全都是我的！'] : []), PANGHU.lines.intro],
       () => this.offerBribe(),
     );
   }
@@ -309,7 +309,7 @@ export class PangHuBoss implements BossController {
     for (const r of this.host.rings) if (r.team === 'enemy') r.destroy();
     this.events.emit('overlay', new InkSplat(this.host, boss.pos.x, boss.pos.y - 80, 260, 0.9, boss.pos.y + 2));
     this.bossTalk(
-      [this.host.run.stage === 0 ? '少侠饶命！人你带走，带走！……我二哥不会放过你的！' : PANGHU.lines.defeated],
+      [this.host.run.stage === 0 ? '少侠饶命！人你带走，带走！' : PANGHU.lines.defeated],
       () => {
         this.host.pauses.add('release');
         if (this.captives) this.captives.release(() => this.readLedger(() => this.events.emit('defeated')));

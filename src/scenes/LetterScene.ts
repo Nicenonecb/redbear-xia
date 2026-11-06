@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { music } from '../audio/music';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { drawInkMountains } from '../art/inkMountains';
 import { drawRedBear } from '../art/redBear';
@@ -7,6 +8,7 @@ import { stageFor } from '../game/stages';
 import { VoicePlayer, queueVoice } from '../audio/voice';
 import { advanceRun } from '../game/flow';
 import { getRun } from '../game/run';
+import { cjkWrap } from '../ui/cjkWrap';
 
 /** 每个字打出来的间隔（毫秒） */
 const CHAR_MS = 70;
@@ -39,6 +41,7 @@ export class LetterScene extends Phaser.Scene {
     queueVoice(this, [this.voiceId()]);
   }
   create() {
+    music.play('ending');
     const run = getRun();
     this.letter = run ? stageFor(run).letters[run.hero][run.paidOff ? 'bribe' : 'sword'] : '';
     this.voice = new VoicePlayer(this);
@@ -73,8 +76,9 @@ export class LetterScene extends Phaser.Scene {
       fontSize: '30px',
       color: CSS_COLORS.ink,
       lineSpacing: 16,
-      wordWrap: { width: 690 },
     });
+    // 先按信纸宽度折好行，再一个字一个字写出来（换行符也算一个字）
+    this.letter = cjkWrap(this.text, this.letter, 690);
 
     this.input.keyboard!.on('keydown', () => this.next());
     this.input.on('pointerdown', () => this.next());

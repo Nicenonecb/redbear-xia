@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { music } from '../audio/music';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
@@ -33,13 +34,13 @@ export class ShopScene extends Phaser.Scene {
   }
 
   create() {
+    music.play('map');
     this.run = getRun() ?? startRun('wenShaohua', false);
     this.leaving = false;
     if (!coverArt(this, this.run.stage === 1 ? 'bg_waist_path' : this.run.stage === 2 ? 'bg_peak_palace' : 'bg_shop')) {
       drawInkMountains(this, { width: GAME_WIDTH, horizon: 300, bottom: GROUND_Y, layers: 3, seed: 'tea-stall' });
     }
     addPaperGrain(this);
-    this.add.rectangle(GAME_WIDTH / 2, GROUND_Y + 50, GAME_WIDTH, 100, COLORS.ink);
     // 有任新野的立绘就让他本人站在那儿（立绘里自带柜台、算盘和灯笼），没有就画剪影茶摊
     const art = placeArt(this, 'portrait_renXinye', STALL_X, GROUND_Y + 24, 340, 470);
     if (art) {

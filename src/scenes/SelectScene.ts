@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { music } from '../audio/music';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { sfx } from '../audio/sfx';
 import { drawInkMountains } from '../art/inkMountains';
@@ -31,6 +32,7 @@ export class SelectScene extends Phaser.Scene {
   }
 
   create() {
+    music.play('title');
     this.chosen = false;
     this.arts = [];
     this.cards = [];

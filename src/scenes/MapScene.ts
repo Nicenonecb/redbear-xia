@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { music } from '../audio/music';
 import { COLORS, CSS_COLORS, FONT_BRUSH, GAME_HEIGHT, GAME_WIDTH } from '../config';
 import { viewRect } from '../render/sharp';
 import { hasArt, prefetchStageArt, queueStageArt, trimArtTextures, type ArtSlot } from '../art/slots';
@@ -160,7 +161,7 @@ export class MapScene extends Phaser.Scene {
    * 进地图前只加载这一关用得上的图（第一次进来要等几秒，画一道墨条；上一关在后台预取过的从缓存读，很快）
    */
   preload() {
-    queueVoice(this, ['redBear_rescue_1', 'redBear_rescue_2', 'redBear_rescue_3']);
+    queueVoice(this, RESCUE_LINES.map((_, i) => `redBear_rescue_${i + 1}`));
     const run = getRun() ?? startRun('wenShaohua', false);
     if (!queueStageArt(this, run.hero, run.stage)) return;
     const cx = GAME_WIDTH / 2;
@@ -187,6 +188,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   create() {
+    music.play('map');
     trimArtTextures(this);
     this.voice = new VoicePlayer(this);
     this.run = getRun() ?? startRun('wenShaohua', false);
@@ -349,7 +351,7 @@ export class MapScene extends Phaser.Scene {
     );
   }
 
-  /** 开 / 关金手指：气血无限、攻击 ×2.5；开的时候顺手把血补满。记在这一局的存档里 */
+  /** 开 / 关金手指：气血无限、攻击 ×CHEAT_ATTACK、移速 ×CHEAT_SPEED；开的时候顺手把血补满。记在这一局的存档里 */
   setCheat(on: boolean) {
     this.run.cheat = on;
     this.player.godMode = on;

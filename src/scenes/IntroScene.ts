@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
+import { music } from '../audio/music';
 import { coverArt, hasArt, placeArt, type ArtSlot } from '../art/slots';
 import { FONT_BRUSH, CSS_COLORS, GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { getRun } from '../game/run';
 import { saveRun } from '../game/save';
 import { introLines } from '../game/story';
+import { cjkWrap } from '../ui/cjkWrap';
 import { queueVoice, VoicePlayer } from '../audio/voice';
 export class IntroScene extends Phaser.Scene {
   private voice!: VoicePlayer;
@@ -21,6 +23,7 @@ export class IntroScene extends Phaser.Scene {
     );
   }
   create() {
+    music.play('title');
     this.index = 0;
     this.token = 0;
     this.done = false;
@@ -37,7 +40,6 @@ export class IntroScene extends Phaser.Scene {
       fontFamily: FONT_BRUSH,
       fontSize: '30px',
       color: CSS_COLORS.paper,
-      wordWrap: { width: 1120 },
       lineSpacing: 12,
     });
     this.add.text(80, 680, 'J / 空格 下一句　Esc 跳过', { fontFamily: FONT_BRUSH, fontSize: '20px' });
@@ -56,7 +58,8 @@ export class IntroScene extends Phaser.Scene {
     const line = introLines(getRun()!.hero)[this.index];
     if (!line) return this.finish();
     const token = ++this.token;
-    this.caption.setText(`${line.voice ? '红熊' : getRun()!.hero === 'wenShaohua' ? '温少华' : '于无瑕'}：${line.text}`);
+    const who = line.voice ? '红熊' : getRun()!.hero === 'wenShaohua' ? '温少华' : '于无瑕';
+    this.caption.setText(cjkWrap(this.caption, `${who}：${line.text}`, 1120));
     this.voice.play(line.voice ?? '', line.text).then(() => {
       if (!this.done && token === this.token) this.next();
     });

@@ -60,6 +60,12 @@ export class Sfx {
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   }
 
+  /** 背景音乐借用同一个 AudioContext 和总音量（静音、调音量、配音时压低都一起生效） */
+  bus(): { ctx: AudioContext; master: GainNode; noise: AudioBuffer } | null {
+    this.attach();
+    return this.ctx && this.master && this.noise ? { ctx: this.ctx, master: this.master, noise: this.noise } : null;
+  }
+
   play(name: string) {
     this.attach();
     const synth = SOUNDS[name];

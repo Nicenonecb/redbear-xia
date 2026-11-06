@@ -9,7 +9,7 @@ export const LETTERS: Record<HeroId, { sword: string; bribe: string }[]> = {
       sword: '少华，你赢了一个只会用拳头说话的人。他背后那位，用的是人心。',
       bribe: '少华，你赢了一个只会用拳头说话的人。他背后那位，用的是人心。',
     },
-    { sword: '好徒儿，学成了。他逃了，但杭州的百姓今年能过个好年。', bribe: '好徒儿，学成了。他逃了，但杭州的百姓今年能过个好年。' },
+    { sword: '少华，你拯救了杭州百姓。', bribe: '少华，你拯救了杭州百姓。' },
   ],
   yuWuxia: [
     {
@@ -20,18 +20,17 @@ export const LETTERS: Record<HeroId, { sword: string; bribe: string }[]> = {
       sword: '无瑕，鲍金梁是把好刀，可惜握刀的人不是他自己。山顶那位，你要看清楚。',
       bribe: '无瑕，鲍金梁是把好刀，可惜握刀的人不是他自己。山顶那位，你要看清楚。',
     },
-    { sword: '好徒儿，学成了。人跑了不要紧，百姓没事就好。', bribe: '好徒儿，学成了。人跑了不要紧，百姓没事就好。' },
+    { sword: '无瑕，你拯救了杭州百姓。', bribe: '无瑕，你拯救了杭州百姓。' },
   ],
 };
 export function introLines(hero: HeroId) {
   const wen = hero === 'wenShaohua';
-  const prefix = `redBear_intro_${wen ? 'wen' : 'yu'}_`;
+  const mission = '最近杭州不太平，城外山上聚了一伙人，迟早要祸害百姓——考验你的时候到了。';
   return [
-    { text: wen ? '少华，剑练到这一步，可以下山了。' : '无瑕，你的镖比为师当年还准。', voice: prefix + '1' },
-    { text: wen ? '师父，弟子下山之后，该做些什么？' : '师父过奖。' },
-    { text: wen ? '剑是用来护人的，不是用来逞能的。' : '准，不难；知道该打谁，才难。', voice: prefix + '2' },
-    { text: '出师之后，惩恶扬善，保护百姓——莫让百姓受伤。', voice: prefix + '3' },
-    { text: wen ? '弟子记下了。' : '……是。' },
-    { text: '山下有座山，山上有三个人，你会碰到他们的。去吧。', voice: prefix + '4' },
+    {
+      text: (wen ? '少华，你的剑已经练成，今日出师。' : '无瑕，你这一手暗器，已经可以出师了。') + mission,
+      voice: `redBear_intro_${wen ? 'wen' : 'yu'}`,
+    },
+    { text: wen ? '弟子明白，定不负师父所托！' : '……是。弟子这就下山。' },
   ];
 }
