@@ -16,6 +16,7 @@ import { PROGRESSION, RESCUE_LINES, type StatId } from '../game/progression';
 import { applyLevelUp, endRun, gainExp, getRun, runStats, startRun, type RunState } from '../game/run';
 import { saveRun } from '../game/save';
 import { Controls } from '../input/Controls';
+import { aiControl, type HandPilot } from '../ai/pilot';
 import { type MapArea, type Pt } from '../map/chapter1Map';
 import { GROUND_SQUASH, areaOf, groundAngle, type Vec } from '../map/combat/ground';
 import type { MapActor, MapHitResult, MapHurtable } from '../map/combat/MapActor';
@@ -359,6 +360,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number) {
+    if (aiControl.pilot) return this.updatePiloted(aiControl.pilot, delta);
     this.controls.update();
     // 刚从暂停菜单回来：按"继续"的那一下 J 不能算成出招
     if (this.swallowInput) {
@@ -379,6 +381,35 @@ export class MapScene extends Phaser.Scene {
         this.accumulator -= FRAME_MS;
         this.tick();
       }
+    }
+    this.updateTalk();
+    this.updateRescue(delta);
+    this.render(delta);
+  }
+
+  /**
+   * AI 操控时的画面帧：每个逻辑帧先让策略看一次当前局面再按键，
+   * 这样不管屏幕刷新率多少，策略看到的节奏都和训练时一致（一逻辑帧一决策）。
+   */
+  private updatePiloted(pilot: HandPilot, delta: number) {
+    if (!this.pauses.size && !this.leaving) {
+      this.accumulator = Math.min(this.accumulator + delta * this.timeScale, FRAME_MS * MAX_CATCHUP_FRAMES);
+      while (this.accumulator >= FRAME_MS && !this.pauses.size && !this.leaving) {
+        this.accumulator -= FRAME_MS;
+        this.controls.update(pilot.decide(this));
+        // 与玩家路径相同：站在任新野跟前，J 是说话不是出招
+        for (const action of this.controls.justPressedActions) {
+          if (action === 'attack' && this.canVisitShop()) {
+            this.visitShop();
+            continue;
+          }
+          this.player.buffer.push(action);
+        }
+        if (this.pauses.size || this.leaving) break;
+        this.tick();
+      }
+    } else {
+      this.controls.update([]);
     }
     this.updateTalk();
     this.updateRescue(delta);

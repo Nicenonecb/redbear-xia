@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
 import type { Action } from '../input/Controls';
 import { areaOf, groundDist, inArea } from '../map/combat/ground';
+import { outside } from '../map/walkable';
 // Development-only player: normal movement and inputs; never changes combat state.
-export function mapAutoPlayer(skill = 0.75, seed = 'bot') {
+// expert（AI 训练用的"老师"）：长判定招（金龙卷等，判定 > 20 帧）在前摇一开始就后撤、留出余量，
+// 胖虎虎啸前摇时先拉开距离再迎着音波闪避。默认关闭，普通验收用的打法保持原样。
+export function mapAutoPlayer(skill = 0.75, seed = 'bot', opts: { expert?: boolean } = {}) {
+  const expert = !!opts.expert;
   const rng = new Phaser.Math.RandomDataGenerator([seed]);
   const reactions = new WeakMap<object, { move: object; frame: number; dodge: boolean }>();
   const projectiles = new WeakMap<object, boolean>();
@@ -36,6 +40,24 @@ export function mapAutoPlayer(skill = 0.75, seed = 'bot') {
       [Math.abs(dx) > 8 ? (dx > 0 ? 'right' : 'left') : null, Math.abs(dy) > 8 ? (dy > 0 ? 'down' : 'up') : null].filter(
         Boolean,
       ) as Action[];
+    // expert：躲大范围招时挑一条走得通、离危险中心最远的退路（被竹篱、擂台边挡住就换方向）
+    const escape = (from: { x: number; y: number }): Action[] => {
+      const walk = s.walk;
+      let best: Action[] | null = null,
+        bestD = -Infinity;
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * Math.PI * 2,
+          ux = Math.cos(a),
+          uy = Math.sin(a);
+        if (walk && [60, 120, 180].some((step) => outside(walk, p.pos.x + ux * step, p.pos.y + uy * step) > 0)) continue;
+        const d = groundDist(p.pos.x + ux * 180 - from.x, p.pos.y + uy * 180 - from.y);
+        if (d > bestD) {
+          bestD = d;
+          best = dirs(ux * 100, uy * 100);
+        }
+      }
+      return best ?? dirs((p.pos.x - from.x) * 10, (p.pos.y - from.y) * 10);
+    };
     const foes = [...s.enemies.map((e: any) => e.enemy), ...(s.controller?.hitTargets() ?? [])].filter(
       (e: any) => !e.dead && !e.invulnerable,
     );
@@ -59,6 +81,20 @@ export function mapAutoPlayer(skill = 0.75, seed = 'bot') {
     if (near) {
       for (const e of foes) {
         const m = e.runner.move;
+        // expert：Boss 按固定顺序出招。快到下一招、而下一招（或它的连招）是大范围长判定时，
+        // 先停手退出范围，免得被自己的连招锁住来不及走（温少华出招中途不能闪避取消）
+        if (expert && !m && typeof e.def?.attacks?.[0] === 'string' && (e.cooldown ?? 99) <= 30) {
+          let next = e.def.moves[e.def.attacks[(e.sequence ?? 0) % e.def.attacks.length]];
+          for (let k = 0; next && k < 4; k++) {
+            // 只管范围大的（金龙卷 230）；撑矛飞踢这类小范围的照常靠闪避，提前停手反而多挨零碎伤害
+            if (next.hit && next.active > 20 && areaOf(next.hit).reach >= 200) {
+              const area = areaOf(next.hit);
+              if (area.arc >= 180 && groundDist(p.pos.x - e.pos.x, p.pos.y - e.pos.y) < area.reach + p.radius + 90) return escape(e.pos);
+              break;
+            }
+            next = next.followUp ? e.def.moves[next.followUp] : null;
+          }
+        }
         if (!m) {
           reactions.delete(e);
           continue;
@@ -70,16 +106,41 @@ export function mapAutoPlayer(skill = 0.75, seed = 'bot') {
         }
         r.frame = e.runner.frame;
         const longActive = e.runner.phase === 'active' && m.active > 20;
+        // 虎啸没有近身判定，只放音波：贴身时等圈出来再闪已经来不及，前摇里先退开
+        if (expert && r.dodge && m.id === 'roar' && e.runner.phase === 'startup') {
+          if (groundDist(p.pos.x - e.pos.x, p.pos.y - e.pos.y) < 400) return dirs((p.pos.x - e.pos.x) * 10, (p.pos.y - e.pos.y) * 10);
+        }
         if (r.dodge && (e.runner.phase === 'startup' || longActive)) {
           const area = m.hit ? (e.warningArea ?? areaOf(m.hit)) : null;
           const aim = ['snare', 'vault', 'pounce'].includes(m.id) ? e.aim : e.pos;
-          const danger = area && inArea(aim, e.facing, m.id === 'snare' ? { reach: 70, arc: 360 } : area, p.pos, p.radius);
+          const long = expert && m.active > 20;
+          const danger = area && inArea(aim, e.facing, m.id === 'snare' ? { reach: 70, arc: 360 } : area, p.pos, p.radius + (long ? 40 : 0));
           if (danger) {
-            const away = area.arc >= 180 ? dirs((p.pos.x - aim.x) * 10, (p.pos.y - aim.y) * 10) : dirs(-e.facing.y * 100, e.facing.x * 100);
+            const away =
+              area.arc >= 180
+                ? long
+                  ? escape(aim)
+                  : dirs((p.pos.x - aim.x) * 10, (p.pos.y - aim.y) * 10)
+                : dirs(-e.facing.y * 100, e.facing.x * 100);
             if (longActive) return away;
+            // 长判定招躲不进无敌帧里，只能走出范围：前摇期间就开始退
+            if (long) return m.startup - e.runner.frame < 12 ? [...away, 'dodge'] : away;
             // Recognizing a warning stops fresh attacks, so the dodge is not trapped
             // behind a newly started combo. Still uses ordinary movement/input rules.
             return m.startup - e.runner.frame < 12 ? [...away, 'dodge'] : [];
+          }
+        }
+        // expert：连招后面接着长判定的大范围招（双鞭连抽 → 回抽 → 金龙卷），提前撤出它的范围。
+        // 有的主角出招中途不能闪避取消，等到最后一招前摇才走就被锁在招式里了
+        if (expert && r.dodge) {
+          let next = m.followUp ? e.def?.moves?.[m.followUp] : null;
+          for (let k = 0; next && k < 3; k++) {
+            if (next.hit && next.active > 20) {
+              const area = areaOf(next.hit);
+              if (area.arc >= 180 && inArea(e.pos, e.facing, area, p.pos, p.radius + 70)) return escape(e.pos);
+              break;
+            }
+            next = next.followUp ? e.def.moves[next.followUp] : null;
           }
         }
       }
