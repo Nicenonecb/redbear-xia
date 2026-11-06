@@ -1,4 +1,5 @@
 import { Captives } from '../Captives';
+import { Hoard } from '../Hoard';
 import Phaser from 'phaser';
 import { COLORS } from '../../config';
 import { placeArt, type ArtSlot } from '../../art/slots';
@@ -18,10 +19,16 @@ import { MapSprite, poseOf } from '../MapSprite';
 import { fillSector, type MapScene } from '../../scenes/MapScene';
 import type { BossController } from './BossController';
 const BOSS_INTRO_RANGE = 560;
+/** 胖虎山寨后院的粮堆（聚义厅左后方） */
+const HOARD_AT = { x: 5290, y: 650 };
+/** 粮堆里翻出的账本 */
+export const LEDGER_LINES = ['粮袋底下压着一本账……', '账本上写着：二哥处已送去三百石……'];
 export class PangHuBoss implements BossController {
   readonly events = new Phaser.Events.EventEmitter();
   boss: MapPangHu | null = null;
   private captives?: Captives;
+  /** 山寨后院的囤粮（第一关）：拔剑打赢、放完人以后翻出账本 */
+  private hoard?: Hoard;
   private bossSprite!: MapSprite;
   private tigerSprite!: MapSprite;
   private bossIntro = false;
@@ -48,7 +55,11 @@ export class PangHuBoss implements BossController {
     this.tigerSprite?.destroy();
   }
   spawn() {
-    if (this.host.run.stage === 0) this.captives = new Captives(this.host);
+    if (this.host.run.stage === 0) {
+      this.captives = new Captives(this.host);
+      this.hoard = new Hoard(this.host, HOARD_AT);
+      this.host.walk.solids!.push(...this.hoard.solids);
+    }
     const at = stageFor(this.host.run).map.boss;
     const boss = new MapPangHu(at.x, at.y, this.host.player, this.host.walk);
     this.boss = boss;
@@ -301,11 +312,43 @@ export class PangHuBoss implements BossController {
       [this.host.run.stage === 0 ? '少侠饶命！人你带走，带走！……我二哥不会放过你的！' : PANGHU.lines.defeated],
       () => {
         this.host.pauses.add('release');
-        if (this.captives) this.captives.release(() => this.events.emit('defeated'));
+        if (this.captives) this.captives.release(() => this.readLedger(() => this.events.emit('defeated')));
         else this.events.emit('defeated');
       },
       'portrait_pangHu_beaten',
     );
+  }
+
+  /**
+   * 放完人：主角自己走到后院粮堆旁，翻出账本——胖虎在给"二哥"运粮，引出山腰。
+   * 只有拔剑打赢才走到这一步（给钱放行直接过关）
+   */
+  private readLedger(done: () => void) {
+    const hoard = this.hoard;
+    if (!hoard) return done();
+    const p = this.host.player;
+    const to = hoard.standAt;
+    const from = { ...p.pos };
+    const dist = Math.hypot(to.x - from.x, to.y - from.y);
+    this.host.cameras.main.pan(to.x - 60, to.y - 90, 900, 'Sine.easeInOut');
+    const walk = { t: 0 };
+    this.host.tweens.add({
+      targets: walk,
+      t: 1,
+      duration: Math.max(400, (dist / 320) * 1000),
+      onUpdate: () => {
+        p.pos.x = Phaser.Math.Linear(from.x, to.x, walk.t);
+        p.pos.y = Phaser.Math.Linear(from.y, to.y, walk.t);
+        p.facing = { x: (to.x - from.x) / (dist || 1), y: (to.y - from.y) / (dist || 1) };
+        p.walking = true;
+      },
+      onComplete: () => {
+        p.walking = false;
+        // 面朝粮堆
+        p.facing = { x: -0.3, y: -0.95 };
+        this.host.talk(LEDGER_LINES, done, () => this.host.headOf(p.pos, 170));
+      },
+    });
   }
 
   drawWarnings(g: Phaser.GameObjects.Graphics, gl: Phaser.GameObjects.Graphics) {
