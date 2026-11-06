@@ -78,6 +78,8 @@ export function fitCamera(cam: Phaser.Cameras.Scene2D.Camera) {
  */
 export class SharpCameraPlugin extends Phaser.Plugins.ScenePlugin {
   boot() {
+    // 场景一开始（加载画面在 preload 里就要画了）放大一次，建好以后再放大一次
+    this.systems!.events.on(Phaser.Scenes.Events.START, () => fitCamera(this.systems!.cameras.main));
     this.systems!.events.on(Phaser.Scenes.Events.CREATE, () => fitCamera(this.systems!.cameras.main));
   }
 }
