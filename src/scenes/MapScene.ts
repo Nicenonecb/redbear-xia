@@ -117,6 +117,8 @@ export class MapScene extends Phaser.Scene {
   private rescueShow: { t: number; startHp: number; targetHp: number; said: boolean } | null = null;
   /** 胖虎名牌只在第一次拔剑时亮 */
   private leaving = false;
+  /** 下一帧的按键不算数（刚关掉暂停菜单） */
+  private swallowInput = false;
   projectiles: MapProjectile[] = [];
   overlays: Overlay[] = [];
   private numbers!: DamageNumbers;
@@ -217,6 +219,7 @@ export class MapScene extends Phaser.Scene {
     this.rescueShow = null;
     this.lookAt = null;
     this.leaving = false;
+    this.swallowInput = false;
     this.renGreeted = false;
     this.warn = this.add.graphics().setDepth(-2900);
     this.glints = this.add.graphics().setDepth(TOP_DEPTH - 1);
@@ -306,13 +309,13 @@ export class MapScene extends Phaser.Scene {
     this.scene.launch('UI', { heroName: this.heroEntry.def.name, hint: this.heroEntry.mapHint, run: this.run, player: this.player });
     this.ui = this.scene.get('UI') as UIScene;
 
-    this.input.keyboard!.on('keydown-ESC', () => {
-      if (this.pauses.size || this.leaving) return;
-      // 存档留着，回到标题可以继续
-      endRun(false);
-      this.scene.stop('UI');
-      this.scene.start('Title');
-    });
+    // Esc / P 暂停：整张地图停住，界面层弹出暂停菜单（操作说明、继续、返回标题）
+    this.input.keyboard!.on('keydown-ESC', () => this.openPauseMenu());
+    this.input.keyboard!.on('keydown-P', () => this.openPauseMenu());
+    // 切到别的窗口、别的标签页时也自动暂停，回来不会发现已经被打死了
+    const onBlur = () => this.openPauseMenu();
+    this.game.events.on(Phaser.Core.Events.BLUR, onBlur);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.game.events.off(Phaser.Core.Events.BLUR, onBlur));
     // 打这一关时，下一关的图在后台慢慢下载到浏览器缓存
     const stopPrefetch = prefetchStageArt(this, this.run.hero, this.run.stage + 1);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -325,8 +328,32 @@ export class MapScene extends Phaser.Scene {
     cam.fadeIn(500, 239, 231, 214);
   }
 
+  /** 打开暂停菜单；升级三选一、拔剑还是给钱这种选项开着时不打开（那时候本来就停着） */
+  openPauseMenu() {
+    if (this.leaving || this.scene.isPaused() || this.ui.activeChoice?.isOpen || this.ui.pauseMenu?.isOpen) return;
+    this.scene.pause();
+    this.ui.openPause(
+      this.heroEntry.mapHint,
+      () => {
+        this.swallowInput = true;
+        this.scene.resume();
+      },
+      () => {
+        // 存档留着，回到标题可以继续
+        endRun(false);
+        this.scene.stop('UI');
+        this.scene.start('Title');
+      },
+    );
+  }
+
   update(_time: number, delta: number) {
     this.controls.update();
+    // 刚从暂停菜单回来：按"继续"的那一下 J 不能算成出招
+    if (this.swallowInput) {
+      this.swallowInput = false;
+      return;
+    }
     if (!this.pauses.size && !this.leaving) {
       for (const action of this.controls.justPressedActions) {
         // 站在任新野跟前，J 是说话不是出招

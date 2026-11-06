@@ -6,6 +6,7 @@ import { ChoicePanel, type ChoiceConfig } from '../ui/ChoicePanel';
 import { CutIn } from '../ui/CutIn';
 import { HealthBar } from '../ui/HealthBar';
 import { IntroCard } from '../ui/IntroCard';
+import { PauseMenu } from '../ui/PauseMenu';
 import { Portrait } from '../ui/Portrait';
 import { RunHud } from '../ui/RunHud';
 import { SpeechBubble } from '../ui/SpeechBubble';
@@ -19,6 +20,8 @@ const CARD_HOLD = 1900;
 const CARD_OUT = 500;
 /** 题卡里的画多宽；题卡摆在右上角，镜头跟着人、人总在画面正中，放正中会把人挡住 */
 const CARD_WIDTH = 340;
+/** 进地图后操作说明亮多久再淡掉 */
+const HINT_MS = 7000;
 
 export interface UIData {
   heroName: string;
@@ -52,6 +55,7 @@ export class UIScene extends Phaser.Scene {
   private run!: RunState;
   private player!: MapFighter;
   private waveText!: Phaser.GameObjects.Text;
+  private hint!: Phaser.GameObjects.Text;
   private dim!: Phaser.GameObjects.Graphics;
   private dimAlpha = 0;
   private dimTarget = 0;
@@ -86,7 +90,8 @@ export class UIScene extends Phaser.Scene {
     this.dimAlpha = 0;
     this.dimTarget = 0;
     this.portraits = { left: new Portrait(this, 'portrait_redBear', 'left'), right: new Portrait(this, 'portrait_pangHu', 'right') };
-    this.add
+    // 操作说明只在进地图时亮一会儿，然后淡掉（暂停菜单里随时能看）
+    this.hint = this.add
       .text(v.x + 24, v.bottom - 40, data.hint, {
         fontFamily: FONT_BRUSH,
         fontSize: '20px',
@@ -95,6 +100,7 @@ export class UIScene extends Phaser.Scene {
         strokeThickness: 5,
       })
       .setAlpha(0.85);
+    this.tweens.add({ targets: this.hint, alpha: 0, delay: HINT_MS, duration: 1200 });
     this.bossBar = new HealthBar(this, GAME_WIDTH / 2 - 300, 64, 600, '山大王 · 胖虎');
     this.bossBar.setVisible(false);
     this.boss = null;
@@ -145,6 +151,13 @@ export class UIScene extends Phaser.Scene {
   endTalk() {
     this.portraits.left.hide();
     this.portraits.right.hide();
+  }
+
+  /** 暂停菜单（大地图按 Esc / P）：菜单开着时返回它 */
+  pauseMenu?: PauseMenu;
+  openPause(hint: string, onResume: () => void, onQuit: () => void) {
+    this.pauseMenu?.close();
+    this.pauseMenu = new PauseMenu(this, hint, onResume, onQuit);
   }
 
   /** 选项面板（升级三选一、拔剑还是给钱） */

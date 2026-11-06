@@ -35,7 +35,7 @@ export const HEROES: Record<HeroId, HeroEntry> = {
     region: '江南',
     weapon: '剑',
     blurb: '翩翩公子，中速、高伤害，稳扎稳打。\n流云三式连斩，少华一剑蓄力剑气远程补刀。',
-    mapHint: 'WASD 走 · J 流云三式 · K 按住蓄力 少华一剑 · L/空格 闪避 · ` 判定 · Esc 返回标题',
+    mapHint: 'WASD 走 · J 流云三式 · K 按住蓄力 少华一剑 · L/空格 闪避 · ` 判定 · Esc / P 暂停',
     spawnOnMap({ scene, player: p, addProjectile }, name) {
       if (name !== 'swordQi') return;
       const level = swordQiLevel(p.runner.charge);
@@ -51,7 +51,7 @@ export const HEROES: Record<HeroId, HeroEntry> = {
     region: '西南',
     weapon: '扇与暗器',
     blurb: '清冷利落，快节奏、高机动。\n扇子横扫、掷扇往返两打，飞镖连发。',
-    mapHint: 'WASD 走 · J 扇子横扫 · K 按住蓄力 掷扇 · I 飞镖 · L/空格 闪避 · ` 判定 · Esc 返回标题',
+    mapHint: 'WASD 走 · J 扇子横扫 · K 按住蓄力 掷扇 · I 飞镖 · L/空格 闪避 · ` 判定 · Esc / P 暂停',
     spawnOnMap({ scene, player: p, addProjectile }, name) {
       const { x, y } = p.pos;
       const at = (d: number) => [x + p.facing.x * d, y + p.facing.y * d] as const;
