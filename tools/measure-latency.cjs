@@ -13,6 +13,8 @@ const args = Object.fromEntries(
 );
 const policy = JSON.parse(fs.readFileSync(path.resolve(args.policy), 'utf8'));
 const seconds = Number(args.seconds ?? 60);
+// --menu-policy 给了就由菜单头处理弹窗和翻页（整套模型驱动），否则由老师脚本按键
+const menuPolicy = args['menu-policy'] ? JSON.parse(fs.readFileSync(path.resolve(args['menu-policy']), 'utf8')) : null;
 (async () => {
   const browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL || 'chrome' });
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
@@ -20,7 +22,7 @@ const seconds = Number(args.seconds ?? 60);
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(process.env.TEST_URL || 'http://127.0.0.1:5173');
   await page.waitForFunction(() => window.__t?.ready, {}, { timeout: 60000 });
-  await page.evaluate(async ({ policy, hero }) => {
+  await page.evaluate(async ({ policy, hero, menuPolicy }) => {
     const { startRun } = await import('/src/game/run.ts');
     const { HandPolicy } = await import('/src/ai/policy.ts');
     const { HandPilot, aiControl } = await import('/src/ai/pilot.ts');
@@ -47,16 +49,21 @@ const seconds = Number(args.seconds ?? 60);
       Object.values(keys).flat().forEach((k) => (k.isDown = false));
       keys = sc.controls?.keys ?? {};
       const live = sc.scene.key === 'Map' && p && !p.dead && !sc.leaving && !sc.pauses?.size;
-      if (!live) for (const a of bot(sc, f++)) keys[a]?.forEach((k) => (k.isDown = true));
+      if (!live && !menuPolicy) for (const a of bot(sc, f++)) keys[a]?.forEach((k) => (k.isDown = true));
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-    aiControl.set(pilot);
-  }, { policy, hero: args.hero ?? 'wenShaohua' });
+    let menu = null;
+    if (menuPolicy) {
+      const { MenuPilot, MenuPolicy } = await import('/src/ai/menu.ts');
+      menu = window.menuPilot = new MenuPilot(new MenuPolicy(menuPolicy));
+    }
+    aiControl.set(pilot, menu);
+  }, { policy, hero: args.hero ?? 'wenShaohua', menuPolicy });
   await page.waitForTimeout(seconds * 1000);
   const r = await page.evaluate(() => {
     const q = (a, p) => { const s = [...a].sort((x, y) => x - y); return s.length ? +s[Math.min(s.length - 1, Math.floor(p * s.length))].toFixed(3) : null; };
-    return { decisions: ms.length, decideMs: { p50: q(ms, 0.5), p99: q(ms, 0.99), max: q(ms, 1) },
+    return { menuPicks: window.menuPilot ? menuPilot.log : null, scene: __t.scene().scene.key, decisions: ms.length, decideMs: { p50: q(ms, 0.5), p99: q(ms, 0.99), max: q(ms, 1) },
       frameMs: { frames: raf.length, p50: q(raf.slice(30), 0.5), p99: q(raf.slice(30), 0.99) } };
   });
   const out = { date: new Date().toISOString(), policy: policy.version, hero: args.hero ?? 'wenShaohua', seconds, headless: true, ...r, errors };
