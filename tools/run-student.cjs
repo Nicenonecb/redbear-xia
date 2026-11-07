@@ -12,7 +12,9 @@
  *     --out /abs/dir --split dagger1 --prefix xia-train-d1 --runs 50 [--beta 0]
  *
  * 大地图上可操控的每一帧都走正式的 AI 路径（aiControl → MapScene.updatePiloted），与上线一致。
- * 尚未接入 2B：剧情翻页、升级面板、商店仍由老师脚本操作，逐局计数为 scriptMenuFrames / menuDecisions，
+ * 默认菜单（剧情翻页、升级面板、商店）由老师脚本操作，逐局计数为 scriptMenuFrames，报告写明"菜单由脚本选择"；
+ * 给 --menu-policy <xia-menu-mlp-v1 权重> 时改由菜单头（src/ai/menu.ts 的 MenuPilot）操作，老师完全不参与，
+ * 逐局记下 menuPicks。以下旧说明只适用于脚本菜单：
  * 报告中必须写明"菜单由脚本选择"，不能称为 100% 模型驱动。
  * --beta 1 时每帧都执行老师的键（仍经过 AI 路径），用于验证这条路径本身不损失通关率。
  */
@@ -37,6 +39,9 @@ const expert = (args.expert ?? '1') !== '0';
 const heroes = (args.heroes ?? 'wenShaohua,yuWuxia').split(',');
 const policyFile = path.resolve(args.policy);
 const policy = JSON.parse(fs.readFileSync(policyFile, 'utf8'));
+const menuPolicyFile = args['menu-policy'] ? path.resolve(args['menu-policy']) : null;
+const menuPolicy = menuPolicyFile ? JSON.parse(fs.readFileSync(menuPolicyFile, 'utf8')) : null;
+if (menuPolicy && mode !== 'eval') throw Error('--menu-policy 只用于 --mode eval');
 const dir = path.join(path.resolve(args.out), args.split);
 fs.mkdirSync(dir, { recursive: true });
 const sha = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -75,7 +80,7 @@ const gitRev = (() => {
         const seed = `${args.prefix}-${hero}-${trial}`;
         const t0 = Date.now();
         await page.evaluate(
-          async ({ hero, seed, policy, mode, beta, expert }) => {
+          async ({ hero, seed, policy, mode, beta, expert, menuPolicy }) => {
             const { startRun, getRun } = await import('/src/game/run.ts');
             const { HandPolicy } = await import('/src/ai/policy.ts');
             const { HandPilot, aiControl } = await import('/src/ai/pilot.ts');
@@ -127,9 +132,13 @@ const gitRev = (() => {
             window.lastHp = null;
             window.prevCharm = null;
             window.prevRescue = null;
-            aiControl.set(pilot);
+            if (menuPolicy) {
+              const { MenuPilot, MenuPolicy } = await import('/src/ai/menu.ts');
+              window.menuPilot = new MenuPilot(new MenuPolicy(menuPolicy));
+            } else window.menuPilot = null;
+            aiControl.set(pilot, menuPilot);
           },
-          { hero, seed, policy, mode, beta, expert },
+          { hero, seed, policy, mode, beta, expert, menuPolicy },
         );
         await page.waitForFunction(() => game.scene.isActive('Map'), {}, { timeout: 60000 });
         await page.evaluate(() => {
@@ -186,6 +195,8 @@ const gitRev = (() => {
                 // 大地图可操控帧：什么都不按，交给 MapScene 里的 AI 路径；其余（剧情、面板、商店）由老师脚本处理
                 const live = s.scene.key === 'Map' && p && !p.dead && !s.leaving && !s.pauses?.size;
                 if (live) return [];
+                // 有菜单头时暂停帧什么都不按：面板和剧情翻页由 MenuPilot 在场景里自己处理
+                if (menuPilot) return [];
                 result.scriptMenuFrames++;
                 return bot(s, f);
               },
@@ -193,6 +204,7 @@ const gitRev = (() => {
             );
             result.decisions = pilot.decisions;
             result.idleFrames = pilot.idleFrames;
+            result.menuPicks = menuPilot ? menuPilot.log.slice() : null;
             const X = new Float32Array(rows.x.length * FEATURE_DIM);
             rows.x.forEach((x, k) => X.set(x, k * FEATURE_DIM));
             const b64 = (buf) => {
@@ -224,7 +236,7 @@ const gitRev = (() => {
           cleared: last.cleared, stage: last.stage, step: last.step, phase: last.phase, frames: last.frames,
           stalled: last.scene !== 'Title', wallMs: Date.now() - t0,
           decisions: last.decisions, idleFrames: last.idleFrames, teacherExecuted: last.teacherExecuted,
-          scriptMenuFrames: last.scriptMenuFrames, hitsTaken: last.hitsTaken, damageTaken: last.damageTaken,
+          scriptMenuFrames: last.scriptMenuFrames, menuPicks: last.menuPicks, hitsTaken: last.hitsTaken, damageTaken: last.damageTaken,
           minHpFrac: Number(last.minHpFrac.toFixed(3)), rescued: last.rescued, cheat: last.cheat,
           decideMsMax: Number(last.decideMsMax.toFixed(3)), saves: last.saves, hitLog: last.hitLog, checkpoints: last.checkpoints,
         };
@@ -279,7 +291,9 @@ const gitRev = (() => {
       policy: { file: policyFile, version: policy.version, sha256: sha(policyFile) },
       game: gitRev,
       features: spec,
-      menus: 'script (2B not wired yet)',
+      menus: menuPolicy
+        ? { by: 'model', file: menuPolicyFile, version: menuPolicy.version, sha256: sha(menuPolicyFile) }
+        : 'script (menu head not used)',
       total: stat(summary),
       wenShaohua: stat(byHero('wenShaohua')),
       yuWuxia: stat(byHero('yuWuxia')),
