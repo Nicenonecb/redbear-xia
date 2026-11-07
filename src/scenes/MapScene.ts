@@ -410,6 +410,9 @@ export class MapScene extends Phaser.Scene {
       }
     } else {
       this.controls.update([]);
+      // 暂停弹出选项面板（升级、拔剑还是给钱）时交给菜单头；没有菜单头时仍可用键盘、鼠标选
+      const panel = this.ui.activeChoice;
+      if (aiControl.menu && panel?.isOpen && !this.ui.pauseMenu?.isOpen) aiControl.menu.tickPanel(panel, this.run, this.player.hp, false);
     }
     this.updateTalk();
     this.updateRescue(delta);

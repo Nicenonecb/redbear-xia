@@ -5,6 +5,7 @@ import { getRun } from '../game/run';
 import { saveRun } from '../game/save';
 import { introLines } from '../game/story';
 import { queueVoice, VoicePlayer } from '../audio/voice';
+import { aiControl } from '../ai/pilot';
 export class IntroScene extends Phaser.Scene {
   private voice!: VoicePlayer;
   private index = 0;
@@ -20,6 +21,11 @@ export class IntroScene extends Phaser.Scene {
       introLines(getRun()!.hero).flatMap((l) => (l.voice ? [l.voice] : [])),
     );
   }
+  /** 看 AI 打时由菜单头按固定节奏翻页 */
+  update() {
+    aiControl.menu?.tickStory(this);
+  }
+
   create() {
     this.index = 0;
     this.token = 0;

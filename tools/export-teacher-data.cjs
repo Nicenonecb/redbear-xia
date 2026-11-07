@@ -31,6 +31,8 @@ const skill = Number(args.skill ?? 1);
 const walkStride = Number(args['walk-stride'] ?? 1);
 // 默认用 expert 老师（见 src/debug/mapAutoPlayer.ts）；--expert 0 退回普通打法
 const expert = (args.expert ?? '1') !== '0';
+// --menu-only 1：只记老师的菜单选择（含菜单特征），不导出逐帧数据
+const menuOnly = args['menu-only'] === '1';
 const dir = path.join(path.resolve(args.out), args.split);
 fs.mkdirSync(dir, { recursive: true });
 const sha = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -65,9 +67,11 @@ const gitRev = (() => {
         const t0 = Date.now();
         await page.evaluate(
           async ({ hero, skill, seed, expert }) => {
-            const { startRun, getRun } = await import('/src/game/run.ts');
+            const { startRun, getRun, runStats } = await import('/src/game/run.ts');
             window.__getRun = getRun;
+            window.__runStats = runStats;
             window.__feat = await import('/src/ai/features.ts');
+            window.__menu = await import('/src/ai/menu.ts');
             const r = startRun(hero);
             r.seed = seed;
             __t.go('Map');
@@ -88,7 +92,7 @@ const gitRev = (() => {
         let last;
         for (let chunk = 0; chunk < 32; chunk++) {
           last = await page.evaluate(
-            ({ walkStride }) => {
+            ({ walkStride, menuOnly }) => {
               const { extractFeatures, actionsToLabel, FEATURE_DIM } = window.__feat;
               const xs = [],
                 ys = [],
@@ -99,7 +103,17 @@ const gitRev = (() => {
                 const pick = panel.pick.bind(panel);
                 panel.pick = (i) => {
                   const r = window.__getRun();
+                  const M = window.__menu;
+                  const mkind = M.menuKind(panel.config.title, kind === 'shop');
+                  // 与上线（MenuPilot.tickPanel）同样的取值：大地图上用主角当前气血，商店里用 run.hp
+                  const hp = kind === 'shop' ? r.hp : s.player.hp;
+                  const maxHp = r ? window.__runStats(r).maxHp : 0;
+                  const mx = r ? Array.from(M.menuFeatures(mkind, panel.config.options, r, hp, maxHp)) : null;
                   menu.push({
+                    menuKind: mkind,
+                    hp,
+                    maxHp,
+                    x: mx,
                     frame: globalFrame,
                     kind,
                     title: panel.config.title,
@@ -127,7 +141,7 @@ const gitRev = (() => {
                   const held = bot(s, f);
                   // 只记录上线时策略会被调用的帧：大地图、未暂停、未离场、面板未打开
                   const live = s.scene.key === 'Map' && !s.pauses?.size && !s.leaving && !s.ui?.activeChoice?.isOpen;
-                  if (live) {
+                  if (live && !menuOnly) {
                     const x = extractFeatures(s, f);
                     const combat = s.enemies?.length || s.rings?.length || s.projectiles?.length || s.controller?.hitTargets?.().length;
                     if (x && (combat || globalFrame % walkStride === 0)) {
@@ -159,7 +173,7 @@ const gitRev = (() => {
                 ...result,
               };
             },
-            { walkStride },
+            { walkStride, menuOnly },
           );
           chunks.x.push(Buffer.from(last.x, 'base64'));
           chunks.y.push(Buffer.from(last.y, 'base64'));
@@ -197,6 +211,12 @@ const gitRev = (() => {
         return { version: f.FEATURE_VERSION, dim: f.FEATURE_DIM, names: f.FEATURE_NAMES, actions: f.AI_ACTIONS };
       })
       .catch(() => null);
+    const menuSpec = await page
+      .evaluate(async () => {
+        const m = await import('/src/ai/menu.ts');
+        return { version: m.MENU_FEATURE_VERSION, dim: m.MENU_FEATURE_DIM, names: m.MENU_FEATURE_NAMES, slots: m.MENU_SLOTS };
+      })
+      .catch(() => null);
     const manifest = {
       schema: 'xia-teacher-export-v1',
       date: new Date().toISOString(),
@@ -206,6 +226,8 @@ const gitRev = (() => {
       walkStride,
       game: gitRev,
       features: spec,
+      menuFeatures: menuSpec,
+      menuOnly,
       runs: summary,
       cleared: summary.filter((r) => r.cleared).length,
       stalled: summary.filter((r) => r.stalled).length,

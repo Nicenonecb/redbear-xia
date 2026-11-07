@@ -6,6 +6,7 @@ import { FONT_BRUSH, CSS_COLORS, GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { getRun, endRun } from '../game/run';
 import { stageFor } from '../game/stages';
 import { queueVoice, VoicePlayer } from '../audio/voice';
+import { aiControl } from '../ai/pilot';
 export class EndingScene extends Phaser.Scene {
   private ready = false;
   private leaving = false;
@@ -20,6 +21,11 @@ export class EndingScene extends Phaser.Scene {
   preload() {
     queueVoice(this, [this.id()]);
   }
+  /** 看 AI 打时由菜单头按固定节奏翻页 */
+  update() {
+    aiControl.menu?.tickStory(this);
+  }
+
   create() {
     this.ready = false;
     this.leaving = false;

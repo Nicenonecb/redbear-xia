@@ -1,6 +1,7 @@
 import type { Action } from '../input/Controls';
 import { extractFeatures } from './features';
 import type { HandPolicy } from './policy';
+import type { MenuPilot } from './menu';
 
 /**
  * "看 AI 打"的操控方：大地图上每个逻辑帧调用一次 decide，由策略网络决定本帧按住哪些键。
@@ -32,13 +33,21 @@ export class HandPilot {
 }
 
 let active: HandPilot | null = null;
+let menu: MenuPilot | null = null;
 
-/** 当前是否由 AI 操控大地图上的主角；null 表示玩家自己打 */
+/**
+ * 当前是否由 AI 操控：pilot 是大地图上的"手"，menu 是暂停弹窗时的"菜单头"（含剧情翻页）。
+ * 都为 null 表示玩家自己打；只设 pilot 时菜单仍由玩家（或评测脚本）操作。
+ */
 export const aiControl = {
   get pilot() {
     return active;
   },
-  set(pilot: HandPilot | null) {
+  get menu() {
+    return menu;
+  },
+  set(pilot: HandPilot | null, menuPilot: MenuPilot | null = null) {
     active = pilot;
+    menu = menuPilot;
   },
 };
