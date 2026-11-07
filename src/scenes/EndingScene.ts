@@ -40,6 +40,7 @@ const THANKS_LAST = '爱你们，笔芯！';
 /** 字幕往上滚的速度（像素 / 秒） */
 const SCROLL_SPEED = 55;
 const PAPER = 0xeee6d6;
+import { aiControl } from '../ai/pilot';
 export class EndingScene extends Phaser.Scene {
   private ready = false;
   private leaving = false;
@@ -54,6 +55,11 @@ export class EndingScene extends Phaser.Scene {
   preload() {
     queueVoice(this, [this.id()]);
   }
+  /** 看 AI 打时由菜单头按固定节奏翻页 */
+  update() {
+    aiControl.menu?.tickStory(this);
+  }
+
   create() {
     music.play('ending');
     this.ready = false;

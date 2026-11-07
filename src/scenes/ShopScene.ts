@@ -12,6 +12,7 @@ import { PROGRESSION, WEAPONS } from '../game/progression';
 import { getRun, runStats, startRun, type RunState } from '../game/run';
 import { ChoicePanel, type ChoiceOption } from '../ui/ChoicePanel';
 import { SpeechBubble } from '../ui/SpeechBubble';
+import { aiControl } from '../ai/pilot';
 
 const GROUND_Y = 620;
 const STALL_X = 250;
@@ -77,6 +78,7 @@ export class ShopScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number) {
+    if (aiControl.menu && this.panel.isOpen) aiControl.menu.tickPanel(this.panel, this.run, this.run.hp, true);
     // 招呼念完接着说情报
     if (this.bubble.done && this.lines.length) this.say(this.lines.shift()!);
     this.bubble.update(delta, this.head.x, this.head.y);

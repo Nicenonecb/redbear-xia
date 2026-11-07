@@ -33,10 +33,13 @@ export class Controls {
     }
   }
 
-  /** 每帧在场景 update 开头调用一次，刷新本帧的按下 / 松开状态。 */
-  update() {
+  /**
+   * 每帧在场景 update 开头调用一次，刷新本帧的按下 / 松开状态。
+   * 传入 held 时（AI 操控）以它为准，不读键盘。
+   */
+  update(held?: readonly Action[]) {
     const prev = this.down;
-    this.down = new Set(ACTIONS.filter((a) => this.keys[a].some((k) => k.isDown)));
+    this.down = held ? new Set(held) : new Set(ACTIONS.filter((a) => this.keys[a].some((k) => k.isDown)));
     this.pressed = new Set([...this.down].filter((a) => !prev.has(a)));
     this.released = new Set([...prev].filter((a) => !this.down.has(a)));
   }

@@ -9,6 +9,7 @@ import { VoicePlayer, queueVoice } from '../audio/voice';
 import { advanceRun } from '../game/flow';
 import { getRun } from '../game/run';
 import { cjkWrap } from '../ui/cjkWrap';
+import { aiControl } from '../ai/pilot';
 
 /** 每个字打出来的间隔（毫秒） */
 const CHAR_MS = 70;
@@ -86,6 +87,7 @@ export class LetterScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number) {
+    aiControl.menu?.tickStory(this);
     if (this.finished) return;
     this.elapsed += delta;
     const shown = Math.min(this.letter.length, Math.floor(this.elapsed / CHAR_MS));
