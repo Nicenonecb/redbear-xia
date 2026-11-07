@@ -186,17 +186,44 @@ export class UIScene extends Phaser.Scene {
 
 
   /** 画面正中的大字（胜败乃兵家常事、过关） */
-  banner(text: string) {
-    this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, text, {
+  banner(text: string, y = GAME_HEIGHT / 2 - 40, size = 72) {
+    return this.add
+      .text(GAME_WIDTH / 2, y, text, {
         fontFamily: FONT_BRUSH,
-        fontSize: '72px',
+        fontSize: `${size}px`,
         color: CSS_COLORS.ink,
         stroke: CSS_COLORS.paper,
         strokeThickness: 8,
       })
       .setOrigin(0.5)
       .setDepth(90);
+  }
+
+  /** 倒下时盖一个朱红大字：从大到小砸下来，落地时屏幕一震 */
+  stamp(text: string) {
+    const t = this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2, text, {
+        fontFamily: FONT_BRUSH,
+        fontSize: '360px',
+        fontStyle: 'bold',
+        color: CSS_COLORS.red,
+        stroke: CSS_COLORS.paper,
+        strokeThickness: 18,
+      })
+      .setOrigin(0.5)
+      .setDepth(91)
+      .setScale(2.5)
+      .setAlpha(0);
+    t.setShadow(0, 6, 'rgba(0,0,0,0.35)', 12, true, true);
+    this.tweens.add({
+      targets: t,
+      scale: 1,
+      alpha: 1,
+      duration: 240,
+      ease: 'Back.easeOut',
+      onComplete: () => this.cameras.main.shake(220, 0.012),
+    });
+    return t;
   }
 
   setArea(name: string) {

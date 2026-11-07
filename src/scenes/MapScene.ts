@@ -908,7 +908,7 @@ export class MapScene extends Phaser.Scene {
     this.over = true;
     endRun();
     sfx.play('death');
-    this.ui.banner('胜败乃兵家常事');
+    this.ui.stamp('菜');
     this.time.delayedCall(2600, () => {
       const cam = this.cameras.main;
       cam.fadeOut(500, 239, 231, 214);
