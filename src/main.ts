@@ -11,6 +11,7 @@ import { MapScene } from './scenes/MapScene';
 import { SelectScene } from './scenes/SelectScene';
 import { ShopScene } from './scenes/ShopScene';
 import { UIScene } from './scenes/UIScene';
+import { installTakeover } from './ai/takeover';
 
 // 画布按屏幕实际像素来开，镜头再放大回 1280×720 的设计画面（见 render/sharp.ts）
 const size = canvasSize();
@@ -30,6 +31,9 @@ const game = new Phaser.Game({
 });
 
 installSharpRendering(game);
+
+// 右上角连点三下：胖虎决策模型代打（见 ai/takeover.ts）
+installTakeover(game);
 
 // 音效借用 Phaser 的 AudioContext；M 静音，- / = 调音量（随时可按）
 sfx.bind(game);

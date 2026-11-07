@@ -55,9 +55,9 @@ export class EndingScene extends Phaser.Scene {
   preload() {
     queueVoice(this, [this.id()]);
   }
-  /** 看 AI 打时由菜单头按固定节奏翻页 */
+  /** 看 AI 打时：字幕滚完、"第一章 · 完"停住以后再停 3 秒，由菜单头按键回标题 */
   update() {
-    aiControl.menu?.tickStory(this);
+    if (this.ready) aiControl.menu?.tickStory(this, 180);
   }
 
   create() {

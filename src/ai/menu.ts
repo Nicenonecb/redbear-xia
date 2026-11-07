@@ -215,10 +215,10 @@ export class MenuPilot {
   }
 
   private storyFrames = new WeakMap<object, number>();
-  /** 剧情场景每帧调用：到点就按一次空格翻页 */
-  tickStory(scene: Phaser.Scene) {
+  /** 剧情场景每帧调用：每隔 every 帧按一次空格翻页 */
+  tickStory(scene: Phaser.Scene, every = MenuPilot.STORY_FRAMES) {
     const n = (this.storyFrames.get(scene) ?? 0) + 1;
-    this.storyFrames.set(scene, n % MenuPilot.STORY_FRAMES);
-    if (n % MenuPilot.STORY_FRAMES === 0) scene.input.keyboard?.emit('keydown', { code: 'Space', repeat: false });
+    this.storyFrames.set(scene, n % every);
+    if (n % every === 0) scene.input.keyboard?.emit('keydown', { code: 'Space', repeat: false });
   }
 }
