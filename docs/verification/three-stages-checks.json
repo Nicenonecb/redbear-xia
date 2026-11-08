@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "old and malformed saves ignored",
+    "all three checkpoint resumes",
+    "stage boundary retains growth and resets rescue",
+    "rescue and bribe letters",
+    "duel arena and exactly three reinforcements",
+    "one charm per run, one HP, rescue remains available",
+    "phase transition completed, lethal damage cannot skip it",
+    "flag haste applies and disappears",
+    "annular attack has safe inner region",
+    "loaded audio volume/mute/cancel and duck restoration",
+    "brothers escape, ending credits, save cleared and return to title",
+    "both heroes intro and skip save"
+  ],
+  "errors": []
+}

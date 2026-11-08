@@ -1,0 +1,24 @@
+# 二关、三关 · 人物 + 风景概念图（给用户看风格用，先不进游戏）
+
+公共风格（每张都要带上）：
+Style: Chinese hand-painted ink wash (shuimo) on rice paper, fine inked linework with dry-brush flying-white texture and soft ink bleed, misty layered mountains fading into the paper. Main ink #1a1714, rice-paper ivory #efe7d6 as the light color, only sparse vermilion accents #b3261e. Same rendering as the attached reference ending_chapter1.png. Dignified wuxia game artwork. No anime cel shading, no photographic realism, no neon glow, no text, no letters, no seal stamps, no signatures.
+
+## 1. stage2_mountainside_duel.png · 1920x1080
+二关 · 山腰演武场，鲍金梁持矛等着主角上擂台
+
+Wide cinematic landscape, 1920x1080. Halfway up a great misty mountain: a flat packed-earth drill yard carved into the slope, ringed by old pines, weathered army tents and spear racks; a crude wooden duelling ring with four posts on the yard; a tall black war banner on a pole flutters (plain cloth, NO characters written on it). A wooden plank road clings to the cliff on the right, clouds drifting below it, and far above in the mist the mountain peak with faint ruined palace roofs. In the ring stands Bao Jinliang: a tall, powerfully muscled former military officer turned bandit, short thick beard, fierce glare, rough topknot with a frayed vermilion headband, a dented round bronze heart-protector mirror on his chest and one lacquered shoulder guard over coarse black-and-ivory clothes, wide vermilion sash; he holds a long spear with a leaf-shaped head and a vermilion horsehair tassel, planted upright beside him, chin raised, itching for a duel. In the foreground lower-left, seen from behind, the young swordsman Wen Shaohua (black hair in a silver crown with a vermilion ribbon, black-and-ivory wide-sleeved robe, a jian sword at his hip) walks up the stone path toward the ring. A few recruits in plain clothes practice drills in the background. Figures small to medium in the frame, landscape dominant, generous misty empty space.
+
+## 2. stage2_plank_road.png · 1920x1080
+二关 · 悬崖栈道，于无瑕在云海上的栈道前行，远处是兵营
+
+Wide cinematic landscape, 1920x1080. A dizzying wooden plank road bolted to a sheer cliff face halfway up a mountain, pines twisting out of the rock, a sea of clouds below with distant peaks breaking through. The cool young swordswoman Yu Wuxia (very long black hair in a high ponytail with a vermilion ribbon, black-and-ivory layered robe, closed black-and-vermilion folding fan in her hand) walks along the plank road, her ribbon and sleeves blown by the wind, looking ahead. Further along the path, on a ledge, a small roadside post-station shed with a tea stall under an old pine (a merchant sits there, tiny). Beyond, a military camp of tents and smoke rises from a flat shoulder of the mountain. Landscape dominant, the heroine small-to-medium, lots of drifting mist.
+
+## 3. stage3_peak_palace.png · 1920x1080
+三关 · 山峰残雪行宫，彰化天（一阶段，黑发束冠）在宫门台阶上俯视
+
+Wide cinematic landscape, 1920x1080. The snow-dusted summit of the mountain above a boundless sea of clouds: the ruins of a secret palace of a fallen dynasty — a grand weathered palace gate with sagging tiled roofs, broken stone lions, a cracked stele, a huge bronze incense burner, tattered old dragon banners (no text) hanging from poles, long grey stone stairs climbing to the gate, thin patches of old snow. At the top of the stairs stands Zhang Huatian, an exiled prince: tall, lean, pale, handsome, cold brooding face, long BLACK hair bound in a high topknot with a small dark-jade crown, faded ink-black old-court robes with subtle dragon-scale pattern and wide sleeves, one hand behind his back, a long thin braided whip glowing warm pale gold #d9b25a coiled in his right hand — the only gold in the picture. At the bottom of the stairs, small and seen from behind, the swordsman Wen Shaohua looks up at him. Gloomy, cold, majestic; landscape dominant.
+
+## 4. stage3_awakened_duel.png · 1920x1080
+三关 · 山峰决战，彰化天二阶段（白发散开、上衣崩开）金鞭狂舞
+
+Wide cinematic landscape, 1920x1080. The same snowy ruined palace courtyard on the mountain summit, grey palace paving with snow in the joints, broken stone lions, wind tearing at old dragon banners (no text), storm clouds and swirling ink-black mist around the peak. In the middle, Zhang Huatian in his awakened form: long WHITE hair loose and whipping in the wind, upper robe torn away and hanging in shreds from his waist sash, bare lean wiry muscular torso with old scars, cold furious eyes; his long whip blazes with bright pale-gold light #d9b25a, arcing around him in great swirling loops — the only gold in the picture. Facing him at the left, the swordswoman Yu Wuxia (long black ponytail with vermilion ribbon, black-and-ivory robe) braces with her black-and-vermilion fan open. Still a man, not a monster. Dramatic, dynamic, but still painterly ink wash with misty depth.

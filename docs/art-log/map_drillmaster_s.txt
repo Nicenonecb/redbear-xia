@@ -1,0 +1,9 @@
+Game map character sprite named map_drillmaster_s.png for a top-down wuxia game.
+Character: a huge bald drill instructor of the bandit army, broad and heavy, bare muscular arms, a dark leather apron-armor over black-and-ivory clothes, vermilion sash, a heavy broad guandao (polearm blade) held across his body. A head taller than a normal soldier.
+Use the attached reference image(s) ONLY for identity, costume, colors and brush style. Do NOT copy the reference pose or framing.
+Camera: true 45-degree oblique TOP-DOWN game map view (like Legend of Mir / Fantasy Westward Journey): camera elevated and looking down, top of the head and shoulder tops clearly visible, slight foreshortening (head a little larger, feet a little smaller).
+Orientation: facing SOUTH, straight toward the camera / bottom of the image; face and chest seen from the front, both shoulders level.
+Pose: natural compact idle, combat-ready stance, feet about shoulder width, arms and weapon close to the body (nothing sticking far out — the game rotates and shakes the sprite).
+Framing: square transparent canvas 1254x1254. Full body. Character height about 70% of the canvas height. The midpoint between the two foot soles is at horizontal center, 6% above the bottom edge. At least 8% empty space above the head. Do not crop to content.
+Style: Chinese hand-painted ink wash (shuimo), fine inked linework with dry-brush flying-white texture and subtle ink bleed on edges, clean readable silhouette. Main ink #1a1714, rice-paper ivory #efe7d6 as the light color, only sparse vermilion accents #b3261e. Dignified wuxia game artwork, same rendering as the existing game art. No anime cel shading, no photographic realism, no neon glow, no text, no seal stamps, no signatures.
+Strict: genuine fully transparent background (real alpha, NOT a drawn checkerboard). NO ground, NO shadow, NO glow outside the subject, NO paper rectangle, NO backdrop, NO floating ink splashes, NO text, NO labels.

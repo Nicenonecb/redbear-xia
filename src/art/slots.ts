@@ -4,7 +4,7 @@ import { viewRect } from '../render/sharp';
 /**
  * 立绘槽位：图片放进 public/art/，在 public/art/manifest.json 的 images 里登记一行，
  * 启动时就会加载，对应的地方自动换成图片；没登记的槽位继续用代码画的剪影。
- * 每个槽位的尺寸见下表。
+ * 每个槽位的尺寸和出图提示词见 docs/art-prompts.md。
  */
 export const ART_SLOTS = {
   title: '标题画面背景',

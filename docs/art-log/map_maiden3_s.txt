@@ -1,0 +1,8 @@
+Game map character sprite named map_maiden3_s.png for a top-down wuxia game.
+Character: a young village woman abducted to the bandit camp: simple ivory-and-ink cotton dress, hair in a plain bun with a wooden pin, standing with arms crossed, giving a cold defiant stare. Gentle, frightened but dignified; NOT sexualized, fully clothed, modest.
+Use the attached reference portrait_maiden.png ONLY for costume and style; each maiden may have a slightly different face and hair.
+Camera: true 45-degree oblique TOP-DOWN game map view (like Legend of Mir / Fantasy Westward Journey): camera elevated and looking down, top of the head and shoulder tops clearly visible, slight foreshortening (head a little larger, feet a little smaller).
+Orientation: facing SOUTH, straight toward the camera / bottom of the image; face and chest seen from the front, both shoulders level.
+Framing: square transparent canvas 1254x1254, full body, character height about 60% of the canvas height (she is smaller than the bandits), the point under her feet at horizontal center, 6% above the bottom edge.
+Style: Chinese hand-painted ink wash (shuimo), fine inked linework with dry-brush flying-white texture and subtle ink bleed on edges, clean readable silhouette. Main ink #1a1714, rice-paper ivory #efe7d6 as the light color, only sparse vermilion accents #b3261e. Dignified wuxia game artwork, same rendering as the existing game art. No anime cel shading, no photographic realism, no neon glow, no text, no seal stamps, no signatures.
+Strict: genuine fully transparent background (real alpha, NOT a drawn checkerboard). NO ground, NO shadow, NO glow outside the subject, NO paper rectangle, NO backdrop, NO floating ink splashes, NO text, NO labels.

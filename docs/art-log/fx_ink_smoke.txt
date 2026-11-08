@@ -1,0 +1,4 @@
+Game visual effect sprite named fx_ink_smoke.png, 1536x1536, transparent background with real alpha. A big billowing cloud of black ink smoke, dense in the middle, thinning to wisps at the edges.
+Seen from the 45-degree top-down game camera (flat on the ground unless stated). Centered on the canvas.
+Style: Chinese hand-painted ink wash (shuimo), fine inked linework with dry-brush flying-white texture and subtle ink bleed on edges, clean readable silhouette. Main ink #1a1714, rice-paper ivory #efe7d6 as the light color, only sparse vermilion accents #b3261e. Dignified wuxia game artwork, same rendering as the existing game art. No anime cel shading, no photographic realism, no neon glow, no text, no seal stamps, no signatures.
+Strict: genuine transparent background, no backdrop, no text.
