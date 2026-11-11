@@ -113,33 +113,11 @@ export class TitleScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setAlpha(0.6);
 
-    // 左上角：回到根目录的选游戏页（Esc 也行）
-    const view = viewRect();
-    const back = this.add
-      .text(view.x + 20, view.y + 18, '← 选择游戏', {
-        fontFamily: FONT_BRUSH,
-        fontSize: '22px',
-        color: CSS_COLORS.ink,
-        // 垫一层半透明宣纸，压在标题画左上角的竹叶上也看得清
-        backgroundColor: 'rgba(239, 231, 214, 0.85)',
-        padding: { x: 12, y: 6 },
-      })
-      .setAlpha(0.8)
-      .setDepth(30) // 压在前景竹叶（depth 20）上面
-      .setInteractive({ useHandCursor: true });
-    back.on('pointerover', () => back.setAlpha(1));
-    back.on('pointerout', () => back.setAlpha(0.8));
-    back.on('pointerdown', (_p: unknown, _x: number, _y: number, e: Phaser.Types.Input.EventData) => {
-      e.stopPropagation(); // 不然会同时触发"点任意处入江湖"
-      this.leaveToPicker();
-    });
-
     this.cameras.main.fadeIn(600, 239, 231, 214);
 
     // 开发快捷键直接进入各关 Boss 战（不存档）
     this.entering = false;
     this.input.keyboard!.on('keydown', (e: KeyboardEvent) => {
-      if (e.code === 'Escape') return this.leaveToPicker();
       if (import.meta.env.DEV && ['KeyB', 'Digit1', 'Digit2', 'Digit3'].includes(e.code)) {
         const run = startRun('wenShaohua', false);
         run.stage = e.code === 'KeyB' ? 0 : Number(e.code.at(-1)) - 1;
@@ -169,17 +147,6 @@ export class TitleScene extends Phaser.Scene {
     setRun(saved);
     const { key, data } = sceneForStep(saved.step);
     this.enterGame(key, data);
-  }
-
-  /** 墨色淡出后回到上一级的选游戏页 */
-  private leaveToPicker() {
-    if (this.entering) return;
-    this.entering = true;
-    const cam = this.cameras.main;
-    cam.fadeOut(400, 239, 231, 214);
-    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      window.location.href = '../';
-    });
   }
 
   private enterGame(scene: string, data?: object) {

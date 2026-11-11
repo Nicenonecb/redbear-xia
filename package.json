@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && rm -rf dist && vite build && cp -R site/. dist/",
+    "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview --outDir dist"
+    "preview": "vite preview"
   },
   "dependencies": {
     "phaser": "^3.90.0"
